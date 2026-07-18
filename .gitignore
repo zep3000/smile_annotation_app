@@ -1,0 +1,12 @@
+node_modules/
+coverage/
+.railway/
+
+.env
+.env.*
+!.env.example
+
+*.log
+
+data/annotations/
+data/*manifest*.json

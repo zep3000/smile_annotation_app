@@ -1,0 +1,14 @@
+{
+  "name": "annotation-app-v2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local stepwise advertisement face annotation app.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "start:expert": "node server.js --expert"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

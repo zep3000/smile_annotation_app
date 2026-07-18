@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Annotation App V2</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main id="loginView" class="login-shell">
+      <section class="login-panel">
+        <h1>Annotation App V2</h1>
+        <div class="welcome-copy">
+          <p>This app guides you through one annotation decision at a time for magazine pages or page spreads.</p>
+          <p>We are looking for advertisements containing eligible face depictions. A face is eligible when more than an ear or the back of a head is visible and its location can be boxed. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.</p>
+          <p>For each qualifying ad, you will draw boxes where needed and then answer short visual questions. Always choose the single best-fitting answer when visual evidence is available; use not assessable only when the required evidence cannot be seen well enough.</p>
+        </div>
+        <label id="manifestPathField">
+          Manifest JSON path
+          <input id="manifestPath" placeholder="C:/master/path/to/manifest.json">
+        </label>
+        <div class="session-mode-field">
+          <span class="field-label">Annotation session</span>
+          <div class="session-mode-control" role="group" aria-label="Annotation session">
+            <button type="button" class="session-mode-button selected" data-session-mode="new" aria-pressed="true">New annotation</button>
+            <button type="button" class="session-mode-button" data-session-mode="resume" aria-pressed="false">Resume annotation</button>
+          </div>
+        </div>
+        <div id="resumeFields" class="resume-fields hidden">
+          <label>
+            Saved annotation
+            <select id="resumeSessionSelect" disabled>
+              <option value="">No saved sessions loaded</option>
+            </select>
+          </label>
+          <div class="resume-actions">
+            <button id="refreshSessionsButton" type="button">Refresh sessions</button>
+            <span id="sessionLookupStatus" class="status-line"></span>
+          </div>
+        </div>
+        <button id="startButton" type="button">Start new annotation</button>
+        <p id="loginStatus" class="status-line"></p>
+      </section>
+    </main>
+
+    <main id="appView" class="app-shell hidden">
+      <section id="workspace" class="workspace">
+        <aside id="imageList" class="image-list" aria-label="Page overview">
+          <div class="page-list-header">
+            <strong>Pages</strong>
+            <div class="page-list-legend" aria-label="Page states">
+              <span class="page-state not-started"><span class="page-state-dot"></span>Not started</span>
+              <span class="page-state started"><span class="page-state-dot"></span>Started</span>
+              <span class="page-state done"><span class="page-state-dot"></span>Done</span>
+            </div>
+          </div>
+          <div id="imageListItems" class="page-list-items"></div>
+        </aside>
+        <section class="image-pane">
+          <div id="imageScroll" class="image-scroll">
+            <div id="imageStage" class="image-stage">
+              <img id="pageImage" alt="">
+              <svg id="overlay" class="overlay"></svg>
+              <button type="button" id="bboxDoneButton" class="bbox-done hidden">Done</button>
+            </div>
+          </div>
+          <button type="button" id="prevImageButton" class="image-page-arrow previous" aria-label="Previous page" title="Previous page">&#8249;</button>
+          <button type="button" id="nextImageButton" class="image-page-arrow next" aria-label="Next page" title="Next page">&#8250;</button>
+          <div class="image-toolbar zoom-toolbar" aria-label="Zoom controls">
+            <span id="imageTitle" class="sr-only"></span>
+            <div class="toolbar-buttons">
+              <button type="button" data-zoom="fit" title="Fit image">Fit</button>
+              <button type="button" data-zoom="out" title="Zoom out">-</button>
+              <button type="button" data-zoom="in" title="Zoom in">+</button>
+            </div>
+          </div>
+          <div class="image-toolbar edit-toolbar hidden" aria-label="Box editing controls">
+            <div class="toolbar-buttons">
+              <button type="button" id="undoBoxButton" title="Undo last box">Undo</button>
+              <button type="button" id="deleteBoxButton" title="Delete selected box">Delete</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="question-panel">
+          <div class="step-kicker" id="stepKicker"></div>
+          <div class="question-row">
+            <h2 id="questionText"></h2>
+            <div class="question-tools">
+              <button type="button" id="helpButton" class="help-button" title="Show coding rule" aria-label="Show coding rule">?</button>
+              <button type="button" id="urgentCommentButton" class="comment-tool-button" title="Add urgent comment" aria-label="Add urgent comment">!</button>
+            </div>
+          </div>
+          <p id="instructionText" class="instruction"></p>
+          <div id="helpText" class="help-text hidden"></div>
+          <div id="inputArea" class="input-area"></div>
+          <div class="nav-row">
+            <button type="button" id="backButton">Back</button>
+            <button type="button" id="nextButton">Next</button>
+          </div>
+          <div class="image-progress-block">
+            <progress id="imageProgress" value="0" max="100" title="Image progress"></progress>
+          </div>
+          <div id="contextSummary" class="context-summary hidden"></div>
+          <p id="saveStatus" class="status-line"></p>
+        </aside>
+      </section>
+      <footer class="bottom-progress">
+        <div class="bottom-left-controls">
+          <button type="button" id="pageListToggle">Pages</button>
+          <span class="session-code-display">Session <strong id="sessionCodeTop"></strong></span>
+          <span id="taskTitle" class="sr-only">Task</span>
+        </div>
+        <label class="task-progress-label">
+          <span id="bottomPageLabel"></span>
+          <progress id="taskProgress" value="0" max="100" title="Task progress"></progress>
+        </label>
+        <div class="bottom-right-controls">
+          <span id="bottomFilename"></span>
+          <span id="expertModeBadge" class="mode-badge hidden">Expert</span>
+        </div>
+      </footer>
+    </main>
+
+    <dialog id="commentDialog">
+      <form method="dialog" class="dialog-body">
+        <h2>Urgent comment</h2>
+        <textarea id="urgentCommentText" rows="6" placeholder="What was difficult or important here?"></textarea>
+        <div class="dialog-actions">
+          <button value="cancel" type="button" id="cancelCommentButton">Cancel</button>
+          <button value="save" type="button" id="saveCommentButton">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="sessionCodeDialog" aria-labelledby="sessionCodeTitle">
+      <div class="dialog-body session-code-dialog">
+        <h2 id="sessionCodeTitle">Save your session number</h2>
+        <p>Copy this number now. It identifies this annotation if you need to resume it later.</p>
+        <output id="sessionCodeValue" class="session-code-value"></output>
+        <p id="sessionCodeStatus" class="status-line" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button type="button" id="copySessionCodeButton">Copy number</button>
+          <button type="button" id="continueSessionButton">Continue</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
