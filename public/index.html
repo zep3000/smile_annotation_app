@@ -15,30 +15,48 @@
           <p>We are looking for advertisements containing eligible face depictions. A face is eligible when more than an ear or the back of a head is visible and its location can be boxed. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.</p>
           <p>For each qualifying ad, you will draw boxes where needed and then answer short visual questions. Always choose the single best-fitting answer when visual evidence is available; use not assessable only when the required evidence cannot be seen well enough.</p>
         </div>
-        <label id="manifestPathField">
-          Manifest JSON path
-          <input id="manifestPath" placeholder="C:/master/path/to/manifest.json">
-        </label>
-        <div class="session-mode-field">
-          <span class="field-label">Annotation session</span>
-          <div class="session-mode-control" role="group" aria-label="Annotation session">
-            <button type="button" class="session-mode-button selected" data-session-mode="new" aria-pressed="true">New annotation</button>
-            <button type="button" class="session-mode-button" data-session-mode="resume" aria-pressed="false">Resume annotation</button>
-          </div>
-        </div>
-        <div id="resumeFields" class="resume-fields hidden">
-          <label>
-            Saved annotation
-            <select id="resumeSessionSelect" disabled>
-              <option value="">No saved sessions loaded</option>
-            </select>
+        <div id="localStartFields" class="start-fields">
+          <label id="manifestPathField">
+            Manifest JSON path
+            <input id="manifestPath" placeholder="C:/master/path/to/manifest.json">
           </label>
-          <div class="resume-actions">
-            <button id="refreshSessionsButton" type="button">Refresh sessions</button>
-            <span id="sessionLookupStatus" class="status-line"></span>
+          <div class="session-mode-field">
+            <span class="field-label">Annotation session</span>
+            <div class="session-mode-control" role="group" aria-label="Annotation session">
+              <button type="button" class="session-mode-button selected" data-session-mode="new" aria-pressed="true">New annotation</button>
+              <button type="button" class="session-mode-button" data-session-mode="resume" aria-pressed="false">Resume annotation</button>
+            </div>
+          </div>
+          <div id="resumeFields" class="resume-fields hidden">
+            <label>
+              Saved annotation
+              <select id="resumeSessionSelect" disabled>
+                <option value="">No saved sessions loaded</option>
+              </select>
+            </label>
+            <div class="resume-actions">
+              <button id="refreshSessionsButton" type="button">Refresh sessions</button>
+              <span id="sessionLookupStatus" class="status-line"></span>
+            </div>
+          </div>
+          <button id="startButton" type="button">Start new annotation</button>
+        </div>
+        <div id="hostedStartFields" class="start-fields hidden">
+          <div id="hostedPasswordStep" class="hosted-entry-step">
+            <label>
+              Study password
+              <input id="hostedPassword" type="password" autocomplete="current-password">
+            </label>
+            <button id="hostedLoginButton" type="button">Continue</button>
+          </div>
+          <div id="hostedAssignmentStep" class="hosted-entry-step hidden">
+            <label>
+              Eight-digit assignment code
+              <input id="hostedAssignmentCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{8}">
+            </label>
+            <button id="hostedOpenButton" type="button">Open annotation</button>
           </div>
         </div>
-        <button id="startButton" type="button">Start new annotation</button>
         <p id="loginStatus" class="status-line"></p>
       </section>
     </main>
@@ -118,6 +136,7 @@
         <div class="bottom-right-controls">
           <span id="bottomFilename"></span>
           <span id="expertModeBadge" class="mode-badge hidden">Expert</span>
+          <button type="button" id="hostedExitButton" class="footer-command hidden">Exit</button>
         </div>
       </footer>
     </main>
@@ -142,6 +161,16 @@
         <div class="dialog-actions">
           <button type="button" id="copySessionCodeButton">Copy number</button>
           <button type="button" id="continueSessionButton">Continue</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="saveConflictDialog" aria-labelledby="saveConflictTitle">
+      <div class="dialog-body">
+        <h2 id="saveConflictTitle">This page changed elsewhere</h2>
+        <p class="instruction">Another browser or tab saved a newer version. Reload this page before continuing so that work is not overwritten.</p>
+        <div class="dialog-actions">
+          <button type="button" id="reloadAfterConflictButton">Reload page</button>
         </div>
       </div>
     </dialog>

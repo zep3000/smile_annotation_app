@@ -1,6 +1,7 @@
 # Annotation App V2
 
-Local browser app for stepwise annotation of advertisements with visible faces.
+Stepwise advertisement-face annotation app with local filesystem and hosted
+Railway/PostgreSQL operating modes.
 
 ## Run
 
@@ -111,3 +112,36 @@ C:\master\annotation_app_v2\data\annotations\<eight_digit_session_id>\annotation
 ```
 
 The copied source documents for the annotation flow are in `docs/`.
+
+## Hosted mode
+
+Hosted mode adds:
+
+- PostgreSQL `JSONB` annotation persistence with revision conflict detection.
+- Separate annotator and administrator authentication.
+- One eight-digit code per annotator assignment.
+- Private S3-compatible JPEG storage served through authenticated routes.
+- Admin set creation, JPEG upload, activation, code generation, monitoring,
+  revocation, expert-mode control, audit events, and JSON/JSONL exports.
+- A scheduled JSONL export command for a separate private backup bucket.
+
+The complete Railway procedure is in
+[`docs/HOSTED_DEPLOYMENT.md`](docs/HOSTED_DEPLOYMENT.md). Do not set
+`APP_MODE=hosted` on Railway until all required services and variables in that
+document are configured.
+
+Run the in-memory hosted development sandbox locally:
+
+```powershell
+npm run dev:hosted
+```
+
+Then open the annotation app at `http://127.0.0.1:5180/` or administration at
+`http://127.0.0.1:5180/admin`. The development-only passwords are printed in
+the terminal. Its database and uploaded files disappear when the process stops.
+
+All automated tests run with:
+
+```powershell
+npm test
+```

@@ -120,7 +120,9 @@ label {
 }
 
 .session-mode-field,
-.resume-fields {
+.resume-fields,
+.start-fields,
+.hosted-entry-step {
   display: grid;
   gap: 8px;
 }
@@ -798,6 +800,11 @@ progress {
 }
 
 .bottom-left-controls button {
+  min-height: 26px;
+  padding: 3px 9px;
+}
+
+.bottom-progress .footer-command {
   min-height: 26px;
   padding: 3px 9px;
 }

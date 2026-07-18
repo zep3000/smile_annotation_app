@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Annotation Administration</title>
+    <link rel="stylesheet" href="/admin/admin.css">
+  </head>
+  <body>
+    <main id="adminLogin" class="login-shell">
+      <section class="login-panel">
+        <h1>Administration</h1>
+        <p>Manage annotation sets, assignment codes, progress, and exports.</p>
+        <label>
+          Admin password
+          <input id="adminPassword" type="password" autocomplete="current-password">
+        </label>
+        <button id="adminLoginButton" type="button" class="primary">Sign in</button>
+        <p id="adminLoginStatus" class="status"></p>
+      </section>
+    </main>
+
+    <main id="adminApp" class="admin-app hidden">
+      <header class="topbar">
+        <div>
+          <strong>Annotation administration</strong>
+          <span id="environmentLabel">Hosted data</span>
+        </div>
+        <div class="topbar-actions">
+          <button id="refreshButton" type="button">Refresh</button>
+          <button id="logoutButton" type="button">Sign out</button>
+        </div>
+      </header>
+
+      <div class="admin-layout">
+        <aside class="set-sidebar">
+          <div class="sidebar-heading">
+            <h2>Annotation sets</h2>
+            <button id="newSetButton" type="button" class="primary">New set</button>
+          </div>
+          <div id="setList" class="set-list"></div>
+        </aside>
+
+        <section class="admin-content">
+          <section id="emptyState" class="empty-state">
+            <h1>Select an annotation set</h1>
+            <p>Choose a set from the overview or create a new one.</p>
+          </section>
+
+          <section id="createSetView" class="content-view hidden">
+            <div class="section-heading">
+              <div>
+                <h1>Create annotation set</h1>
+                <p>The manifest must contain a task ID and JPEG filenames.</p>
+              </div>
+            </div>
+            <form id="createSetForm" class="form-grid">
+              <label>
+                Set name
+                <input id="setName" required maxlength="240">
+              </label>
+              <label>
+                Flow version
+                <input id="flowVersion" value="1.11" required maxlength="40">
+              </label>
+              <label class="wide-field">
+                Manifest JSON
+                <input id="manifestFile" type="file" accept="application/json,.json" required>
+              </label>
+              <div class="form-actions wide-field">
+                <button id="cancelCreateButton" type="button">Cancel</button>
+                <button type="submit" class="primary">Create set</button>
+              </div>
+              <p id="createSetStatus" class="status wide-field"></p>
+            </form>
+          </section>
+
+          <section id="setDetailView" class="content-view hidden">
+            <div class="section-heading">
+              <div>
+                <h1 id="setTitle"></h1>
+                <p id="setSubtitle"></p>
+              </div>
+              <span id="setStatusBadge" class="status-badge"></span>
+            </div>
+
+            <section class="metrics-band" aria-label="Set metrics">
+              <div><span>Images</span><strong id="imageMetric"></strong></div>
+              <div><span>Assignments</span><strong id="assignmentMetric"></strong></div>
+              <div><span>Started</span><strong id="startedMetric"></strong></div>
+              <div><span>Done</span><strong id="doneMetric"></strong></div>
+            </section>
+
+            <section class="admin-section">
+              <div class="section-row">
+                <div>
+                  <h2>JPEG images</h2>
+                  <p id="uploadSummary"></p>
+                </div>
+                <div class="section-actions">
+                  <label class="file-command">
+                    Choose image folder
+                    <input id="imageFiles" type="file" accept="image/jpeg,.jpg,.jpeg" multiple webkitdirectory directory>
+                  </label>
+                  <button id="uploadImagesButton" type="button" class="primary" disabled>Upload missing</button>
+                </div>
+              </div>
+              <progress id="uploadProgress" value="0" max="100"></progress>
+              <p id="uploadStatus" class="status"></p>
+              <div class="section-actions left-actions">
+                <button id="activateSetButton" type="button" class="primary">Activate set</button>
+                <button id="deactivateSetButton" type="button">Deactivate set</button>
+              </div>
+            </section>
+
+            <section class="admin-section">
+              <div class="section-row">
+                <div>
+                  <h2>Assignment codes</h2>
+                  <p>Each code belongs to one coder and resumes the same annotation.</p>
+                </div>
+                <div class="assignment-create">
+                  <label>
+                    Number
+                    <input id="assignmentCount" type="number" min="1" max="500" value="1">
+                  </label>
+                  <label class="checkbox-label">
+                    <input id="newAssignmentExpert" type="checkbox">
+                    Expert navigation
+                  </label>
+                  <button id="createAssignmentsButton" type="button" class="primary">Generate</button>
+                </div>
+              </div>
+              <p id="assignmentStatus" class="status"></p>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Code</th><th>Status</th><th>Progress</th><th>Last activity</th><th>Expert</th><th>Access</th></tr>
+                  </thead>
+                  <tbody id="assignmentRows"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="admin-section">
+              <div class="section-row">
+                <div>
+                  <h2>Results</h2>
+                  <p>Exports contain the stored annotation JSON plus assignment and revision metadata.</p>
+                </div>
+                <div class="section-actions">
+                  <a id="jsonlExportLink" class="button-link" href="#">Download JSONL</a>
+                  <a id="jsonExportLink" class="button-link" href="#">Download JSON</a>
+                </div>
+              </div>
+            </section>
+
+            <section class="admin-section">
+              <h2>Recent activity</h2>
+              <div id="auditList" class="audit-list"></div>
+            </section>
+          </section>
+        </section>
+      </div>
+    </main>
+
+    <dialog id="codesDialog">
+      <div class="dialog-content">
+        <h2>Assignment codes</h2>
+        <p>Give one code to each coder.</p>
+        <textarea id="generatedCodes" rows="8" readonly></textarea>
+        <div class="dialog-actions">
+          <button id="copyCodesButton" type="button">Copy codes</button>
+          <button id="closeCodesButton" type="button" class="primary">Done</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="/admin/admin.js"></script>
+  </body>
+</html>

@@ -262,6 +262,8 @@ const STEP_META = {
 const state = {
   session: null,
   manifest: null,
+  hostedMode: false,
+  annotationRevision: 0,
   expertMode: false,
   startMode: "new",
   resumeSessions: [],
@@ -382,6 +384,7 @@ function compactTimestamp(date = new Date()) {
 }
 
 function imageUrl(image) {
+  if (state.hostedMode) return `/api/image?image_id=${encodeURIComponent(image.image_id)}`;
   return `/api/image?path=${encodeURIComponent(image.path)}`;
 }
 
@@ -666,6 +669,7 @@ function normalizeLoadedStep(step) {
 }
 
 function saveLocalBootState() {
+  if (state.hostedMode) return;
   if (!state.session || !state.manifest) return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     session_id: state.session.session_id,
@@ -690,7 +694,11 @@ async function postJson(url, body) {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || "Request failed");
+    const error = new Error(data.error || "Request failed");
+    error.status = response.status;
+    error.code = data.code;
+    error.currentRevision = data.current_revision;
+    throw error;
   }
   return data;
 }
@@ -699,7 +707,10 @@ async function fetchJson(url) {
   const response = await fetch(url);
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || "Request failed");
+    const error = new Error(data.error || "Request failed");
+    error.status = response.status;
+    error.code = data.code;
+    throw error;
   }
   return data;
 }
@@ -1625,11 +1636,13 @@ async function saveAnnotationNow() {
   state.annotation.updated_at = nowIso();
   const image = currentImage();
   try {
-    await postJson("/api/annotation", {
+    const saved = await postJson("/api/annotation", {
       session_id: state.session.session_id,
       image_id: image.image_id,
+      revision: state.annotationRevision,
       annotation: state.annotation
     });
+    state.annotationRevision = Number(saved.revision || state.annotationRevision);
     state.statuses[image.image_id] = {
       status: state.annotation.status,
       updated_at: state.annotation.updated_at,
@@ -1644,6 +1657,11 @@ async function saveAnnotationNow() {
   } catch (error) {
     $("#saveStatus").textContent = error.message;
     $("#saveStatus").className = "status-line error";
+    if (error.code === "revision_conflict") {
+      state.dirty = true;
+      const dialog = $("#saveConflictDialog");
+      if (dialog && !dialog.open) dialog.showModal();
+    }
   }
 }
 
@@ -2513,7 +2531,10 @@ function bindOverlay() {
 }
 
 async function refreshProgress() {
-  const data = await fetchJson(`/api/progress?session_id=${encodeURIComponent(state.session.session_id)}&manifest_path=${encodeURIComponent(state.manifest.manifest_path)}`);
+  const query = state.hostedMode
+    ? "/api/progress"
+    : `/api/progress?session_id=${encodeURIComponent(state.session.session_id)}&manifest_path=${encodeURIComponent(state.manifest.manifest_path)}`;
+  const data = await fetchJson(query);
   state.statuses = data.progress.statuses || {};
 }
 
@@ -2554,6 +2575,7 @@ async function loadImage(index, options = {}) {
   };
   pageImage.src = imageUrl(image);
   const data = await fetchJson(`/api/annotation?session_id=${encodeURIComponent(state.session.session_id)}&image_id=${encodeURIComponent(image.image_id)}`);
+  state.annotationRevision = Number(data.revision || 0);
   state.annotationPersisted = Boolean(data.annotation);
   state.dirty = false;
   state.annotation = migrateLoadedAnnotation(data.annotation || defaultAnnotation(image));
@@ -2764,6 +2786,75 @@ async function startApp() {
   }
 }
 
+function setHostedEntryStep(step) {
+  const passwordStep = step === "password";
+  $("#hostedPasswordStep").classList.toggle("hidden", !passwordStep);
+  $("#hostedAssignmentStep").classList.toggle("hidden", passwordStep);
+  $("#loginStatus").textContent = "";
+  window.setTimeout(() => {
+    (passwordStep ? $("#hostedPassword") : $("#hostedAssignmentCode"))?.focus();
+  }, 0);
+}
+
+async function enterHostedAssignment(code) {
+  $("#loginStatus").textContent = "Opening annotation...";
+  $("#loginStatus").className = "status-line";
+  const sessionData = await postJson("/api/assignment/open", { code });
+  const [configData, manifestData] = await Promise.all([
+    fetchJson("/api/config"),
+    fetchJson("/api/manifest")
+  ]);
+  state.expertMode = Boolean(configData.config?.expert_mode);
+  state.session = sessionData.session;
+  state.manifest = manifestData.manifest;
+  await refreshProgress();
+  $("#loginView").classList.add("hidden");
+  $("#appView").classList.remove("hidden");
+  $("#taskTitle").textContent = state.manifest.task_id;
+  $("#expertModeBadge").classList.toggle("hidden", !state.expertMode);
+  $("#hostedExitButton").classList.remove("hidden");
+  $("#pageListToggle").title = state.expertMode
+    ? "Open page overview; all pages are available"
+    : "Open page overview";
+  $("#sessionCodeTop").textContent = sessionDisplayId();
+  $("#sessionCodeTop").title = `Assignment ${sessionDisplayId()}`;
+  const initialIndex = resumeIndexFromStatuses();
+  state.currentIndex = initialIndex;
+  state.maxVisitedIndex = initialIndex;
+  await loadImage(initialIndex);
+}
+
+async function hostedLogin() {
+  const password = $("#hostedPassword").value;
+  $("#loginStatus").textContent = "Signing in...";
+  $("#loginStatus").className = "status-line";
+  try {
+    await postJson("/api/auth/login", { role: "annotator", password });
+    $("#hostedPassword").value = "";
+    setHostedEntryStep("assignment");
+  } catch (error) {
+    $("#loginStatus").textContent = error.message;
+    $("#loginStatus").className = "status-line error";
+  }
+}
+
+async function hostedOpenAssignment() {
+  const code = $("#hostedAssignmentCode").value.trim();
+  try {
+    await enterHostedAssignment(code);
+  } catch (error) {
+    $("#loginStatus").textContent = error.message;
+    $("#loginStatus").className = "status-line error";
+  }
+}
+
+async function hostedExit() {
+  await saveAnnotationNow();
+  await postJson("/api/auth/logout", {});
+  localStorage.removeItem(STORAGE_KEY);
+  window.location.reload();
+}
+
 function showCommentDialog() {
   $("#urgentCommentText").value = "";
   $("#commentDialog").showModal();
@@ -2810,6 +2901,7 @@ function persistBeforeUnload() {
   const payload = JSON.stringify({
     session_id: state.session.session_id,
     image_id: currentImage().image_id,
+    revision: state.annotationRevision,
     annotation: state.annotation
   });
   navigator.sendBeacon("/api/annotation", new Blob([payload], { type: "application/json" }));
@@ -2853,6 +2945,20 @@ function bindEvents() {
   $("#manifestPath").addEventListener("keydown", (event) => {
     if (event.key === "Enter") void startApp();
   });
+  $("#hostedLoginButton").addEventListener("click", () => void hostedLogin());
+  $("#hostedPassword").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") void hostedLogin();
+  });
+  $("#hostedOpenButton").addEventListener("click", () => void hostedOpenAssignment());
+  $("#hostedAssignmentCode").addEventListener("input", (event) => {
+    event.target.value = event.target.value.replace(/\D/g, "").slice(0, 8);
+  });
+  $("#hostedAssignmentCode").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") void hostedOpenAssignment();
+  });
+  $("#hostedExitButton").addEventListener("click", () => void hostedExit());
+  $("#reloadAfterConflictButton").addEventListener("click", () => window.location.reload());
+  $("#saveConflictDialog").addEventListener("cancel", (event) => event.preventDefault());
   $("#copySessionCodeButton").addEventListener("click", () => void copySessionCode());
   $("#sessionCodeDialog").addEventListener("cancel", (event) => event.preventDefault());
   $("#nextButton").addEventListener("click", advance);
@@ -2902,9 +3008,34 @@ function bindEvents() {
   bindOverlay();
 }
 
-function boot() {
+async function boot() {
   const stored = loadLocalBootState();
   bindEvents();
+  try {
+    const publicConfig = await fetchJson("/api/public-config");
+    state.hostedMode = publicConfig.mode === "hosted";
+  } catch {
+    state.hostedMode = false;
+  }
+  if (state.hostedMode) {
+    $("#localStartFields").classList.add("hidden");
+    $("#hostedStartFields").classList.remove("hidden");
+    try {
+      const auth = await fetchJson("/api/auth/me");
+      if (!auth.authenticated || auth.role !== "annotator") {
+        setHostedEntryStep("password");
+      } else if (auth.assignment?.code) {
+        await enterHostedAssignment(auth.assignment.code);
+      } else {
+        setHostedEntryStep("assignment");
+      }
+    } catch (error) {
+      $("#loginStatus").textContent = error.message;
+      $("#loginStatus").className = "status-line error";
+      setHostedEntryStep("password");
+    }
+    return;
+  }
   if (stored) {
     $("#manifestPath").value = stored.manifest_path || "";
     setStartMode("resume", {
@@ -2915,4 +3046,4 @@ function boot() {
   }
 }
 
-boot();
+void boot();
