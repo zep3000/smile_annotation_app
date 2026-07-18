@@ -15,6 +15,47 @@ Then open:
 http://localhost:5176
 ```
 
+## Local baseline and hosted staging
+
+The working local JSON-storage application source is preserved in Git as tag
+`local-v2-baseline`. Generated annotations and absolute-path manifests remain
+outside Git and must be backed up separately. This tag is a local recovery
+point; pushing it to a private remote repository is a separate step.
+
+The hosted preparation adds a public `GET /health` endpoint and an optional
+temporary HTTP Basic Authentication gate. The gate protects every route except
+`/health`, which Railway must be able to request while deciding whether a new
+deployment started successfully. This is only an outer staging gate; the later
+hosted application will use separate database-backed user and administrator
+authentication.
+
+Run locally without the staging gate:
+
+```powershell
+npm start
+```
+
+Run locally with the staging gate:
+
+```powershell
+$env:APP_ENV='staging'
+$env:STAGING_AUTH_REQUIRED='true'
+$env:STAGING_USER='staging'
+$env:STAGING_PASSWORD='replace-with-a-long-random-password'
+npm start
+```
+
+Do not commit real passwords. On Railway, add these values in the Web service's
+Variables tab. Railway injects `PORT`; do not define it manually. The checked-in
+`railway.json` selects Railpack, starts the app with `npm start`, checks
+`/health`, and restarts the process on failure.
+
+Run the deployment-focused tests with:
+
+```powershell
+npm test
+```
+
 ## Expert mode
 
 Start the app in expert mode when unrestricted navigation through the Pages overview is needed:

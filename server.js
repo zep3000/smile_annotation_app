@@ -8,9 +8,22 @@ const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, "public");
 const DATA_DIR = path.join(ROOT, "data", "annotations");
 const DEFAULT_PORT = Number(process.env.PORT || 5176);
+const HOST = String(process.env.HOST || "0.0.0.0");
 const SCHEMA_VERSION = "ad_face_annotation_v2";
+const APP_ENV = String(process.env.APP_ENV || "development");
 const EXPERT_MODE = process.argv.includes("--expert") ||
   /^(1|true|yes|on)$/i.test(String(process.env.ANNOTATION_EXPERT_MODE || ""));
+const STAGING_AUTH_REQUIRED = /^(1|true|yes|on)$/i.test(
+  String(process.env.STAGING_AUTH_REQUIRED || "")
+);
+const STAGING_USER = String(process.env.STAGING_USER || "");
+const STAGING_PASSWORD = String(process.env.STAGING_PASSWORD || "");
+
+if (STAGING_AUTH_REQUIRED && (!STAGING_USER || !STAGING_PASSWORD)) {
+  throw new Error(
+    "STAGING_AUTH_REQUIRED is enabled, but STAGING_USER or STAGING_PASSWORD is missing."
+  );
+}
 
 function contentType(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -46,6 +59,45 @@ function sendJson(res, status, data) {
     "content-length": Buffer.byteLength(body)
   });
   res.end(body);
+}
+
+function sendUnauthorized(res) {
+  const body = "Authentication required.";
+  res.writeHead(401, {
+    "www-authenticate": 'Basic realm="Annotation App Staging", charset="UTF-8"',
+    "cache-control": "no-store",
+    "content-type": "text/plain; charset=utf-8",
+    "content-length": Buffer.byteLength(body)
+  });
+  res.end(body);
+}
+
+function secureEqual(left, right) {
+  const leftDigest = crypto.createHash("sha256").update(String(left)).digest();
+  const rightDigest = crypto.createHash("sha256").update(String(right)).digest();
+  return crypto.timingSafeEqual(leftDigest, rightDigest);
+}
+
+function hasValidStagingAuthorization(req) {
+  if (!STAGING_AUTH_REQUIRED) return true;
+  const authorization = String(req.headers.authorization || "");
+  if (!authorization.startsWith("Basic ")) return false;
+
+  const encoded = authorization.slice("Basic ".length).trim();
+  if (!encoded) return false;
+
+  let decoded;
+  try {
+    decoded = Buffer.from(encoded, "base64").toString("utf-8");
+  } catch {
+    return false;
+  }
+  const separator = decoded.indexOf(":");
+  if (separator < 0) return false;
+
+  const username = decoded.slice(0, separator);
+  const password = decoded.slice(separator + 1);
+  return secureEqual(username, STAGING_USER) && secureEqual(password, STAGING_PASSWORD);
 }
 
 async function readBody(req, limitBytes = 20 * 1024 * 1024) {
@@ -533,6 +585,20 @@ async function handler(req, res) {
     const parsedUrl = new url.URL(req.url, `http://${req.headers.host}`);
     const pathname = decodeURIComponent(parsedUrl.pathname);
 
+    if (req.method === "GET" && pathname === "/health") {
+      sendJson(res, 200, {
+        status: "ok",
+        environment: APP_ENV,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    if (!hasValidStagingAuthorization(req)) {
+      sendUnauthorized(res);
+      return;
+    }
+
     if (pathname.startsWith("/api/")) {
       await handleApi(req, res, pathname, parsedUrl);
       return;
@@ -563,15 +629,17 @@ async function handler(req, res) {
 function listen(port) {
   const server = http.createServer(handler);
   server.on("error", (error) => {
-    if (error.code === "EADDRINUSE") {
+    if (error.code === "EADDRINUSE" && process.env.PORT === undefined) {
       listen(port + 1);
       return;
     }
     throw error;
   });
-  server.listen(port, () => {
+  server.listen(port, HOST, () => {
     const mode = EXPERT_MODE ? " (expert mode)" : "";
-    console.log(`Annotation App V2${mode}: http://localhost:${port}`);
+    const address = server.address();
+    const activePort = typeof address === "object" && address ? address.port : port;
+    console.log(`Annotation App V2${mode}: http://${HOST}:${activePort}`);
   });
 }
 

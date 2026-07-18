@@ -6,7 +6,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "start:expert": "node server.js --expert"
+    "start:expert": "node server.js --expert",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"
