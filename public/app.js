@@ -18,7 +18,7 @@ const ENUMS = {
   gender_presentation: ["feminine", "masculine", "ambiguous_or_androgynous", "not_assessable"],
   face_orientation: ["beyond_profile", "profile", "three_quarter", "frontal", "tilted_down", "tilted_up", "not_assessable"],
   face_expression_legibility: ["0_not_legible", "1_low_legibility", "2_moderate_legibility", "3_high_legibility"],
-  gaze_target: ["viewer_camera", "another_person", "advertised_product", "other_object", "off_frame_or_scene_direction", "closed_eyes", "not_assessable"],
+  gaze_target: ["viewer_camera", "another_person", "advertised_product", "other_object", "off_frame_or_scene_direction", "eyes_covered", "closed_eyes", "not_assessable"],
   mouth_covered: ["no", "yes", "partly", "not_assessable"],
   mouth_covering: ["hand", "beard", "other_body_part", "part_of_another_person", "object", "object_in_mouth", "text_or_graphic_overlay", "other", "not_assessable"],
   smile_presence: ["yes", "no", "not_assessable"],
@@ -283,6 +283,10 @@ const state = {
   visibleRegionKey: "0,0,1,1",
   naturalSize: { width: 0, height: 0 },
   saveTimer: null,
+  savePromise: null,
+  changeVersion: 0,
+  prefetchedImage: null,
+  imageLoadToken: 0,
   stepTimer: null,
   lastFocusStart: null,
   completionLoading: false
@@ -387,6 +391,55 @@ function compactTimestamp(date = new Date()) {
 function imageUrl(image) {
   if (state.hostedMode) return `/api/image?image_id=${encodeURIComponent(image.image_id)}`;
   return `/api/image?path=${encodeURIComponent(image.path)}`;
+}
+
+function discardPrefetchedImage() {
+  const entry = state.prefetchedImage;
+  state.prefetchedImage = null;
+  if (!entry) return;
+  entry.cancelled = true;
+  if (entry.objectUrl) URL.revokeObjectURL(entry.objectUrl);
+}
+
+function prefetchImage(index) {
+  if (!state.hostedMode || !state.manifest) return;
+  const image = state.manifest.images[index];
+  if (!image || image.image_id === currentImage()?.image_id) return;
+  if (state.prefetchedImage?.imageId === image.image_id) return;
+  discardPrefetchedImage();
+  const entry = {
+    imageId: image.image_id,
+    objectUrl: null,
+    cancelled: false,
+    promise: null
+  };
+  entry.promise = (async () => {
+    const response = await fetch(imageUrl(image), { cache: "no-store" });
+    if (!response.ok) throw new Error("Image prefetch failed.");
+    const objectUrl = URL.createObjectURL(await response.blob());
+    entry.objectUrl = objectUrl;
+    const probe = new Image();
+    probe.src = objectUrl;
+    if (typeof probe.decode === "function") await probe.decode();
+    if (entry.cancelled) {
+      URL.revokeObjectURL(objectUrl);
+      entry.objectUrl = null;
+      return null;
+    }
+    return objectUrl;
+  })().catch(() => {
+    if (entry.objectUrl) URL.revokeObjectURL(entry.objectUrl);
+    entry.objectUrl = null;
+    return null;
+  });
+  state.prefetchedImage = entry;
+}
+
+async function takePrefetchedImage(image) {
+  const entry = state.prefetchedImage;
+  if (!entry || entry.imageId !== image.image_id) return null;
+  state.prefetchedImage = null;
+  return entry.promise;
 }
 
 function currentImage() {
@@ -1623,6 +1676,7 @@ function advance() {
 function markDirty() {
   if (!state.annotation) return;
   state.dirty = true;
+  state.changeVersion += 1;
   state.annotation.updated_at = nowIso();
   $("#saveStatus").textContent = "";
   $("#saveStatus").className = "status-line";
@@ -1630,41 +1684,53 @@ function markDirty() {
 
 async function saveAnnotationNow() {
   if (!state.session || !state.annotation) return;
-  if (!state.annotationPersisted && !state.dirty) return;
   if (state.saveTimer) {
     clearTimeout(state.saveTimer);
     state.saveTimer = null;
   }
-  state.annotation.current_step = { ...state.step };
-  state.annotation.updated_at = nowIso();
+  if (state.savePromise) await state.savePromise;
+  if (!state.dirty) return;
   const image = currentImage();
-  try {
-    const saved = await postJson("/api/annotation", {
-      session_id: state.session.session_id,
-      image_id: image.image_id,
-      revision: state.annotationRevision,
-      annotation: state.annotation
-    });
-    state.annotationRevision = Number(saved.revision || state.annotationRevision);
-    state.statuses[image.image_id] = {
-      status: state.annotation.status,
-      updated_at: state.annotation.updated_at,
-      finished_at: state.annotation.finished_at
-    };
-    state.annotationPersisted = true;
-    state.dirty = false;
-    $("#saveStatus").textContent = "";
-    $("#saveStatus").className = "status-line";
-    renderImageList();
-    updateProgress();
-  } catch (error) {
-    $("#saveStatus").textContent = error.message;
-    $("#saveStatus").className = "status-line error";
-    if (error.code === "revision_conflict") {
+  const annotation = state.annotation;
+  const saveVersion = state.changeVersion;
+  annotation.current_step = { ...state.step };
+  annotation.updated_at = nowIso();
+  const operation = (async () => {
+    try {
+      const saved = await postJson("/api/annotation", {
+        session_id: state.session.session_id,
+        image_id: image.image_id,
+        revision: state.annotationRevision,
+        annotation
+      });
+      state.annotationRevision = Number(saved.revision || state.annotationRevision);
+      state.statuses[image.image_id] = {
+        status: annotation.status,
+        updated_at: annotation.updated_at,
+        finished_at: annotation.finished_at
+      };
+      state.annotationPersisted = true;
+      state.dirty = state.changeVersion !== saveVersion;
+      $("#saveStatus").textContent = "";
+      $("#saveStatus").className = "status-line";
+      renderImageList();
+      updateProgress();
+      if (state.dirty) saveAnnotationDebounced();
+    } catch (error) {
+      $("#saveStatus").textContent = error.message;
+      $("#saveStatus").className = "status-line error";
       state.dirty = true;
-      const dialog = $("#saveConflictDialog");
-      if (dialog && !dialog.open) dialog.showModal();
+      if (error.code === "revision_conflict") {
+        const dialog = $("#saveConflictDialog");
+        if (dialog && !dialog.open) dialog.showModal();
+      }
     }
+  })();
+  state.savePromise = operation;
+  try {
+    await operation;
+  } finally {
+    if (state.savePromise === operation) state.savePromise = null;
   }
 }
 
@@ -2632,8 +2698,21 @@ async function loadImage(index, options = {}) {
   if (!state.manifest) return;
   const requestedIndex = clamp(index, 0, state.manifest.images.length - 1);
   if (!canNavigateToImageIndex(requestedIndex, options)) return;
+  const loadToken = ++state.imageLoadToken;
+  const requestedImage = state.manifest.images[requestedIndex];
+  const prefetchedSourcePromise = takePrefetchedImage(requestedImage);
+  $("#imageLoading").classList.remove("hidden");
   finishStepTimer("image_change");
   await saveAnnotationNow();
+  if (loadToken !== state.imageLoadToken) {
+    void prefetchedSourcePromise?.then((source) => source && URL.revokeObjectURL(source));
+    return;
+  }
+  if (state.dirty) {
+    void prefetchedSourcePromise?.then((source) => source && URL.revokeObjectURL(source));
+    $("#imageLoading").classList.add("hidden");
+    return;
+  }
   state.currentIndex = requestedIndex;
   state.maxVisitedIndex = Math.max(state.maxVisitedIndex, state.currentIndex);
   state.naturalSize = { width: 0, height: 0 };
@@ -2641,6 +2720,12 @@ async function loadImage(index, options = {}) {
   state.visibleRegionKey = "0,0,1,1";
   const image = currentImage();
   const pageImage = $("#pageImage");
+  const annotationPromise = fetchJson(`/api/annotation?session_id=${encodeURIComponent(state.session.session_id)}&image_id=${encodeURIComponent(image.image_id)}`);
+  const prefetchedSource = await prefetchedSourcePromise;
+  if (loadToken !== state.imageLoadToken) {
+    if (prefetchedSource) URL.revokeObjectURL(prefetchedSource);
+    return;
+  }
   let annotationReady = false;
   let imageReady = false;
   const applyLoadedImage = () => {
@@ -2653,21 +2738,27 @@ async function loadImage(index, options = {}) {
     state.fitBaseWidth = 1;
     setStageSize();
     renderOverlay();
+    $("#imageLoading").classList.add("hidden");
+    prefetchImage(state.currentIndex + 1);
   };
   pageImage.onload = () => {
     imageReady = true;
+    if (prefetchedSource) URL.revokeObjectURL(prefetchedSource);
     applyLoadedImage();
   };
   pageImage.onerror = () => {
     imageReady = false;
     $("#saveStatus").textContent = "Image could not be loaded.";
     $("#saveStatus").className = "status-line error";
+    $("#imageLoading").classList.add("hidden");
   };
-  pageImage.src = imageUrl(image);
-  const data = await fetchJson(`/api/annotation?session_id=${encodeURIComponent(state.session.session_id)}&image_id=${encodeURIComponent(image.image_id)}`);
+  pageImage.src = prefetchedSource || imageUrl(image);
+  const data = await annotationPromise;
+  if (loadToken !== state.imageLoadToken) return;
   state.annotationRevision = Number(data.revision || 0);
   state.annotationPersisted = Boolean(data.annotation);
   state.dirty = false;
+  state.changeVersion = 0;
   state.annotation = migrateLoadedAnnotation(data.annotation || defaultAnnotation(image));
   state.step = normalizeLoadedStep(state.annotation.current_step || { id: "P1_qualifying_ad_count" });
   const normalizedLegacyStatus = !state.step.id.startsWith("END_PAGE_") && state.annotation.status !== "draft";

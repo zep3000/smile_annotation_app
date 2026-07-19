@@ -112,6 +112,7 @@ enums:
     - advertised_product
     - other_object
     - off_frame_or_scene_direction
+    - eyes_covered
     - closed_eyes
     - not_assessable
   mouth_covered: ["no", "yes", partly, not_assessable]

@@ -9,3 +9,9 @@ test("scheduled backup executable parses", () => {
   const source = fs.readFileSync(filename, "utf8");
   assert.doesNotThrow(() => new vm.Script(source, { filename }));
 });
+
+test("browser annotation executable parses", () => {
+  const filename = path.join(__dirname, "..", "public", "app.js");
+  const source = fs.readFileSync(filename, "utf8");
+  assert.doesNotThrow(() => new vm.Script(source, { filename }));
+});

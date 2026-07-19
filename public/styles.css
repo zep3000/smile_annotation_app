@@ -588,6 +588,26 @@ progress {
   cursor: crosshair;
 }
 
+.image-loading {
+  position: absolute;
+  z-index: 12;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(28, 37, 34, 0.16);
+  animation: image-loading-spin 0.75s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes image-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
 .bbox {
   fill: rgba(40, 102, 110, 0.1);
   stroke: var(--accent);
