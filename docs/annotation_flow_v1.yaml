@@ -1,4 +1,4 @@
-schema_version: "1.12"
+schema_version: "1.13"
 title: "Advertisement Face Annotation Flow"
 companion_playbook: "annotation_playbook_v1.md"
 
@@ -181,9 +181,7 @@ flow:
   start: P1_qualifying_ad_count
   phases:
     - page_and_ad_setup
-    - draw_all_individual_and_group_boxes
-    - resolve_duplicate_identities_once_per_page
-    - code_canonical_people_and_groups
+    - process_each_ad_fully_in_order
   steps:
     P1_qualifying_ad_count:
       unit: page
@@ -225,9 +223,10 @@ flow:
     PREPARE_ADS:
       kind: iterator
       collection_from: advertisements
+      ordering: "After all advertisement boxes are drawn, finish each advertisement completely before moving to the next advertisement."
       item_start: A2_ad_depiction_type
-      item_end: END_AD_PREPARATION
-      after: START_DUPLICATE_RESOLUTION
+      item_end: END_AD_DETAILS
+      after: END_PAGE_COMPLETE
 
     A2_ad_depiction_type:
       unit: advertisement
@@ -258,7 +257,7 @@ flow:
         derive_field_value_from: "count(drawn face boxes)"
       crowd_choices: ["10_20", "20_plus"]
       transitions:
-        "1 <= count(drawn face boxes) <= 9": END_AD_PREPARATION
+        "1 <= count(drawn face boxes) <= 9": START_DUPLICATE_RESOLUTION
         "value in ['10_20','20_plus']": C1_outstanding_present
 
     C1_outstanding_present:
@@ -284,17 +283,18 @@ flow:
       create_unit: group
       field: bbox
       ui: draw_bbox_until_done
-      after: END_AD_PREPARATION
+      after: START_DUPLICATE_RESOLUTION
 
     START_DUPLICATE_RESOLUTION:
       kind: conditional
+      scope: advertisement
       transitions:
-        "count(all individually boxed faces) < 2": START_DETAIL_CODING
+        "count(individually boxed faces in current advertisement) < 2": START_DETAIL_CODING
         otherwise: D0_duplicates_present
 
     D0_duplicates_present:
-      unit: page
-      field: page.duplicate_faces_present
+      unit: advertisement
+      field: advertisement.duplicate_faces_present
       ui: single_choice
       values_from: yes_no
       transitions:
@@ -304,18 +304,19 @@ flow:
         "yes": D1_unique_face_count
 
     D1_unique_face_count:
-      unit: page
-      field: page.unique_face_count
+      unit: advertisement
+      field: advertisement.unique_face_count
       ui: bounded_integer_buttons
       constraints:
         minimum: 1
-        maximum: "count(all individually boxed faces) - 1"
+        maximum: "count(individually boxed faces in current advertisement) - 1"
       next: LOOP_IDENTITY_GROUPS
 
     LOOP_IDENTITY_GROUPS:
       kind: iterator
-      count_from: page.unique_face_count
+      count_from: advertisement.unique_face_count
       create_unit: face_identity_group
+      scope: advertisement
       item_start: D2_select_main
       item_end: END_IDENTITY_GROUP
       after: START_DETAIL_CODING
@@ -337,11 +338,11 @@ flow:
       next: END_IDENTITY_GROUP
 
     START_DETAIL_CODING:
-      kind: iterator
-      collection_from: advertisements
+      kind: scoped_sequence
+      scope: current_advertisement
       item_start: LOOP_CANONICAL_PEOPLE
       item_end: END_AD_DETAILS
-      after: END_PAGE_COMPLETE
+      after: NEXT_AD_OR_END_PAGE
 
     LOOP_CANONICAL_PEOPLE:
       kind: iterator
@@ -552,19 +553,20 @@ flow:
         next: RETURN_TO_INTERRUPTED_STEP
       on_cancel: RETURN_TO_INTERRUPTED_STEP
 
-    END_AD_PREPARATION: {kind: return}
     END_IDENTITY_GROUP: {kind: return}
     END_PERSON: {kind: return}
     END_GROUP: {kind: return}
     END_AD_DETAILS: {kind: return}
+    NEXT_AD_OR_END_PAGE: {kind: advance_to_next_ad_or_terminal_page_complete}
     RETURN_TO_INTERRUPTED_STEP: {kind: return}
     END_PAGE_INELIGIBLE: {kind: terminal, status: ineligible}
     END_PAGE_COMPLETE: {kind: terminal, status: complete}
 
 storage:
   page_fields: [qualifying_ad_count, duplicate_faces_present, unique_face_count]
+  advertisement_duplicate_fields: [duplicate_faces_present, unique_face_count]
   advertisement_depiction_field: depiction_type
-  identity_group_fields: [identity_group_id, main_person_id, duplicate_person_ids]
+  identity_group_fields: [identity_group_id, scope_ad_id, main_person_id, duplicate_person_ids]
   group_expression_legibility_field: expression_legibility_distribution
   person_duplicate_fields: [duplicate_of_person_id, duplicate_person_ids]
   depiction_inheritance: "When advertisement.depiction_type is not multiple_types_present, it applies to every person in that advertisement and person.depiction_type remains null."
@@ -577,7 +579,7 @@ validation_rules:
   - id: full_page_bbox_is_automatic
     assert: "advertisement.extent != 'full_page' or advertisement.bbox_source == 'automatic_full_usable_page'"
   - id: duplicate_groups_partition_individual_boxes
-    assert: "when page.duplicate_faces_present == 'yes', every boxed person id occurs exactly once across identity-group main and duplicate ids"
+    assert: "when advertisement.duplicate_faces_present == 'yes', every boxed person id in that advertisement occurs exactly once across same-ad identity-group main and duplicate ids"
   - id: only_canonical_people_receive_details
     assert: "person.duplicate_of_person_id != null implies detailed person fields are null"
   - id: multiple_ad_types_require_person_type

@@ -90,7 +90,7 @@ For one through nine faces, keep **only individuals** selected and begin drawing
 
 For ten or more faces, do not draw all individual boxes. Choose `10_20` or `20_plus` to enter the crowd route. This route can be changed back to **only individuals** before continuing. If a crowd band is selected after provisional boxes have been drawn on this screen, those provisional individual boxes are removed.
 
-Draw the smallest box that covers all visible face and head features needed for coding. Include visible hair, ears, forehead, cheeks, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, labels, or empty background unless they visibly cover or cut across the face. The count concerns depictions, not unique identities, so repeated depictions receive separate boxes. Boxes are stored relative to the full page even while the interface displays only the current advertisement crop. Duplicate identities are resolved later across all individually drawn boxes on the page.
+Draw the smallest box that covers all visible face and head features needed for coding. Include visible hair, ears, forehead, cheeks, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, labels, or empty background unless they visibly cover or cut across the face. The count concerns depictions, not unique identities, so repeated depictions receive separate boxes. Boxes are stored relative to the full page even while the interface displays only the current advertisement crop. Duplicate identities are resolved later within the current advertisement.
 
 ### C1. Outstanding individuals in a crowd
 
@@ -104,18 +104,18 @@ Draw one box for each visually distinct remaining group. A group box should incl
 
 ## 5. Duplicate identity resolution
 
-Duplicate resolution occurs once after all individual face boxes on the page have been drawn. It applies only to individually boxed faces, not to unboxed members represented by a group box.
+Duplicate resolution occurs within each advertisement after that advertisement's individual face boxes have been drawn. When a page contains multiple advertisements, finish the first advertisement's face drawing, duplicate resolution, individual coding, and group coding before moving to the second advertisement. Duplicate resolution applies only to individually boxed faces, not to unboxed members represented by a group box.
 
 ### D0. Are any boxed faces duplicates?
 
 Choose `yes` when two or more boxes repeat the same face identity, for example through a mirror, collage repetition, repeated portrait, or repeated product shot. For nonhuman or schematic depictions, identity refers to the same represented character, object, or symbol. Do not merge merely similar-looking faces.
 
-- `no`: every box becomes its own canonical person and duplicate resolution ends for the page.
+- `no`: every box in the current advertisement becomes its own canonical person and duplicate resolution ends for that advertisement.
 - `yes`: continue to D1.
 
 ### D1. Number of unique face identities
 
-Enter the number of unique face identities represented by all individual face boxes. Because D0 is `yes`, this number must be at least one and smaller than the number of boxes.
+Enter the number of unique face identities represented by the current advertisement's individual face boxes. Because D0 is `yes`, this number must be at least one and smaller than the number of boxes.
 
 ### D2-D3. Build identity groups
 

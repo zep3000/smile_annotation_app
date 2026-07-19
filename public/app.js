@@ -491,6 +491,8 @@ function defaultAd(number) {
     depiction_type: null,
     face_depiction_count_band: null,
     has_outstanding_individuals: null,
+    duplicate_faces_present: null,
+    unique_face_count: null,
     people: [],
     groups: []
   };
@@ -549,7 +551,7 @@ function setInitialFaceRoute(ad, route) {
     ad.has_outstanding_individuals = null;
     const count = ad.people.filter((person) => person.face_bbox).length;
     ad.face_depiction_count_band = count ? String(count) : null;
-    invalidateDuplicateResolution();
+    invalidateDuplicateResolution(ad);
     return;
   }
 
@@ -563,7 +565,7 @@ function setInitialFaceRoute(ad, route) {
   } else {
     ad.people = ad.people.filter((person) => person.annotation_role !== "individual");
   }
-  invalidateDuplicateResolution();
+  invalidateDuplicateResolution(ad);
 }
 
 function defaultAnnotation(image) {
@@ -572,7 +574,7 @@ function defaultAnnotation(image) {
     flow_source: {
       playbook: "docs/annotation_playbook_v1.md",
       yaml: "docs/annotation_flow_v1.yaml",
-      flow_schema_version: "1.12"
+      flow_schema_version: "1.13"
     },
     session: {
       session_id: state.session.session_id,
@@ -617,7 +619,7 @@ function defaultAnnotation(image) {
 
 function migrateLoadedAnnotation(annotation) {
   annotation.flow_source ||= {};
-  annotation.flow_source.flow_schema_version = "1.12";
+  annotation.flow_source.flow_schema_version = "1.13";
   annotation.page ||= {};
   if (annotation.page.qualifying_ad_count === "unclear") annotation.page.qualifying_ad_count = null;
   const legacyPageDepictionType = annotation.page.depiction_type || null;
@@ -639,6 +641,8 @@ function migrateLoadedAnnotation(annotation) {
     if (ad.extent === "unclear") ad.extent = null;
     if (ad.face_depiction_count_band === "unclear") ad.face_depiction_count_band = null;
     if (ad.has_outstanding_individuals === "unclear") ad.has_outstanding_individuals = null;
+    ad.duplicate_faces_present ??= null;
+    ad.unique_face_count ??= null;
     for (const person of ad.people || []) {
       person.duplicate_of_person_id ??= null;
       person.duplicate_person_ids ||= [];
@@ -926,12 +930,13 @@ function ensureSingleAd() {
   return state.annotation.advertisements[0];
 }
 
-function allBoxedPeople() {
-  return state.annotation.advertisements.flatMap((ad, adIndex) =>
-    ad.people
+function allBoxedPeople(adIndex = null) {
+  return state.annotation.advertisements.flatMap((ad, currentAdIndex) => {
+    if (adIndex !== null && currentAdIndex !== adIndex) return [];
+    return ad.people
       .filter((person) => person.face_bbox)
-      .map((person) => ({ ad, adIndex, person }))
-  );
+      .map((person) => ({ ad, adIndex: currentAdIndex, person }));
+  });
 }
 
 function canonicalPeople(ad) {
@@ -948,53 +953,128 @@ function personStartStep(adIndex, person) {
   };
 }
 
-function firstDetailsFromAd(startAdIndex = 0) {
-  for (let adIndex = startAdIndex; adIndex < state.annotation.advertisements.length; adIndex += 1) {
-    const ad = adByIndex(adIndex);
-    const people = canonicalPeople(ad);
-    if (people.length) return personStartStep(adIndex, people[0]);
-    if (ad.groups.length) {
-      return { id: "G1_group_type", adIndex, groupId: ad.groups[0].group_id, groupIndex: 0 };
-    }
-  }
-  return terminalStep("complete", "END_PAGE_COMPLETE");
-}
-
-function clearDuplicateLinks() {
-  state.annotation.face_identity_groups = [];
-  for (const { person } of allBoxedPeople()) {
-    person.duplicate_of_person_id = null;
-    person.duplicate_person_ids = [];
-  }
-}
-
-function invalidateDuplicateResolution() {
-  clearDuplicateLinks();
-  state.annotation.page.duplicate_faces_present = null;
-  state.annotation.page.unique_face_count = null;
-}
-
-function applyNoDuplicateLinks() {
-  clearDuplicateLinks();
-  state.annotation.page.duplicate_faces_present = "no";
-  state.annotation.page.unique_face_count = allBoxedPeople().length;
-}
-
-function startDuplicateOrDetails() {
-  const people = allBoxedPeople();
-  if (people.length < 2) {
-    applyNoDuplicateLinks();
-    return firstDetailsFromAd(0);
-  }
-  return { id: "D0_duplicates_present" };
-}
-
-function nextAdPreparationStep(adIndex) {
+function nextAdAfterCompletedAd(adIndex) {
   const nextIndex = adIndex + 1;
   if (nextIndex < state.annotation.advertisements.length) {
     return { id: "A2_ad_depiction_type", adIndex: nextIndex };
   }
-  return startDuplicateOrDetails();
+  return terminalStep("complete", "END_PAGE_COMPLETE");
+}
+
+function firstDetailsInAd(adIndex) {
+  const ad = adByIndex(adIndex);
+  const people = canonicalPeople(ad);
+  if (people.length) return personStartStep(adIndex, people[0]);
+  if (ad.groups.length) {
+    return { id: "G1_group_type", adIndex, groupId: ad.groups[0].group_id, groupIndex: 0 };
+  }
+  return nextAdAfterCompletedAd(adIndex);
+}
+
+function firstDetailsFromAd(startAdIndex = 0) {
+  for (let adIndex = startAdIndex; adIndex < state.annotation.advertisements.length; adIndex += 1) {
+    const ad = adByIndex(adIndex);
+    if (canonicalPeople(ad).length || ad.groups.length) return firstDetailsInAd(adIndex);
+  }
+  return terminalStep("complete", "END_PAGE_COMPLETE");
+}
+
+function duplicateStepAd(step = state.step) {
+  return step.adIndex !== undefined ? adByIndex(step.adIndex) : null;
+}
+
+function duplicatePeopleForStep(step = state.step) {
+  return step.adIndex !== undefined ? allBoxedPeople(step.adIndex) : allBoxedPeople();
+}
+
+function duplicateScopeId(step = state.step) {
+  return duplicateStepAd(step)?.ad_id || null;
+}
+
+function duplicateIdentityGroups(step = state.step) {
+  const scopeId = duplicateScopeId(step);
+  if (!scopeId) return state.annotation.face_identity_groups;
+  return state.annotation.face_identity_groups.filter((group) => group.scope_ad_id === scopeId);
+}
+
+function duplicatePresenceForStep(step = state.step) {
+  const ad = duplicateStepAd(step);
+  return ad ? ad.duplicate_faces_present : state.annotation.page.duplicate_faces_present;
+}
+
+function duplicateUniqueCountForStep(step = state.step) {
+  const ad = duplicateStepAd(step);
+  return ad ? ad.unique_face_count : state.annotation.page.unique_face_count;
+}
+
+function duplicatePersonIdsForStep(step = state.step) {
+  return new Set(duplicatePeopleForStep(step).map(({ person }) => person.person_id));
+}
+
+function syncPageDuplicateSummary() {
+  const ads = state.annotation.advertisements || [];
+  const values = ads.map((ad) => ad.duplicate_faces_present).filter(Boolean);
+  state.annotation.page.duplicate_faces_present = values.includes("yes")
+    ? "yes"
+    : values.length === ads.length && ads.length
+      ? "no"
+      : null;
+  state.annotation.page.unique_face_count = allBoxedPeople().filter(({ person }) => !person.duplicate_of_person_id).length || null;
+}
+
+function clearDuplicateLinks(step = state.step) {
+  const personIds = duplicatePersonIdsForStep(step);
+  const scopeId = duplicateScopeId(step);
+  if (!personIds.size && !scopeId) return;
+  state.annotation.face_identity_groups = state.annotation.face_identity_groups.filter((group) => {
+    if (scopeId && group.scope_ad_id === scopeId) return false;
+    if (!scopeId) return false;
+    const ids = [group.main_person_id, ...(group.duplicate_person_ids || [])].filter(Boolean);
+    return !ids.some((id) => personIds.has(id));
+  });
+  for (const { person } of duplicatePeopleForStep(step)) {
+    person.duplicate_of_person_id = null;
+    person.duplicate_person_ids = [];
+  }
+  syncPageDuplicateSummary();
+}
+
+function invalidateDuplicateResolution(ad = null) {
+  const adIndex = ad ? state.annotation.advertisements.indexOf(ad) : undefined;
+  const step = adIndex >= 0 ? { adIndex } : state.step;
+  clearDuplicateLinks(step);
+  const targetAd = ad || duplicateStepAd(step);
+  if (targetAd) {
+    targetAd.duplicate_faces_present = null;
+    targetAd.unique_face_count = null;
+  } else {
+    state.annotation.page.duplicate_faces_present = null;
+    state.annotation.page.unique_face_count = null;
+  }
+  syncPageDuplicateSummary();
+}
+
+function applyNoDuplicateLinks(step = state.step) {
+  clearDuplicateLinks(step);
+  const ad = duplicateStepAd(step);
+  if (ad) {
+    ad.duplicate_faces_present = "no";
+    ad.unique_face_count = duplicatePeopleForStep(step).length;
+  } else {
+    state.annotation.page.duplicate_faces_present = "no";
+    state.annotation.page.unique_face_count = allBoxedPeople().length;
+  }
+  syncPageDuplicateSummary();
+}
+
+function startDuplicateOrDetailsForAd(adIndex) {
+  const step = { adIndex };
+  const people = duplicatePeopleForStep(step);
+  if (people.length < 2) {
+    applyNoDuplicateLinks(step);
+    return firstDetailsInAd(adIndex);
+  }
+  return { id: "D0_duplicates_present", adIndex };
 }
 
 function nextPersonOrAfter(step) {
@@ -1009,7 +1089,7 @@ function nextPersonOrAfter(step) {
   if (ad.groups.length) {
     return { id: "G1_group_type", adIndex: step.adIndex, groupId: ad.groups[0].group_id, groupIndex: 0 };
   }
-  return firstDetailsFromAd(step.adIndex + 1);
+  return nextAdAfterCompletedAd(step.adIndex);
 }
 
 function firstGroupDetailOr(adIndex, fallback) {
@@ -1026,7 +1106,7 @@ function nextGroupOrEnd(step) {
   if (next) {
     return { id: "G1_group_type", adIndex: step.adIndex, groupId: next.group_id, groupIndex: index + 1 };
   }
-  return firstDetailsFromAd(step.adIndex + 1);
+  return nextAdAfterCompletedAd(step.adIndex);
 }
 
 function getPersonField(step) {
@@ -1048,8 +1128,8 @@ function stepValue(step = state.step) {
     A2_ad_depiction_type: () => ad?.depiction_type,
     A3_unique_person_count: () => ad?.face_depiction_count_band,
     C1_outstanding_present: () => ad?.has_outstanding_individuals,
-    D0_duplicates_present: () => state.annotation.page.duplicate_faces_present,
-    D1_unique_face_count: () => state.annotation.page.unique_face_count,
+    D0_duplicates_present: () => duplicatePresenceForStep(step),
+    D1_unique_face_count: () => duplicateUniqueCountForStep(step),
     G1_group_type: () => group?.group_type,
     G2_group_age: () => group?.age_composition,
     G3_group_gender: () => group?.gender_presentation_composition,
@@ -1106,14 +1186,23 @@ function setStepValue(value, step = state.step) {
       ad.has_outstanding_individuals = value;
     },
     D0_duplicates_present: () => {
-      state.annotation.page.duplicate_faces_present = value;
-      state.annotation.page.unique_face_count = value === "no" ? allBoxedPeople().length : null;
-      clearDuplicateLinks();
+      const targetAd = duplicateStepAd(step);
+      if (targetAd) {
+        targetAd.duplicate_faces_present = value;
+        targetAd.unique_face_count = value === "no" ? duplicatePeopleForStep(step).length : null;
+      } else {
+        state.annotation.page.duplicate_faces_present = value;
+        state.annotation.page.unique_face_count = value === "no" ? allBoxedPeople().length : null;
+      }
+      clearDuplicateLinks(step);
+      syncPageDuplicateSummary();
     },
     D1_unique_face_count: () => {
-      state.annotation.page.unique_face_count = Number(value);
-      state.annotation.face_identity_groups = [];
-      for (const { person: item } of allBoxedPeople()) {
+      const targetAd = duplicateStepAd(step);
+      if (targetAd) targetAd.unique_face_count = Number(value);
+      else state.annotation.page.unique_face_count = Number(value);
+      clearDuplicateLinks(step);
+      for (const { person: item } of duplicatePeopleForStep(step)) {
         item.duplicate_of_person_id = null;
         item.duplicate_person_ids = [];
       }
@@ -1322,7 +1411,7 @@ function currentBboxSpec(step = state.step) {
         person.face_bbox = bbox;
         ad.people.push(person);
         syncDerivedCount();
-        invalidateDuplicateResolution();
+        invalidateDuplicateResolution(ad);
       },
       update: (id, bbox) => {
         const person = personById(id);
@@ -1331,7 +1420,7 @@ function currentBboxSpec(step = state.step) {
       remove: (id) => {
         ad.people = ad.people.filter((person) => person.person_id !== id);
         syncDerivedCount();
-        invalidateDuplicateResolution();
+        invalidateDuplicateResolution(ad);
         for (const person of ad.people) {
           if (person.gaze_target_person_id === id) {
             person.gaze_target = null;
@@ -1387,23 +1476,28 @@ function allRenderableBoxes() {
   return boxes;
 }
 
-function identityGroupAt(index, create = false) {
+function identityGroupAt(index, create = false, step = state.step) {
+  const scopedGroups = duplicateIdentityGroups(step);
   if (create) {
-    while (state.annotation.face_identity_groups.length <= index) {
+    const scopeId = duplicateScopeId(step);
+    while (scopedGroups.length <= index) {
       const next = state.annotation.face_identity_groups.length + 1;
-      state.annotation.face_identity_groups.push({
+      const group = {
         identity_group_id: `identity_${next}`,
         main_person_id: null,
         duplicate_person_ids: []
-      });
+      };
+      if (scopeId) group.scope_ad_id = scopeId;
+      state.annotation.face_identity_groups.push(group);
+      scopedGroups.push(group);
     }
   }
-  return state.annotation.face_identity_groups[index] || null;
+  return scopedGroups[index] || null;
 }
 
-function assignedFaceIds(beforeGroupIndex = Infinity) {
+function assignedFaceIds(beforeGroupIndex = Infinity, step = state.step) {
   const assigned = new Set();
-  state.annotation.face_identity_groups.forEach((group, index) => {
+  duplicateIdentityGroups(step).forEach((group, index) => {
     if (index >= beforeGroupIndex) return;
     if (group.main_person_id) assigned.add(group.main_person_id);
     for (const id of group.duplicate_person_ids || []) assigned.add(id);
@@ -1413,18 +1507,18 @@ function assignedFaceIds(beforeGroupIndex = Infinity) {
 
 function duplicateGroupContext(step = state.step) {
   const index = step.identityGroupIndex || 0;
-  const group = identityGroupAt(index, true);
-  const assignedBefore = assignedFaceIds(index);
-  const candidateIds = allBoxedPeople().map(({ person }) => person.person_id);
+  const group = identityGroupAt(index, true, step);
+  const assignedBefore = assignedFaceIds(index, step);
+  const candidateIds = duplicatePeopleForStep(step).map(({ person }) => person.person_id);
   return { index, group, assignedBefore, candidateIds };
 }
 
-function applyIdentityGroups() {
-  for (const { person } of allBoxedPeople()) {
+function applyIdentityGroups(step = state.step) {
+  for (const { person } of duplicatePeopleForStep(step)) {
     person.duplicate_of_person_id = null;
     person.duplicate_person_ids = [];
   }
-  for (const group of state.annotation.face_identity_groups) {
+  for (const group of duplicateIdentityGroups(step)) {
     const main = personById(group.main_person_id);
     if (!main) continue;
     main.duplicate_person_ids = [...group.duplicate_person_ids];
@@ -1433,12 +1527,14 @@ function applyIdentityGroups() {
       if (duplicate) duplicate.duplicate_of_person_id = main.person_id;
     }
   }
+  syncPageDuplicateSummary();
 }
 
 function handleDuplicateFaceSelection(id) {
   const person = personById(id);
   if (!person?.face_bbox) return;
-  const { index, group, assignedBefore } = duplicateGroupContext();
+  const { index, group, assignedBefore, candidateIds } = duplicateGroupContext();
+  if (!candidateIds.includes(id)) return;
   if (assignedBefore.has(id)) return;
   state.annotation.face_identity_groups.length = index + 1;
   if (state.step.id === "D2_select_main") {
@@ -1478,8 +1574,8 @@ function validationMessage(step = state.step) {
       : "Click a person box or choose Person without bounding box.";
   }
   if (step.id === "D1_unique_face_count") {
-    const total = allBoxedPeople().length;
-    const count = Number(state.annotation.page.unique_face_count);
+    const total = duplicatePeopleForStep(step).length;
+    const count = Number(duplicateUniqueCountForStep(step));
     return Number.isInteger(count) && count >= 1 && count < total
       ? ""
       : `Enter a whole number from 1 to ${Math.max(total - 1, 1)}.`;
@@ -1491,7 +1587,7 @@ function validationMessage(step = state.step) {
     const { index, group, assignedBefore, candidateIds } = duplicateGroupContext(step);
     const selectedNow = new Set([group.main_person_id, ...(group.duplicate_person_ids || [])]);
     const remainingAfter = candidateIds.filter((id) => !assignedBefore.has(id) && !selectedNow.has(id)).length;
-    const groupCount = Number(state.annotation.page.unique_face_count);
+    const groupCount = Number(duplicateUniqueCountForStep(step));
     const groupsAfter = groupCount - index - 1;
     if (remainingAfter < groupsAfter) return `Leave at least ${groupsAfter} face${groupsAfter === 1 ? "" : "s"} for the remaining identities.`;
     if (groupsAfter === 0 && remainingAfter > 0) return `Assign the remaining ${remainingAfter} face${remainingAfter === 1 ? "" : "s"} to this person.`;
@@ -1553,10 +1649,10 @@ function nextStepForCurrent() {
       if (CROWD_FACE_BANDS.has(ad.face_depiction_count_band)) {
         return { id: "C1_outstanding_present", adIndex: step.adIndex };
       }
-      return nextAdPreparationStep(step.adIndex);
+      return startDuplicateOrDetailsForAd(step.adIndex);
     }
     case "DRAW_ALL_INDIVIDUAL_BOXES":
-      return nextAdPreparationStep(step.adIndex);
+      return startDuplicateOrDetailsForAd(step.adIndex);
     case "C1_outstanding_present":
       return ad.has_outstanding_individuals === "no"
         ? { id: "DRAW_GROUP_BOXES", adIndex: step.adIndex }
@@ -1564,25 +1660,25 @@ function nextStepForCurrent() {
     case "DRAW_OUTSTANDING_INDIVIDUAL_BOXES":
       return { id: "DRAW_GROUP_BOXES", adIndex: step.adIndex };
     case "DRAW_GROUP_BOXES":
-      return nextAdPreparationStep(step.adIndex);
+      return startDuplicateOrDetailsForAd(step.adIndex);
     case "D0_duplicates_present":
-      if (state.annotation.page.duplicate_faces_present === "no") {
-        applyNoDuplicateLinks();
-        return firstDetailsFromAd(0);
+      if (duplicatePresenceForStep(step) === "no") {
+        applyNoDuplicateLinks(step);
+        return step.adIndex !== undefined ? firstDetailsInAd(step.adIndex) : firstDetailsFromAd(0);
       }
-      clearDuplicateLinks();
-      return { id: "D1_unique_face_count" };
+      clearDuplicateLinks(step);
+      return { id: "D1_unique_face_count", adIndex: step.adIndex };
     case "D1_unique_face_count":
-      return { id: "D2_select_main", identityGroupIndex: 0 };
+      return { id: "D2_select_main", adIndex: step.adIndex, identityGroupIndex: 0 };
     case "D2_select_main":
-      return { id: "D3_select_duplicates", identityGroupIndex: step.identityGroupIndex };
+      return { id: "D3_select_duplicates", adIndex: step.adIndex, identityGroupIndex: step.identityGroupIndex };
     case "D3_select_duplicates": {
       const nextGroupIndex = step.identityGroupIndex + 1;
-      if (nextGroupIndex < Number(state.annotation.page.unique_face_count)) {
-        return { id: "D2_select_main", identityGroupIndex: nextGroupIndex };
+      if (nextGroupIndex < Number(duplicateUniqueCountForStep(step))) {
+        return { id: "D2_select_main", adIndex: step.adIndex, identityGroupIndex: nextGroupIndex };
       }
-      applyIdentityGroups();
-      return firstDetailsFromAd(0);
+      applyIdentityGroups(step);
+      return step.adIndex !== undefined ? firstDetailsInAd(step.adIndex) : firstDetailsFromAd(0);
     }
     case "G1_group_type":
       return { id: "G2_group_age", adIndex: step.adIndex, groupId: step.groupId, groupIndex: step.groupIndex };
@@ -1831,7 +1927,7 @@ function renderP1CountInput() {
 }
 
 function renderUniqueFaceCountInput() {
-  const total = allBoxedPeople().length;
+  const total = duplicatePeopleForStep(state.step).length;
   const values = Array.from({ length: Math.max(total - 1, 0) }, (_, index) => String(index + 1));
   return renderChoice(values, String(stepValue(state.step) || ""), false);
 }
@@ -1866,7 +1962,7 @@ function renderDuplicateSelectionStatus() {
   const { index, group, assignedBefore, candidateIds } = duplicateGroupContext();
   const wrapper = document.createElement("div");
   wrapper.className = "selection-status";
-  const groupCount = Number(state.annotation.page.unique_face_count);
+  const groupCount = Number(duplicateUniqueCountForStep(state.step));
   const selectedDuplicates = group.duplicate_person_ids || [];
   const assignedNow = new Set([group.main_person_id, ...selectedDuplicates].filter(Boolean));
   const available = candidateIds.filter((id) => !assignedBefore.has(id) && !assignedNow.has(id));
@@ -2010,7 +2106,7 @@ function currentHierarchyParts() {
   if (state.step.personId) parts.push(state.step.personId);
   if (state.step.groupId) parts.push(state.step.groupId);
   if (state.step.identityGroupIndex !== undefined) {
-    parts.push(`identity ${state.step.identityGroupIndex + 1}/${state.annotation.page.unique_face_count}`);
+    parts.push(`identity ${state.step.identityGroupIndex + 1}/${duplicateUniqueCountForStep(state.step)}`);
   }
   return parts;
 }
@@ -2239,6 +2335,7 @@ function currentVisibleRegion() {
   ]);
   if (fullPageSteps.has(step.id) || step.id?.startsWith("END_PAGE_")) return full;
   if (["D0_duplicates_present", "D1_unique_face_count", "D2_select_main", "D3_select_duplicates"].includes(step.id)) {
+    if (step.adIndex !== undefined) return adByIndex(step.adIndex)?.bbox || full;
     const boxed = allBoxedPeople();
     const adIndexes = new Set(boxed.map((item) => item.adIndex));
     if (adIndexes.size === 1) {
