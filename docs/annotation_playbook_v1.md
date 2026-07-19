@@ -172,7 +172,7 @@ The interface displays `beyond_profile` as **less than profile**. Use `tilted_do
 
 ### I5. Gaze
 
-Values: `viewer_camera`, `another_person`, `advertised_product`, `other_object`, `off_frame_or_scene_direction`, `not_assessable`, `closed_eyes`.
+Values: `viewer_camera`, `another_person`, `advertised_product`, `other_object`, `off_frame_or_scene_direction`, `closed_eyes`, `not_assessable`.
 
 Code visible gaze direction, not inferred attention or narrative intention. Use `closed_eyes` only when the eyelids are visibly closed; use `not_assessable` when gaze cannot be judged for another reason. When `another_person` is selected, click that person's box. If the target person has no individual box, choose **Person without bounding box**; this selection immediately continues to the next question.
 

@@ -18,7 +18,7 @@ const ENUMS = {
   gender_presentation: ["feminine", "masculine", "ambiguous_or_androgynous", "not_assessable"],
   face_orientation: ["beyond_profile", "profile", "three_quarter", "frontal", "tilted_down", "tilted_up", "not_assessable"],
   face_expression_legibility: ["0_not_legible", "1_low_legibility", "2_moderate_legibility", "3_high_legibility"],
-  gaze_target: ["viewer_camera", "another_person", "advertised_product", "other_object", "off_frame_or_scene_direction", "not_assessable", "closed_eyes"],
+  gaze_target: ["viewer_camera", "another_person", "advertised_product", "other_object", "off_frame_or_scene_direction", "closed_eyes", "not_assessable"],
   mouth_covered: ["no", "yes", "partly", "not_assessable"],
   mouth_covering: ["hand", "beard", "other_body_part", "part_of_another_person", "object", "object_in_mouth", "text_or_graphic_overlay", "other", "not_assessable"],
   smile_presence: ["yes", "no", "not_assessable"],
