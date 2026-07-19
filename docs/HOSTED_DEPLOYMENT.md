@@ -12,7 +12,7 @@ to run the existing local-mode smoke application.
 - **PostgreSQL service:** annotation sets, assignment codes, JSONB annotations,
   revisions, login sessions, progress, and audit events.
 - **Images bucket:** private JPEG originals.
-- **Backup bucket:** private scheduled JSONL research exports. This is separate
+- **Backup bucket:** private scheduled JSON and JSONL research exports. This is separate
   from the images bucket so one bucket failure or accidental deletion does not
   remove both primary images and research exports.
 - **Backup cron service:** short-lived daily process that reads PostgreSQL,
@@ -225,8 +225,9 @@ In that service's settings, set its Railway config file path to:
 /railway.backup.json
 ```
 
-That file runs `npm run backup:exports` daily at `02:00 UTC` and never starts a
-web server. It has no public domain. Give the backup service `DATABASE_URL` and
+That file runs `npm run backup:exports` at the start of every hour and never
+starts a web server. It has no public domain. Give the backup service
+`DATABASE_URL` and
 these references to the separate backup bucket:
 
 ```text
@@ -238,9 +239,11 @@ BACKUP_AWS_DEFAULT_REGION=${{Backups.REGION}}
 BACKUP_AWS_S3_URL_STYLE=virtual
 ```
 
-Each run writes timestamped JSONL files and records their SHA-256 checksums in
-PostgreSQL audit events and bucket metadata. This research export complements,
-but does not replace, Railway database backup or point-in-time-recovery options.
+Each run writes matching timestamped JSON and JSONL files and records both
+SHA-256 checksums in PostgreSQL audit events and bucket metadata. On plans
+without native database backups, also download both formats to a computer at
+the end of every annotation day. These research exports preserve analysis data
+but are not a drop-in restoration of login sessions or the running database.
 
 ## Security Boundary
 

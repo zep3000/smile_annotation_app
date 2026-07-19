@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const http = require("node:http");
 const path = require("node:path");
 const url = require("node:url");
+const { formatSetExport } = require("../shared/export-format");
 const {
   clearSessionCookie,
   newSessionToken,
@@ -389,33 +390,11 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
       const exported = await repo.exportSet(exportMatch[1]);
       if (!exported) return sendJson(res, 404, { error: "Annotation set not found." });
       const format = exportMatch[2].toLowerCase();
-      const records = exported.records.filter((record) => record.payload);
       const generatedAt = new Date().toISOString();
       const filename = `${contentDispositionFilename(exported.set.task_id)}_${generatedAt.slice(0, 10)}.${format}`;
-      const body = format === "jsonl"
-        ? `${records.map((record) => JSON.stringify({
-          export_schema_version: "hosted_annotation_export_v1",
-          annotation_set_id: exported.set.id,
-          task_id: exported.set.task_id,
-          assignment_code: record.assignment_code,
-          assignment_status: record.assignment_status,
-          image_id: record.image_id,
-          filename: record.filename,
-          image_index: record.sort_order,
-          annotation_status: record.status,
-          revision: record.revision,
-          server_created_at: record.created_at,
-          server_updated_at: record.updated_at,
-          server_completed_at: record.completed_at,
-          annotation: record.payload
-        })).join("\n")}${records.length ? "\n" : ""}`
-        : JSON.stringify({
-          export_schema_version: "hosted_annotation_export_v1",
-          generated_at: generatedAt,
-          annotation_set: exported.set,
-          annotations: records
-        }, null, 2);
-      await repo.audit({ role: "admin", setId: exported.set.id, eventType: "set_exported", details: { format, record_count: records.length }, ipAddress: ip });
+      const formatted = formatSetExport(exported, generatedAt);
+      const body = formatted[format];
+      await repo.audit({ role: "admin", setId: exported.set.id, eventType: "set_exported", details: { format, record_count: formatted.records.length }, ipAddress: ip });
       return sendText(res, 200, body, format === "jsonl" ? "application/x-ndjson; charset=utf-8" : "application/json; charset=utf-8", {
         "content-disposition": `attachment; filename="${filename}"`,
         "cache-control": "no-store"

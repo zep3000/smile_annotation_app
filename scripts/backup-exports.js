@@ -1,7 +1,9 @@
+const crypto = require("node:crypto");
 const { loadBackupConfig } = require("../src/hosted/config");
 const { createPool } = require("../src/hosted/database");
 const { HostedRepository } = require("../src/hosted/repository");
 const { createStorage } = require("../src/hosted/storage");
+const { formatSetExport } = require("../src/shared/export-format");
 
 async function main() {
   const config = loadBackupConfig();
@@ -13,36 +15,33 @@ async function main() {
     const sets = await repository.listSets();
     for (const set of sets) {
       const exported = await repository.exportSet(set.id);
-      const records = exported.records.filter((record) => record.payload);
-      const body = `${records.map((record) => JSON.stringify({
-        export_schema_version: "hosted_annotation_export_v1",
-        generated_at: new Date().toISOString(),
-        annotation_set_id: set.id,
-        task_id: set.task_id,
-        assignment_code: record.assignment_code,
-        assignment_status: record.assignment_status,
-        image_id: record.image_id,
-        filename: record.filename,
-        image_index: record.sort_order,
-        annotation_status: record.status,
-        revision: record.revision,
-        server_updated_at: record.updated_at,
-        annotation: record.payload
-      })).join("\n")}${records.length ? "\n" : ""}`;
-      const key = `backups/annotation-exports/${stamp}/${set.id}.jsonl`;
-      const sha256 = crypto.createHash("sha256").update(body).digest("hex");
-      await storage.putObject(key, Buffer.from(body), "application/x-ndjson", {
+      const formatted = formatSetExport(exported);
+      const baseKey = `backups/annotation-exports/${stamp}/${set.id}`;
+      const jsonlKey = `${baseKey}.jsonl`;
+      const jsonKey = `${baseKey}.json`;
+      const jsonlSha256 = crypto.createHash("sha256").update(formatted.jsonl).digest("hex");
+      const jsonSha256 = crypto.createHash("sha256").update(formatted.json).digest("hex");
+      await storage.putObject(jsonlKey, Buffer.from(formatted.jsonl), "application/x-ndjson", {
         "annotation-set-id": set.id,
-        "record-count": String(records.length),
-        sha256
+        "record-count": String(formatted.records.length),
+        sha256: jsonlSha256
+      });
+      await storage.putObject(jsonKey, Buffer.from(formatted.json), "application/json", {
+        "annotation-set-id": set.id,
+        "record-count": String(formatted.records.length),
+        sha256: jsonSha256
       });
       await repository.audit({
         role: "system",
         setId: set.id,
         eventType: "scheduled_export_created",
-        details: { object_key: key, record_count: records.length, sha256 }
+        details: {
+          object_keys: { json: jsonKey, jsonl: jsonlKey },
+          record_count: formatted.records.length,
+          sha256: { json: jsonSha256, jsonl: jsonlSha256 }
+        }
       });
-      console.log(`${set.task_id}: ${records.length} annotations -> ${key}`);
+      console.log(`${set.task_id}: ${formatted.records.length} annotations -> ${jsonKey}, ${jsonlKey}`);
     }
   } finally {
     await pool.end();
