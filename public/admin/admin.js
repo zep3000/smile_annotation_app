@@ -34,6 +34,12 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? "Unknown" : date.toLocaleString("en-GB");
 }
 
+function summarizeFilenames(images) {
+  const names = images.map((item) => item.filename);
+  if (names.length <= 3) return names.join(", ");
+  return `${names.slice(0, 3).join(", ")} and ${names.length - 3} more`;
+}
+
 async function login() {
   setStatus("#adminLoginStatus", "Signing in...");
   try {
@@ -91,6 +97,7 @@ async function selectSet(setId) {
 
 function renderDetail() {
   const { set, images, assignments, events } = state.detail;
+  const missingImages = images.filter((item) => !item.uploaded);
   $("#setTitle").textContent = set.name;
   $("#setSubtitle").textContent = `${set.task_id} | flow ${set.flow_version}`;
   $("#setStatusBadge").textContent = set.status;
@@ -99,7 +106,9 @@ function renderDetail() {
   $("#assignmentMetric").textContent = assignments.length;
   $("#startedMetric").textContent = assignments.filter((item) => item.status === "started").length;
   $("#doneMetric").textContent = assignments.filter((item) => item.status === "done").length;
-  $("#uploadSummary").textContent = `${set.uploaded_count} of ${set.image_count} manifest images are stored.`;
+  $("#uploadSummary").textContent = missingImages.length
+    ? `${set.uploaded_count} of ${set.image_count} manifest images are stored. Missing: ${summarizeFilenames(missingImages)}.`
+    : `All ${set.image_count} manifest images are stored.`;
   $("#activateSetButton").disabled = set.status === "active" || set.uploaded_count !== set.image_count;
   $("#deactivateSetButton").disabled = set.status !== "active";
   $("#createAssignmentsButton").disabled = set.status === "inactive";
@@ -166,7 +175,7 @@ async function createSet(event) {
       })
     });
     $("#createSetForm").reset();
-    $("#flowVersion").value = "1.11";
+    $("#flowVersion").value = "1.12";
     await loadSets(data.set.id);
   } catch (error) {
     setStatus("#createSetStatus", error.message, "error");
@@ -191,6 +200,7 @@ async function uploadImages() {
   const selected = new Map(state.files.map((file) => [file.name.toLowerCase(), file]));
   const pending = state.detail.images.filter((item) => !item.uploaded && selected.has(item.filename.toLowerCase()));
   $("#uploadImagesButton").disabled = true;
+  let uploaded = 0;
   for (let index = 0; index < pending.length; index += 1) {
     const image = pending[index];
     setStatus("#uploadStatus", `Uploading ${index + 1}/${pending.length}: ${image.filename}`);
@@ -203,17 +213,28 @@ async function uploadImages() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(`${image.filename}: ${data.error || `HTTP ${response.status}`}`);
+      uploaded += 1;
+      $("#uploadProgress").value = Math.round((uploaded / Math.max(pending.length, 1)) * 100);
     } catch (error) {
-      setStatus("#uploadStatus", error.message, "error");
       await selectSet(setId);
+      setStatus("#uploadStatus", `${error.message} Select the folder and retry; files already stored will be skipped.`, "error");
       return;
     }
   }
-  $("#uploadProgress").value = 100;
-  setStatus("#uploadStatus", `${pending.length} JPEG image(s) uploaded.`, "success");
+  await loadSets(setId);
+  const remaining = state.detail.images.filter((item) => !item.uploaded);
   state.files = [];
   $("#imageFiles").value = "";
-  await loadSets(setId);
+  $("#uploadImagesButton").disabled = true;
+  if (remaining.length) {
+    setStatus(
+      "#uploadStatus",
+      `${uploaded} JPEG image(s) uploaded. Still missing: ${summarizeFilenames(remaining)}. Select the folder and upload again.`,
+      "error"
+    );
+  } else {
+    setStatus("#uploadStatus", `${uploaded} JPEG image(s) uploaded. The set is complete.`, "success");
+  }
 }
 
 async function changeSetStatus(status) {

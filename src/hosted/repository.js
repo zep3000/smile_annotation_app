@@ -358,6 +358,18 @@ class HostedRepository {
     } : null]));
   }
 
+  async assignmentSummaryRecords(assignmentId) {
+    const result = await this.pool.query(
+      `SELECT i.image_id, n.status, n.payload
+       FROM assignments a
+       JOIN images i ON i.annotation_set_id = a.annotation_set_id
+       LEFT JOIN annotations n ON n.assignment_id = a.id AND n.image_id = i.id
+       WHERE a.id = $1 ORDER BY i.sort_order`,
+      [assignmentId]
+    );
+    return result.rows;
+  }
+
   async imageForAssignment(assignmentId, externalImageId) {
     const result = await this.pool.query(
       `SELECT i.* FROM assignments a

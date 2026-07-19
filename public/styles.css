@@ -91,6 +91,97 @@ label {
   padding: 24px;
 }
 
+.completion-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.completion-shell:focus {
+  outline: none;
+}
+
+.completion-panel {
+  width: min(900px, 100%);
+  display: grid;
+  gap: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 32px;
+}
+
+.completion-kicker,
+.completion-message,
+.completion-session {
+  margin: 0;
+  color: var(--muted);
+}
+
+.completion-kicker {
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.completion-panel h1 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.completion-message {
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.completion-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-block: 1px solid var(--line);
+}
+
+.completion-stats div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+  padding: 18px 14px;
+  border-right: 1px solid var(--line);
+}
+
+.completion-stats div:last-child {
+  border-right: 0;
+}
+
+.completion-stats strong {
+  color: var(--ink);
+  font-size: 25px;
+}
+
+.completion-stats span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.completion-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.primary-command {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.primary-command:hover {
+  background: var(--accent-strong);
+}
+
 .login-panel {
   width: min(560px, 100%);
   display: grid;
@@ -956,5 +1047,29 @@ dialog::backdrop {
 
   .workspace.sidebar-open {
     grid-template-columns: 170px minmax(360px, 1fr) 304px;
+  }
+}
+
+@media (max-width: 700px) {
+  .completion-panel {
+    padding: 24px;
+  }
+
+  .completion-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .completion-stats div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .completion-stats div:last-child {
+    grid-column: 1 / -1;
+    border-bottom: 0;
+  }
+
+  .completion-actions {
+    display: grid;
   }
 }

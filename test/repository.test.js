@@ -26,7 +26,7 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
   t.after(() => pool.end());
   const set = await repository.createSet({
     name: "Test set",
-    flowVersion: "1.11",
+    flowVersion: "1.12",
     manifest: {
       task_id: "test-task",
       metadata: { sample: true },
@@ -97,6 +97,10 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
   const progress = await repository.assignmentProgress(issued.id);
   assert.equal(progress["page-1"].status, "complete");
   assert.equal(progress["page-2"].status, "ineligible");
+  const summaryRecords = await repository.assignmentSummaryRecords(issued.id);
+  assert.equal(summaryRecords.length, 2);
+  assert.equal(summaryRecords[0].payload.status, "complete");
+  assert.equal(summaryRecords[1].payload.status, "ineligible");
   const exported = await repository.exportSet(set.id);
   assert.equal(exported.records.filter((record) => record.payload).length, 2);
   const assignments = await repository.setAssignments(set.id);

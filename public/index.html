@@ -61,6 +61,26 @@
       </section>
     </main>
 
+    <main id="completionView" class="completion-shell hidden" tabindex="-1">
+      <section class="completion-panel" aria-labelledby="completionTitle">
+        <p class="completion-kicker">Annotation set complete</p>
+        <h1 id="completionTitle">Thank you.</h1>
+        <p id="completionMessage" class="completion-message">Your annotations have been saved.</p>
+        <div class="completion-stats" aria-label="Annotation summary">
+          <div><strong id="completionPages">0</strong><span>Pages</span></div>
+          <div><strong id="completionAds">0</strong><span>Qualifying ads</span></div>
+          <div><strong id="completionFaces">0</strong><span>Faces boxed</span></div>
+          <div><strong id="completionGroups">0</strong><span>Groups</span></div>
+          <div><strong id="completionTime">0 min</strong><span>Focused time</span></div>
+        </div>
+        <p class="completion-session">Session <strong id="completionSessionCode"></strong></p>
+        <div class="completion-actions">
+          <button type="button" id="reviewCompletedTaskButton">Review annotations</button>
+          <button type="button" id="leaveCompletedTaskButton" class="primary-command">Sign out</button>
+        </div>
+      </section>
+    </main>
+
     <main id="appView" class="app-shell hidden">
       <section id="workspace" class="workspace">
         <aside id="imageList" class="image-list" aria-label="Page overview">

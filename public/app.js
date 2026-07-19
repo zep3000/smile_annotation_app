@@ -18,7 +18,7 @@ const ENUMS = {
   gender_presentation: ["feminine", "masculine", "ambiguous_or_androgynous", "not_assessable"],
   face_orientation: ["beyond_profile", "profile", "three_quarter", "frontal", "tilted_down", "tilted_up", "not_assessable"],
   face_expression_legibility: ["0_not_legible", "1_low_legibility", "2_moderate_legibility", "3_high_legibility"],
-  gaze_target: ["viewer_camera", "another_person", "advertised_product", "other_object", "off_frame_or_scene_direction", "not_assessable"],
+  gaze_target: ["viewer_camera", "another_person", "advertised_product", "other_object", "off_frame_or_scene_direction", "not_assessable", "closed_eyes"],
   mouth_covered: ["no", "yes", "partly", "not_assessable"],
   mouth_covering: ["hand", "beard", "other_body_part", "part_of_another_person", "object", "object_in_mouth", "text_or_graphic_overlay", "other", "not_assessable"],
   smile_presence: ["yes", "no", "not_assessable"],
@@ -201,7 +201,7 @@ const STEP_META = {
     unit: "Person",
     prompt: "What is this person's gaze?",
     instruction: "Choose one.",
-    help: "Code visible direction, not implied attention. Choose not assessable when the image does not support a gaze judgment."
+    help: "Code visible direction, not implied attention. Choose closed eyes only when the eyelids are visibly closed. Choose not assessable when gaze cannot be judged for another reason."
   },
   I5_target_person: {
     unit: "Person",
@@ -284,7 +284,8 @@ const state = {
   naturalSize: { width: 0, height: 0 },
   saveTimer: null,
   stepTimer: null,
-  lastFocusStart: null
+  lastFocusStart: null,
+  completionLoading: false
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -518,7 +519,7 @@ function defaultAnnotation(image) {
     flow_source: {
       playbook: "docs/annotation_playbook_v1.md",
       yaml: "docs/annotation_flow_v1.yaml",
-      flow_schema_version: "1.11"
+      flow_schema_version: "1.12"
     },
     session: {
       session_id: state.session.session_id,
@@ -563,7 +564,7 @@ function defaultAnnotation(image) {
 
 function migrateLoadedAnnotation(annotation) {
   annotation.flow_source ||= {};
-  annotation.flow_source.flow_schema_version = "1.11";
+  annotation.flow_source.flow_schema_version = "1.12";
   annotation.page ||= {};
   if (annotation.page.qualifying_ad_count === "unclear") annotation.page.qualifying_ad_count = null;
   const legacyPageDepictionType = annotation.page.depiction_type || null;
@@ -1604,6 +1605,8 @@ function advance() {
   if (state.step.id.startsWith("END_PAGE_")) {
     if (state.currentIndex < state.manifest.images.length - 1) {
       void loadImage(state.currentIndex + 1, { allowSequentialNext: true });
+    } else {
+      void showCompletionView();
     }
     return;
   }
@@ -1965,9 +1968,10 @@ function renderContextSummary() {
 
 function renderStepPanel() {
   const meta = STEP_META[state.step.id] || STEP_META.P1_qualifying_ad_count;
+  const finalTerminal = state.step.id.startsWith("END_PAGE_") && state.currentIndex >= state.manifest.images.length - 1;
   $("#stepKicker").textContent = stepKickerText();
   $("#questionText").textContent = meta.prompt;
-  $("#instructionText").textContent = meta.instruction || "";
+  $("#instructionText").textContent = finalTerminal ? "Choose Finish task to save and view your summary." : meta.instruction || "";
   $("#helpText").textContent = meta.help || "";
   $("#helpButton").disabled = !meta.help;
   renderInput();
@@ -1977,12 +1981,93 @@ function renderStepPanel() {
 
 function updateNavState() {
   const terminal = state.step.id.startsWith("END_PAGE_");
+  const finalPage = state.currentIndex >= state.manifest.images.length - 1;
   $("#backButton").disabled = !state.annotation?.navigation_history?.length;
   $("#backButton").textContent = terminal ? "Edit annotation" : "Back";
   $("#nextButton").disabled = terminal
-    ? state.currentIndex >= state.manifest.images.length - 1
+    ? state.completionLoading
     : state.step.id === "P1_qualifying_ad_count" ? false : !canAdvance();
-  $("#nextButton").textContent = terminal ? "Next page" : currentBboxSpec() ? "Done" : "Next";
+  $("#nextButton").textContent = terminal
+    ? finalPage ? "Finish task" : "Next page"
+    : currentBboxSpec() ? "Done" : "Next";
+}
+
+function taskIsComplete() {
+  return Boolean(state.manifest?.images?.length) && state.manifest.images.every((image) =>
+    DONE_STATUSES.has(state.statuses[image.image_id]?.status)
+  );
+}
+
+function summaryUrl() {
+  if (state.hostedMode) return "/api/summary";
+  return `/api/summary?session_id=${encodeURIComponent(state.session.session_id)}&manifest_path=${encodeURIComponent(state.manifest.manifest_path)}`;
+}
+
+function formatFocusedTime(milliseconds) {
+  const minutes = Math.max(0, Math.round(Number(milliseconds || 0) / 60_000));
+  if (minutes < 1) return "<1 min";
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return remainder ? `${hours} h ${remainder} min` : `${hours} h`;
+}
+
+function renderCompletionSummary(summary) {
+  $("#completionPages").textContent = Number(summary.pages_annotated || 0).toLocaleString();
+  $("#completionAds").textContent = Number(summary.qualifying_advertisements || 0).toLocaleString();
+  $("#completionFaces").textContent = Number(summary.face_depictions_boxed || 0).toLocaleString();
+  $("#completionGroups").textContent = Number(summary.groups_annotated || 0).toLocaleString();
+  $("#completionTime").textContent = formatFocusedTime(summary.focused_time_ms);
+  const pageTotal = Number(summary.pages_total || 0);
+  $("#completionMessage").textContent = `You completed ${pageTotal === 1 ? "the page" : `all ${pageTotal} pages`}. Your annotations have been saved.`;
+  $("#completionSessionCode").textContent = sessionDisplayId();
+  $("#leaveCompletedTaskButton").textContent = state.hostedMode ? "Sign out" : "Return to start";
+}
+
+async function showCompletionView() {
+  if (state.completionLoading) return;
+  state.completionLoading = true;
+  updateNavState();
+  $("#saveStatus").textContent = "Finishing task...";
+  $("#saveStatus").className = "status-line";
+  try {
+    finishStepTimer("task_complete");
+    markDirty();
+    await saveAnnotationNow();
+    if (state.dirty) throw new Error("The final page could not be saved. Try again.");
+    await refreshProgress();
+    if (!taskIsComplete()) throw new Error("Complete every page before finishing the task.");
+    const data = await fetchJson(summaryUrl());
+    renderCompletionSummary(data.summary || {});
+    $("#appView").classList.add("hidden");
+    $("#completionView").classList.remove("hidden");
+    $("#completionView").focus();
+  } catch (error) {
+    $("#saveStatus").textContent = error.message;
+    $("#saveStatus").className = "status-line error";
+    if (!state.stepTimer) startStepTimer(state.step);
+  } finally {
+    state.completionLoading = false;
+    if (!$("#appView").classList.contains("hidden")) updateNavState();
+  }
+}
+
+function reviewCompletedTask() {
+  $("#completionView").classList.add("hidden");
+  $("#appView").classList.remove("hidden");
+  enterStep(state.step);
+  window.setTimeout(() => {
+    setStageSize();
+    renderOverlay();
+  }, 0);
+}
+
+async function leaveCompletedTask() {
+  if (state.hostedMode) {
+    await hostedExit();
+    return;
+  }
+  window.location.reload();
 }
 
 function estimateRemainingScreens() {
@@ -2957,6 +3042,8 @@ function bindEvents() {
     if (event.key === "Enter") void hostedOpenAssignment();
   });
   $("#hostedExitButton").addEventListener("click", () => void hostedExit());
+  $("#reviewCompletedTaskButton").addEventListener("click", reviewCompletedTask);
+  $("#leaveCompletedTaskButton").addEventListener("click", () => void leaveCompletedTask());
   $("#reloadAfterConflictButton").addEventListener("click", () => window.location.reload());
   $("#saveConflictDialog").addEventListener("cancel", (event) => event.preventDefault());
   $("#copySessionCodeButton").addEventListener("click", () => void copySessionCode());

@@ -1,6 +1,6 @@
 # Advertisement Face Annotation Playbook
 
-Version: 1.11
+Version: 1.12
 
 This playbook defines the human annotation procedure and the behavior expected from an automated or LLM annotator. The application presents one decision at a time and stores bounding boxes as normalized page coordinates in `[x1, y1, x2, y2]` format.
 
@@ -172,9 +172,9 @@ The interface displays `beyond_profile` as **less than profile**. Use `tilted_do
 
 ### I5. Gaze
 
-Values: `viewer_camera`, `another_person`, `advertised_product`, `other_object`, `off_frame_or_scene_direction`, `not_assessable`.
+Values: `viewer_camera`, `another_person`, `advertised_product`, `other_object`, `off_frame_or_scene_direction`, `not_assessable`, `closed_eyes`.
 
-Code visible gaze direction, not inferred attention or narrative intention. When `another_person` is selected, click that person's box. If the target person has no individual box, choose **Person without bounding box**; this selection immediately continues to the next question.
+Code visible gaze direction, not inferred attention or narrative intention. Use `closed_eyes` only when the eyelids are visibly closed; use `not_assessable` when gaze cannot be judged for another reason. When `another_person` is selected, click that person's box. If the target person has no individual box, choose **Person without bounding box**; this selection immediately continues to the next question.
 
 ### I6. Mouth covering
 

@@ -3,6 +3,7 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const url = require("node:url");
+const { summarizeAnnotations } = require("../shared/annotation-summary");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const PUBLIC_DIR = path.join(ROOT, "public");
@@ -386,6 +387,15 @@ async function sessionProgress(sessionId, manifestPath) {
   };
 }
 
+async function sessionSummary(sessionId, manifestPath) {
+  const manifest = await readManifest(manifestPath);
+  const records = await Promise.all(manifest.images.map(async (image) => {
+    const annotation = await readAnnotation(sessionId, image.image_id);
+    return annotation ? { status: annotation.status, annotation } : null;
+  }));
+  return summarizeAnnotations(records.filter(Boolean), manifest.images.length);
+}
+
 function isDoneStatus(status) {
   return ["complete", "ineligible", "needs_review"].includes(status);
 }
@@ -550,6 +560,14 @@ async function handleApi(req, res, pathname, parsedUrl) {
       parsedUrl.searchParams.get("manifest_path")
     );
     return sendJson(res, 200, { ok: true, progress });
+  }
+
+  if (req.method === "GET" && pathname === "/api/summary") {
+    const summary = await sessionSummary(
+      parsedUrl.searchParams.get("session_id"),
+      parsedUrl.searchParams.get("manifest_path")
+    );
+    return sendJson(res, 200, { ok: true, summary });
   }
 
   if (req.method === "GET" && pathname === "/api/image") {

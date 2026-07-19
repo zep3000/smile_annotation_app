@@ -43,7 +43,7 @@ async function main() {
       body: JSON.stringify({
         name: setName || manifest.task_id || path.basename(manifestPath, path.extname(manifestPath)),
         manifest,
-        flow_version: process.env.FLOW_VERSION || "1.11"
+        flow_version: process.env.FLOW_VERSION || "1.12"
       })
     });
     const data = await responseJson(created);

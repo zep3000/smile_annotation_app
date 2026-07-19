@@ -93,6 +93,9 @@ class FakeRepository {
   }
 
   async assignmentProgress() { return { "page-1": this.saved ? { status: this.saved.status, revision: this.revision } : null }; }
+  async assignmentSummaryRecords() {
+    return [{ image_id: "page-1", status: this.saved?.status || null, payload: this.saved || null }];
+  }
   async annotation() { return this.saved ? { payload: this.saved, revision: this.revision } : null; }
   async imageForAssignment() { return { filename: "page-1.jpg", object_key: "sets/test/page-1.jpg" }; }
 
@@ -155,6 +158,8 @@ test("hosted annotator login protects assignment and image APIs", async (t) => {
 
   const anonymousImage = await fetch(`${app.baseUrl}/api/image?image_id=page-1`);
   assert.equal(anonymousImage.status, 401);
+  const anonymousSummary = await fetch(`${app.baseUrl}/api/summary`);
+  assert.equal(anonymousSummary.status, 401);
 
   const wrong = await login(app.baseUrl, "annotator", "wrong");
   assert.equal(wrong.response.status, 401);
@@ -179,6 +184,23 @@ test("hosted annotator login protects assignment and image APIs", async (t) => {
   assert.equal(image.status, 200);
   assert.equal(image.headers.get("content-type"), "image/jpeg");
   assert.deepEqual(Buffer.from(await image.arrayBuffer()), Buffer.from([0xff, 0xd8, 0xff, 0xd9]));
+
+  app.repository.saved = {
+    status: "complete",
+    advertisements: [{ people: [{ face_bbox: [0, 0, 1, 1] }], groups: [] }],
+    timing: { total_focused_ms: 60_000 }
+  };
+  const summaryResponse = await fetch(`${app.baseUrl}/api/summary`, { headers: { cookie: signedIn.cookie } });
+  assert.equal(summaryResponse.status, 200);
+  assert.deepEqual((await summaryResponse.json()).summary, {
+    pages_total: 1,
+    pages_annotated: 1,
+    qualifying_advertisements: 1,
+    face_depictions_boxed: 1,
+    unique_face_identities_boxed: 1,
+    groups_annotated: 0,
+    focused_time_ms: 60_000
+  });
 });
 
 test("hosted annotation saves reject stale revisions", async (t) => {

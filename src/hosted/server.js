@@ -26,6 +26,7 @@ const {
 const { isJpeg } = require("./manifest");
 const { HostedRepository } = require("./repository");
 const { createStorage } = require("./storage");
+const { summarizeAnnotations } = require("../shared/annotation-summary");
 
 const PUBLIC_DIR = path.resolve(__dirname, "..", "..", "public");
 const DONE_STATUSES = new Set(["complete", "ineligible", "needs_review"]);
@@ -231,6 +232,11 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
       sendJson(res, 200, { ok: true, progress: { statuses } });
       return;
     }
+    if (req.method === "GET" && pathname === "/api/summary") {
+      const records = await repo.assignmentSummaryRecords(session.assignment_id);
+      sendJson(res, 200, { ok: true, summary: summarizeAnnotations(records, records.length) });
+      return;
+    }
     if (req.method === "GET" && pathname === "/api/annotation") {
       const saved = await repo.annotation(session.assignment_id, parsedUrl.searchParams.get("image_id"));
       sendJson(res, 200, {
@@ -310,7 +316,7 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
         set = await repo.createSet({
           name: body.name,
           manifest: body.manifest,
-          flowVersion: String(body.flow_version || "1.11")
+          flowVersion: String(body.flow_version || "1.12")
         });
       } catch (error) {
         if (!error.statusCode) error.statusCode = error.code === "23505" ? 409 : 400;

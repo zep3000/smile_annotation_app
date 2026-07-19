@@ -1,4 +1,4 @@
-schema_version: "1.11"
+schema_version: "1.12"
 title: "Advertisement Face Annotation Flow"
 companion_playbook: "annotation_playbook_v1.md"
 
@@ -113,6 +113,7 @@ enums:
     - other_object
     - off_frame_or_scene_direction
     - not_assessable
+    - closed_eyes
   mouth_covered: ["no", "yes", partly, not_assessable]
   mouth_covering:
     - hand
