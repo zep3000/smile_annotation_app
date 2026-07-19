@@ -354,7 +354,7 @@ const DISPLAY_LABELS = {
   three_quarter: "three-quarter",
   off_frame: "off-frame",
   crop_or_frame: "crop/frame",
-  off_frame_or_scene_direction: "off-frame/scene direction",
+  off_frame_or_scene_direction: "scene direction/off-screen",
   own_body_part: "other body part",
   other_body_part: "other body part",
   part_of_another_person: "(part of) another person",
@@ -2164,20 +2164,25 @@ function renderImageList() {
 
 function currentVisibleRegion() {
   const step = state.step || {};
-  const ad = step.adIndex !== undefined ? adByIndex(step.adIndex) : null;
   const full = [0, 0, 1, 1];
-  if (!ad?.bbox) return full;
   const fullPageSteps = new Set([
     "P1_qualifying_ad_count",
     "P2_single_ad_full_page",
     "A1_ad_bbox",
-    "DRAW_AD_BOXES",
-    "D0_duplicates_present",
-    "D1_unique_face_count",
-    "D2_select_main",
-    "D3_select_duplicates"
+    "DRAW_AD_BOXES"
   ]);
   if (fullPageSteps.has(step.id) || step.id?.startsWith("END_PAGE_")) return full;
+  if (["D0_duplicates_present", "D1_unique_face_count", "D2_select_main", "D3_select_duplicates"].includes(step.id)) {
+    const boxed = allBoxedPeople();
+    const adIndexes = new Set(boxed.map((item) => item.adIndex));
+    if (adIndexes.size === 1) {
+      const [adIndex] = [...adIndexes];
+      return adByIndex(adIndex)?.bbox || full;
+    }
+    return full;
+  }
+  const ad = step.adIndex !== undefined ? adByIndex(step.adIndex) : null;
+  if (!ad?.bbox) return full;
   return ad.bbox;
 }
 
