@@ -5,6 +5,21 @@ const { HostedRepository } = require("../src/hosted/repository");
 const { createStorage } = require("../src/hosted/storage");
 const { formatSetExport } = require("../src/shared/export-format");
 
+const EXPORT_PREFIX = "backups/annotation-exports/";
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+async function pruneExpiredExports(storage, { now = new Date(), retentionDays = 7 } = {}) {
+  const cutoff = now.getTime() - (retentionDays * DAY_MS);
+  const objects = await storage.listObjects(EXPORT_PREFIX);
+  const expiredKeys = objects
+    .filter((object) => object.Key?.startsWith(EXPORT_PREFIX)
+      && object.LastModified
+      && new Date(object.LastModified).getTime() < cutoff)
+    .map((object) => object.Key);
+  await storage.deleteObjects(expiredKeys);
+  return expiredKeys.length;
+}
+
 async function main() {
   const config = loadBackupConfig();
   const pool = createPool(config);
@@ -16,7 +31,7 @@ async function main() {
     for (const set of sets) {
       const exported = await repository.exportSet(set.id);
       const formatted = formatSetExport(exported);
-      const baseKey = `backups/annotation-exports/${stamp}/${set.id}`;
+      const baseKey = `${EXPORT_PREFIX}${stamp}/${set.id}`;
       const jsonlKey = `${baseKey}.jsonl`;
       const jsonKey = `${baseKey}.json`;
       const jsonlSha256 = crypto.createHash("sha256").update(formatted.jsonl).digest("hex");
@@ -43,12 +58,20 @@ async function main() {
       });
       console.log(`${set.task_id}: ${formatted.records.length} annotations -> ${jsonKey}, ${jsonlKey}`);
     }
+    const deletedCount = await pruneExpiredExports(storage, {
+      retentionDays: config.backupRetentionDays
+    });
+    console.log(`Retention cleanup: deleted ${deletedCount} export object(s) older than ${config.backupRetentionDays} days.`);
   } finally {
     await pool.end();
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { EXPORT_PREFIX, main, pruneExpiredExports };

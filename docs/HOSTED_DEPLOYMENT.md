@@ -225,9 +225,9 @@ In that service's settings, set its Railway config file path to:
 /railway.backup.json
 ```
 
-That file runs `npm run backup:exports` at the start of every hour and never
-starts a web server. It has no public domain. Give the backup service
-`DATABASE_URL` and
+That file runs `npm run backup:exports` at `01:00` and `13:00` UTC, corresponding
+to `03:00` and `15:00` in Berlin during summer time, and never starts a web
+server. It has no public domain. Give the backup service `DATABASE_URL` and
 these references to the separate backup bucket:
 
 ```text
@@ -237,13 +237,16 @@ BACKUP_AWS_SECRET_ACCESS_KEY=${{Backups.SECRET_ACCESS_KEY}}
 BACKUP_AWS_S3_BUCKET_NAME=${{Backups.BUCKET}}
 BACKUP_AWS_DEFAULT_REGION=${{Backups.REGION}}
 BACKUP_AWS_S3_URL_STYLE=virtual
+BACKUP_RETENTION_DAYS=7
 ```
 
 Each run writes matching timestamped JSON and JSONL files and records both
 SHA-256 checksums in PostgreSQL audit events and bucket metadata. On plans
 without native database backups, also download both formats to a computer at
-the end of every annotation day. These research exports preserve analysis data
-but are not a drop-in restoration of login sessions or the running database.
+the end of every annotation day. After a successful export, the job deletes
+objects under `backups/annotation-exports/` that are older than seven days.
+These research exports preserve analysis data but are not a drop-in restoration
+of login sessions or the running database.
 
 ## Security Boundary
 

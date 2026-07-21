@@ -47,6 +47,7 @@ function loadConfig(environment = process.env) {
     backupBucketAccessKeyId: firstValue(environment, ["BACKUP_AWS_ACCESS_KEY_ID", "BACKUP_BUCKET_ACCESS_KEY_ID"]),
     backupBucketSecretAccessKey: firstValue(environment, ["BACKUP_AWS_SECRET_ACCESS_KEY", "BACKUP_BUCKET_SECRET_ACCESS_KEY"]),
     backupBucketForcePathStyle: firstValue(environment, ["BACKUP_AWS_S3_URL_STYLE"]).toLowerCase() === "path",
+    backupRetentionDays: integerValue(environment.BACKUP_RETENTION_DAYS, 7),
     maxJpegBytes: integerValue(environment.MAX_JPEG_BYTES, 60 * 1024 * 1024)
   };
 
@@ -80,7 +81,8 @@ function loadBackupConfig(environment = process.env) {
     bucketRegion: firstValue(environment, ["BACKUP_AWS_DEFAULT_REGION", "BACKUP_BUCKET_REGION"]) || "auto",
     bucketAccessKeyId: firstValue(environment, ["BACKUP_AWS_ACCESS_KEY_ID", "BACKUP_BUCKET_ACCESS_KEY_ID"]),
     bucketSecretAccessKey: firstValue(environment, ["BACKUP_AWS_SECRET_ACCESS_KEY", "BACKUP_BUCKET_SECRET_ACCESS_KEY"]),
-    bucketForcePathStyle: firstValue(environment, ["BACKUP_AWS_S3_URL_STYLE"]).toLowerCase() === "path"
+    bucketForcePathStyle: firstValue(environment, ["BACKUP_AWS_S3_URL_STYLE"]).toLowerCase() === "path",
+    backupRetentionDays: integerValue(environment.BACKUP_RETENTION_DAYS, 7)
   };
   const missing = [];
   if (!config.databaseUrl) missing.push("DATABASE_URL");

@@ -1,6 +1,8 @@
 const {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client
 } = require("@aws-sdk/client-s3");
@@ -37,6 +39,31 @@ function createStorage(config) {
         Bucket: config.bucket,
         Key: key
       }));
+    },
+
+    async listObjects(prefix) {
+      const objects = [];
+      let continuationToken;
+      do {
+        const response = await client.send(new ListObjectsV2Command({
+          Bucket: config.bucket,
+          Prefix: prefix,
+          ContinuationToken: continuationToken
+        }));
+        objects.push(...(response.Contents || []));
+        continuationToken = response.IsTruncated ? response.NextContinuationToken : undefined;
+      } while (continuationToken);
+      return objects;
+    },
+
+    async deleteObjects(keys) {
+      const pending = keys.filter(Boolean);
+      for (let index = 0; index < pending.length; index += 20) {
+        await Promise.all(pending.slice(index, index + 20).map((key) => client.send(new DeleteObjectCommand({
+          Bucket: config.bucket,
+          Key: key
+        }))));
+      }
     },
 
     async exists(key) {
