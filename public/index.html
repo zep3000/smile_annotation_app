@@ -9,6 +9,10 @@
   <body>
     <main id="loginView" class="login-shell">
       <section class="login-panel">
+        <div class="language-toggle" role="group" aria-label="Interface language">
+          <button type="button" data-lang-option="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang-option="de" aria-pressed="false">DE</button>
+        </div>
         <h1>Annotation App V2</h1>
         <div class="welcome-copy">
           <p>This app guides you through one annotation decision at a time for magazine pages or page spreads.</p>
@@ -65,6 +69,10 @@
 
     <main id="completionView" class="completion-shell hidden" tabindex="-1">
       <section class="completion-panel" aria-labelledby="completionTitle">
+        <div class="language-toggle completion-language-toggle" role="group" aria-label="Interface language">
+          <button type="button" data-lang-option="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang-option="de" aria-pressed="false">DE</button>
+        </div>
         <p class="completion-kicker">Annotation set complete</p>
         <h1 id="completionTitle">Thank you.</h1>
         <p id="completionMessage" class="completion-message">Your annotations have been saved.</p>
@@ -159,6 +167,10 @@
         <div class="bottom-right-controls">
           <span id="bottomFilename"></span>
           <span id="expertModeBadge" class="mode-badge hidden">Expert</span>
+          <div class="language-toggle footer-language-toggle" role="group" aria-label="Interface language">
+            <button type="button" data-lang-option="en" aria-pressed="true">EN</button>
+            <button type="button" data-lang-option="de" aria-pressed="false">DE</button>
+          </div>
           <button type="button" id="hostedExitButton" class="footer-command hidden">Exit</button>
         </div>
       </footer>

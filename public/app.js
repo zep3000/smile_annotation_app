@@ -46,7 +46,7 @@ const PERSON_DEPICTION_TYPES = ENUMS.depiction_type.filter((value) => value !== 
 const CROWD_FACE_BAND_VALUES = ["10_20", "20_plus"];
 const CROWD_FACE_BANDS = new Set(CROWD_FACE_BAND_VALUES);
 
-const STEP_META = {
+const STEP_META_EN = {
   P1_qualifying_ad_count: {
     unit: "Page",
     prompt: "How many advertisements on this page contain at least one eligible face depiction?",
@@ -259,12 +259,235 @@ const STEP_META = {
   }
 };
 
+const STEP_META_DE = {
+  P1_qualifying_ad_count: {
+    unit: "Seite",
+    prompt: "Wie viele Anzeigen auf dieser Seite enthalten mindestens eine geeignete Gesichtsdarstellung?",
+    instruction: "Wähle 0-5 direkt aus oder gib eine höhere genaue Anzahl ein.",
+    help: "Zahle Anzeigen, nicht Gesichter. Eine Darstellung ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und das Gesicht mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter."
+  },
+  P2_single_ad_full_page: {
+    unit: "Anzeige",
+    prompt: "Ist die einzige qualifizierende Anzeige ganzseitig?",
+    instruction: "Wenn sie die nutzbare Seite ausfüllt, ist keine Anzeigen-Box nötig.",
+    help: "Ganzseitig bedeutet, dass die qualifizierende Anzeige die Seite als Haupteinheit einnimmt. Wenn weitere Seiteninhalte vorhanden sind, wähle Teilseite."
+  },
+  A1_ad_bbox: {
+    unit: "Anzeige",
+    prompt: "Zeichne die vollständige Anzeigen-Box.",
+    instruction: "Zeichne oder korrigiere eine Box um die gesamte Anzeige.",
+    help: "Schließe Bild und Text ein, die zur Anzeige gehören. Schließe benachbarte redaktionelle Inhalte oder andere Anzeigen aus."
+  },
+  DRAW_AD_BOXES: {
+    unit: "Anzeige",
+    prompt: "Zeichne eine Box für jede qualifizierende Anzeige.",
+    instruction: "Zeichne alle qualifizierenden Anzeigen-Boxen und wähle dann Weiter.",
+    help: "Nutze dies, wenn mehrere qualifizierende Anzeigen vorhanden sind. Jede Box soll eine vollständige Anzeige einschließen."
+  },
+  A2_ad_depiction_type: {
+    unit: "Anzeige",
+    prompt: "Wie sind die geeigneten Gesichter in dieser Anzeige dargestellt?",
+    instruction: "Wähle einen gemeinsamen Typ oder mehrere Typen vorhanden.",
+    help: "Wähle nur dann einen einzelnen Typ, wenn er für alle einzeln codierten Gesichter in dieser Anzeige gilt. Wenn innerhalb dieser Anzeige mehr als ein Typ vorkommt, wähle mehrere Typen vorhanden; dann wird der Darstellungstyp pro codierter Person abgefragt."
+  },
+  A3_unique_person_count: {
+    unit: "Anzeige",
+    prompt: "Zeichne eine Box um jede geeignete Gesichtsdarstellung.",
+    instruction: "Lass Nur Einzelpersonen ausgewählt und zeichne 1-9 Boxen, oder wähle 10-20 bzw. 20+ für eine Menge.",
+    help: "Bei ein bis neun Gesichtern lass Nur Einzelpersonen ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, werden vorläufige Einzelpersonen-Boxen entfernt. Du kannst vor dem Fortfahren wieder zu Nur Einzelpersonen wechseln."
+  },
+  C1_outstanding_present: {
+    unit: "Menge",
+    prompt: "Gibt es herausstechende Einzelpersonen, die separat annotiert werden sollten?",
+    instruction: "Wähle ja nur für visuell hervorgehobene Personen innerhalb einer größeren Menge.",
+    help: "Herausstechende Einzelpersonen sind zentral, groß, hervorgehoben oder anderweitig analytisch wichtig. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung."
+  },
+  DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
+    unit: "Personen",
+    prompt: "Zeichne Boxen für herausstechende Einzelpersonen.",
+    instruction: "Zeichne jede herausstechende Gesichts-Box, bevor du Fertig wählst.",
+    help: "Nutze dies nur für Personen, die separat von der restlichen Menge oder Gruppe codiert werden sollen. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen."
+  },
+  DRAW_GROUP_BOXES: {
+    unit: "Gruppen",
+    prompt: "Zeichne eine Box für jede visuell abgrenzbare verbleibende Gruppe.",
+    instruction: "Jede Gruppen-Box soll alle Gesichter dieser Gruppe einschließen.",
+    help: "Nutze Gruppen-Boxen für Mengen oder viele kleine Gesichter, bei denen Einzelannotation langsam oder unzuverlässig wäre."
+  },
+  G1_group_type: {
+    unit: "Gruppe",
+    prompt: "Wähle den Gruppentyp.",
+    instruction: "",
+    help: "Codiere die dominierende visuelle Organisation der markierten Gruppe."
+  },
+  G2_group_age: {
+    unit: "Gruppe",
+    prompt: "Wähle die ungefähre Alterszusammensetzung der Gruppe.",
+    instruction: "",
+    help: "Codiere nur die grobe wahrgenommene Alterszusammensetzung anhand sichtbarer Hinweise."
+  },
+  G3_group_gender: {
+    unit: "Gruppe",
+    prompt: "Wähle die wahrgenommene Geschlechterpräsentation der Gruppe.",
+    instruction: "",
+    help: "Codiere Präsentation, nicht Identität. Nutze nicht beurteilbar nur, wenn die nötigen visuellen Hinweise fehlen."
+  },
+  G4_group_expression_legibility: {
+    unit: "Gruppe",
+    prompt: "Wie gut sind Gesichtsausdrücke in dieser Gruppe lesbar?",
+    instruction: "Wähle die passendste Verteilung über die gruppierten Gesichter.",
+    help: "Bewerte die allgemeine Lesbarkeit für Ausdruckscodierung in der Gruppe. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Gesichtsdetails, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Wähle gemischt, wenn kein einzelnes Niveau oder mehrheitliches Niveau gut passt. Wenn keine gruppierten Gesichter lesbar sind, werden Blick- und Lächelfragen übersprungen."
+  },
+  G5_group_gaze: {
+    unit: "Gruppe",
+    prompt: "Wähle das dominierende Blickmuster der Gruppe.",
+    instruction: "",
+    help: "Codiere das dominierende sichtbare Blickmuster unter den beurteilbaren Gesichtern."
+  },
+  G6_group_smile: {
+    unit: "Gruppe",
+    prompt: "Wie verbreitet ist sichtbares Lächeln unter den beurteilbaren Gruppenmitgliedern?",
+    instruction: "",
+    help: "Schätze die Häufigkeit unter Gruppenmitgliedern, deren Mund/Gesicht sichtbar genug ist."
+  },
+  G7_group_smile_intensity: {
+    unit: "Gruppe",
+    prompt: "Welche Lächelintensität überwiegt unter den lächelnden Gruppenmitgliedern?",
+    instruction: "",
+    help: "Codiere nur unter sichtbar lächelnden Personen. Nutze gemischt, wenn keine Intensität klar überwiegt."
+  },
+  D0_duplicates_present: {
+    unit: "Anzeige",
+    prompt: "Wiederholen einzeln markierte Gesichter dieselbe Gesichtsidentitat?",
+    instruction: "Berücksichtige Spiegel, wiederholte Porträts und Collage-Wiederholungen.",
+    help: "Beantworte dies für die einzeln markierten Gesichter in der aktuellen Anzeige. Ähnlich aussehende Gesichter sind keine Duplikate, außer sie wiederholen klar dieselbe Person, Figur, dasselbe Objekt oder dieselbe dargestellte Identität."
+  },
+  D1_unique_face_count: {
+    unit: "Anzeige",
+    prompt: "Wie viele eindeutige Gesichtsidentitaten sind durch die Boxen dargestellt?",
+    instruction: "Zähle jede wiederholte Identität nur einmal.",
+    help: "Diese Anzahl muss kleiner sein als die Anzahl der gezeichneten Gesichts-Boxen, weil mindestens eine Person wiederholt wird."
+  },
+  D2_select_main: {
+    unit: "Duplikatgruppe",
+    prompt: "Wähle das Hauptgesicht für diese Identität.",
+    instruction: "Klicke die klarste oder analytisch nutzlichste Gesichts-Box.",
+    help: "Das Hauptgesicht erhalt die detaillierte Personenannotation. Wiederholte Darstellungen bleiben als verknupfte Boxen gespeichert."
+  },
+  D3_select_duplicates: {
+    unit: "Duplikatgruppe",
+    prompt: "Wähle alle Duplikate dieses Hauptgesichts.",
+    instruction: "Klicke passende Boxen zum Aus- oder Abwählen und wähle dann Weiter.",
+    help: "Lass nicht zugehörige Gesichter ungewählt. Eine Identitätsgruppe kann keine Duplikate enthalten, wenn eine andere Gruppe das wiederholte Gesicht abdeckt."
+  },
+  I0_person_depiction_type: {
+    unit: "Person",
+    prompt: "Wie ist diese Person dargestellt?",
+    instruction: "Wähle den passendsten Darstellungstyp.",
+    help: "Diese Frage erscheint pro Person nur, weil für diese Anzeige mehrere Typen vorhanden ausgewählt wurde."
+  },
+  I1_age: {
+    unit: "Person",
+    prompt: "Wähle die wahrgenommene Altersgruppe dieser Person.",
+    instruction: "",
+    help: "Nutze das grobe sichtbare Alter. Wähle nicht beurteilbar, wenn Gesicht/Körper nicht genug Hinweise liefern."
+  },
+  I2_gender: {
+    unit: "Person",
+    prompt: "Wähle die wahrgenommene Geschlechterpräsentation dieser Person.",
+    instruction: "",
+    help: "Codiere Präsentation, nicht Identität. Nutze ambig/androgyn nur, wenn das die sichtbare Präsentation ist."
+  },
+  I3_orientation: {
+    unit: "Person",
+    prompt: "Wähle die Gesichtsausrichtung.",
+    instruction: "",
+    help: "Weniger als Profil bedeutet, dass weniger vom Gesicht sichtbar ist als bei einem konventionellen Profil. Wähle nach unten geneigt oder nach oben geneigt, wenn der vertikale Kopfwinkel das klarste Ausrichtungsmerkmal ist."
+  },
+  I4_expression_legibility: {
+    unit: "Person",
+    prompt: "Wie gut ist der Gesichtsausdruck dieser Person lesbar?",
+    instruction: "Wähle die passendste Stufe auf der Vier-Punkte-Skala.",
+    help: "Bewerte das Ergebnis, nicht die Ursache. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Details, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Beurteile die kombinierte Wirkung auf die Ausdruckscodierung. Stufe 0 überspringt Blick- und Lächelcodierung; Ausrichtung und Mundverdeckung werden weiterhin erfasst."
+  },
+  I5_gaze_target: {
+    unit: "Person",
+    prompt: "Wohin geht der Blick dieser Person?",
+    instruction: "Wähle eine Option.",
+    help: "Codiere die sichtbare Richtung, nicht die vermutete Aufmerksamkeit. Wähle Augen bedeckt, wenn die Augenregion sichtbar verdeckt ist. Wähle Augen geschlossen nur, wenn die Augenlider sichtbar geschlossen sind. Wähle nicht beurteilbar, wenn der Blick aus anderem Grund nicht eingeschätzt werden kann."
+  },
+  I5_target_person: {
+    unit: "Person",
+    prompt: "Auf welche andere Person ist der Blick gerichtet?",
+    instruction: "Klicke eine markierte Person oder wähle Person ohne Box.",
+    help: "Ein markiertes Ziel wird über die Personen-ID gespeichert. Nutze Person ohne Box für eine sichtbare Person in der Anzeige, die nicht einzeln markiert wurde."
+  },
+  I6_mouth_covered: {
+    unit: "Person",
+    prompt: "Ist der Mund durch etwas verdeckt?",
+    instruction: "Wähle eine Option.",
+    help: "Wähle teilweise, wenn eine Verdeckung nur einen Teil des Mundes blockiert. Wähle nicht beurteilbar nur, wenn die Mundregion fehlt oder nicht nutzbar ist. Bei schwierigen, aber sichtbaren Fällen wähle die beste substantielle Option."
+  },
+  I7_mouth_covering: {
+    unit: "Person",
+    prompt: "Was verdeckt den Mund?",
+    instruction: "",
+    help: "Wähle die hauptsächliche sichtbare Verdeckung. Erfasse, was den Mund verdeckt, nicht ob die Verdeckung absichtlich ist."
+  },
+  I7_covering_other_text: {
+    unit: "Person",
+    prompt: "Beschreibe kurz die andere Mundverdeckung.",
+    instruction: "Nutze eine kurze, konkrete Beschreibung.",
+    help: "Beschreibe, was den Mund sichtbar verdeckt. Interpretiere keine Absicht oder Emotion."
+  },
+  I8_smile_present: {
+    unit: "Person",
+    prompt: "Ist ein Lächeln sichtbar?",
+    instruction: "",
+    help: "Codiere nur sichtbare Mund-/Gesichtskonfiguration. Schließe nicht auf gefühlte Emotion."
+  },
+  I9_smile_intensity: {
+    unit: "Person",
+    prompt: "Wähle die sichtbare Lächelintensität.",
+    instruction: "",
+    help: "Nutze die vierstufige verbale Skala ohne externe Beispiele: leicht, deutlich, breit, lachend."
+  },
+  END_PAGE_COMPLETE: {
+    unit: "Fertig",
+    prompt: "Annotation des Bildes abgeschlossen.",
+    instruction: "Nutze Nächste Seite, um fortzufahren.",
+    help: ""
+  },
+  END_PAGE_INELIGIBLE: {
+    unit: "Fertig",
+    prompt: "Keine qualifizierende Anzeige auf diesem Bild.",
+    instruction: "Nutze Nächste Seite, um fortzufahren.",
+    help: ""
+  },
+  END_PAGE_REVIEW: {
+    unit: "Fertig",
+    prompt: "Bild zur Prufung markiert.",
+    instruction: "Nutze Nächste Seite, um fortzufahren.",
+    help: ""
+  }
+};
+
+const LANGUAGE_STORAGE_KEY = "annotationAppV2Language";
+const LANGUAGE_LABELS = { en: "English", de: "Deutsch" };
+
+function initialLanguage() {
+  const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  if (saved === "en" || saved === "de") return saved;
+  return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
+}
+
 const state = {
   session: null,
   manifest: null,
   hostedMode: false,
   annotationRevision: 0,
   expertMode: false,
+  language: initialLanguage(),
   startMode: "new",
   resumeSessions: [],
   sessionLookupToken: 0,
@@ -289,7 +512,8 @@ const state = {
   imageLoadToken: 0,
   stepTimer: null,
   lastFocusStart: null,
-  completionLoading: false
+  completionLoading: false,
+  completionSummary: null
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -309,7 +533,7 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
-const DISPLAY_LABELS = {
+const DISPLAY_LABELS_EN = {
   photo_of_person: "photo of person",
   cartoon_or_caricature: "cartoon/caricature",
   photo_of_artwork_or_statue: "photo of artwork/statue",
@@ -366,6 +590,514 @@ const DISPLAY_LABELS = {
   tilted_down: "tilted down",
   tilted_up: "tilted up"
 };
+
+const DISPLAY_LABELS_DE = {
+  yes: "ja",
+  no: "nein",
+  partly: "teilweise",
+  full_page: "ganzseitig",
+  partial_page: "Teilseite",
+  photo_of_person: "Foto einer Person",
+  naturalistic_illustration: "naturalistische Illustration",
+  stylized_illustration: "stilisierte Illustration",
+  cartoon_or_caricature: "Cartoon/Karikatur",
+  generic_human_figure: "generische menschliche Figur",
+  photo_of_artwork_or_statue: "Foto von Kunstwerk/Statue",
+  drawing_of_statue_monument_or_public_symbol: "Zeichnung von Statue, Denkmal oder öffentlichem Symbol",
+  mask_mannequin_doll_or_puppet: "Maske, Schaufensterpuppe, Puppe oder Marionette",
+  personified_object: "personifiziertes Objekt",
+  nonhuman_creature_with_face: "nichtmenschliches Wesen mit Gesicht",
+  schematic_icon_or_logo_face: "schematisches Icon/Logo-Gesicht",
+  multiple_types_present: "mehrere Typen vorhanden",
+  only_individuals: "nur Einzelpersonen",
+  "10_20": "10-20",
+  "20_plus": "20+",
+  infant: "Säugling",
+  child: "Kind",
+  adolescent: "Jugendliche/r",
+  young_adult: "junge/r Erwachsene/r",
+  middle_adult: "mittleres Erwachsenenalter",
+  older_adult: "ältere/r Erwachsene/r",
+  feminine: "feminin",
+  masculine: "maskulin",
+  ambiguous_or_androgynous: "ambig/androgyn",
+  beyond_profile: "weniger als Profil",
+  profile: "Profil",
+  three_quarter: "Dreiviertel",
+  frontal: "frontal",
+  tilted_down: "nach unten geneigt",
+  tilted_up: "nach oben geneigt",
+  not_assessable: "nicht beurteilbar",
+  viewer_camera: "Betrachter/Kamera",
+  another_person: "andere Person",
+  advertised_product: "beworbenes Produkt",
+  other_object: "anderes Objekt",
+  off_frame_or_scene_direction: "Szenenrichtung/außerhalb des Bildes",
+  eyes_covered: "Augen bedeckt",
+  closed_eyes: "Augen geschlossen",
+  hand: "Hand",
+  beard: "Bart",
+  other_body_part: "anderes Körperteil",
+  own_body_part: "anderes Körperteil",
+  part_of_another_person: "(Teil einer) anderen Person",
+  object: "Objekt",
+  object_in_mouth: "Objekt im Mund",
+  text_or_graphic_overlay: "Text/grafische Überlagerung",
+  other: "anderes",
+  "1_slight": "1 leicht",
+  "2_clear": "2 deutlich",
+  "3_broad": "3 breit",
+  "4_laughter_like": "4 lachend",
+  "0_not_legible": "0 nicht lesbar",
+  "1_low_legibility": "1 geringe Lesbarkeit",
+  "2_moderate_legibility": "2 mittlere Lesbarkeit",
+  "3_high_legibility": "3 hohe Lesbarkeit",
+  interacting_group: "interagierende Gruppe",
+  posed_group: "gestellte Gruppe",
+  audience_or_crowd: "Publikum/Menge",
+  background_population: "Hintergrundpersonen",
+  separate_portraits_or_composite: "getrennte Porträts/Komposit",
+  young_only: "nur jung",
+  middle_only: "nur mittleres Alter",
+  older_only: "nur älter",
+  mostly_young: "überwiegend jung",
+  mostly_middle: "überwiegend mittleres Alter",
+  mostly_older: "überwiegend älter",
+  mixed: "gemischt",
+  feminine_only: "nur feminin",
+  masculine_only: "nur maskulin",
+  mostly_feminine: "überwiegend feminin",
+  mostly_masculine: "überwiegend maskulin",
+  ambiguous_or_androgynous_present: "ambig/androgyn vorhanden",
+  all_0_not_legible: "alle nicht lesbar",
+  mostly_0_not_legible: "überwiegend nicht lesbar",
+  all_1_low_legibility: "alle geringe Lesbarkeit",
+  mostly_1_low_legibility: "überwiegend geringe Lesbarkeit",
+  all_2_moderate_legibility: "alle mittlere Lesbarkeit",
+  mostly_2_moderate_legibility: "überwiegend mittlere Lesbarkeit",
+  all_3_high_legibility: "alle hohe Lesbarkeit",
+  mostly_3_high_legibility: "überwiegend hohe Lesbarkeit",
+  mixed_legibility: "gemischte Lesbarkeit",
+  toward_viewer_camera: "zum Betrachter/zur Kamera",
+  toward_each_other: "zueinander",
+  toward_object: "zu einem Objekt",
+  none: "keine",
+  minority: "Minderheit",
+  about_half: "etwa die Hälfte",
+  majority: "Mehrheit",
+  all: "alle",
+  slight: "leicht",
+  clear: "deutlich",
+  broad_or_laughter_like: "breit/lachend",
+  face_orientation: "Gesichtsausrichtung",
+  image_quality_or_low_contrast: "Bildqualität/niedriger Kontrast",
+  hand_or_body: "Hand/Körper",
+  object_or_clothing: "Objekt/Kleidung",
+  none_visible: "nichts sichtbar",
+  any_visible: "etwas sichtbar",
+  not_visible: "nicht sichtbar",
+  partly_visible: "teilweise sichtbar",
+  fully_visible: "vollständig sichtbar",
+  off_frame: "außerhalb des Bildes",
+  crop_or_frame: "Beschnitt/Rahmen"
+};
+
+const STEP_META = new Proxy(STEP_META_EN, {
+  get(target, property) {
+    return (state.language === "de" ? STEP_META_DE[property] : null) || target[property];
+  }
+});
+
+const DISPLAY_LABELS = new Proxy(DISPLAY_LABELS_EN, {
+  get(target, property) {
+    return (state.language === "de" ? DISPLAY_LABELS_DE[property] : null) || target[property];
+  }
+});
+
+const UI_TEXT = {
+  en: {
+    app_title: "Annotation App V2",
+    welcome_1: "This app guides you through one annotation decision at a time for magazine pages or page spreads.",
+    welcome_2: "We are looking for advertisements containing eligible face depictions. A face is eligible when more than an ear or the back of a head is visible and its location can be boxed. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.",
+    welcome_3: "For each qualifying ad, you will draw boxes where needed and then answer short visual questions. Always choose the single best-fitting answer when visual evidence is available; use not assessable only when the required evidence cannot be seen well enough.",
+    welcome_4: "Use the question-mark button for detailed coding rules. Your progress is saved during annotation so a session can be resumed later.",
+    welcome_5: "Use the urgent comment button during annotation only for exceptional cases that were unusually difficult or may need review; it adds a note but does not replace the required answer.",
+    manifest_path: "Manifest JSON path",
+    annotation_session: "Annotation session",
+    new_annotation: "New annotation",
+    resume_annotation: "Resume annotation",
+    saved_annotation: "Saved annotation",
+    no_saved_sessions_loaded: "No saved sessions loaded",
+    refresh_sessions: "Refresh sessions",
+    start_new_annotation: "Start new annotation",
+    open_saved_annotation: "Open saved annotation",
+    study_password: "Study password",
+    continue: "Continue",
+    assignment_code: "Eight-digit assignment code",
+    open_annotation: "Open annotation",
+    annotation_set_complete: "Annotation set complete",
+    thank_you: "Thank you.",
+    annotations_saved: "Your annotations have been saved.",
+    pages: "Pages",
+    qualifying_ads: "Qualifying ads",
+    faces_boxed: "Faces boxed",
+    groups: "Groups",
+    focused_time: "Focused time",
+    session: "Session",
+    review_annotations: "Review annotations",
+    sign_out: "Sign out",
+    return_to_start: "Return to start",
+    not_started: "Not started",
+    started: "Started",
+    done: "Done",
+    loading_page: "Loading page",
+    previous_page: "Previous page",
+    next_page: "Next page",
+    zoom_controls: "Zoom controls",
+    fit_image: "Fit image",
+    fit: "Fit",
+    zoom_out: "Zoom out",
+    zoom_in: "Zoom in",
+    box_editing_controls: "Box editing controls",
+    undo_last_box: "Undo last box",
+    undo: "Undo",
+    delete_selected_box: "Delete selected box",
+    delete: "Delete",
+    show_coding_rule: "Show coding rule",
+    add_urgent_comment: "Add urgent comment",
+    back: "Back",
+    next: "Next",
+    edit_annotation: "Edit annotation",
+    finish_task: "Finish task",
+    image_progress: "Image progress",
+    task_progress: "Task progress",
+    task: "Task",
+    expert: "Expert",
+    exit: "Exit",
+    urgent_comment: "Urgent comment",
+    urgent_comment_placeholder: "What was difficult or important here?",
+    cancel: "Cancel",
+    save: "Save",
+    save_session_number: "Save your session number",
+    session_number_copy_instruction: "Copy this number now. It identifies this annotation if you need to resume it later.",
+    copy_number: "Copy number",
+    page_changed_elsewhere: "This page changed elsewhere",
+    page_changed_explanation: "Another browser or tab saved a newer version. Reload this page before continuing so that work is not overwritten.",
+    reload_page: "Reload page",
+    higher_count: "Higher count",
+    face_route: "Face route",
+    other_covering: "Other covering",
+    short_description: "Short description",
+    person_without_box: "Person without bounding box",
+    no_target_selected: "No target selected.",
+    selected_person_without_box: "Selected: person without bounding box",
+    boxes: "Boxes",
+    language_group: "Interface language",
+    page_overview: "Page overview",
+    page_states: "Page states",
+    open_page_overview: "Open page overview",
+    open_page_overview_expert: "Open page overview; all pages are available",
+    choose_saved_annotation: "Choose a saved annotation to resume.",
+    selected_saved_unavailable: "The selected saved annotation is no longer available.",
+    manifest_required: "Manifest path is required.",
+    loading_saved_sessions: "Loading saved sessions...",
+    loading: "Loading...",
+    saved_sessions_unavailable: "Saved sessions could not be loaded",
+    no_saved_annotations: "No saved annotations found.",
+    saved_annotations_found_one: "1 saved annotation found.",
+    saved_annotations_found_many: "{count} saved annotations found.",
+    copying: "Copying...",
+    copied: "Copied",
+    session_number_copied: "Session number copied.",
+    copy_unavailable: "Copy was unavailable. The number is selected; use Ctrl+C.",
+    finishing_task: "Finishing task...",
+    final_page_not_saved: "The final page could not be saved. Try again.",
+    complete_every_page: "Complete every page before finishing the task.",
+    image_could_not_load: "Image could not be loaded.",
+    opening_annotation: "Opening annotation...",
+    signing_in: "Signing in...",
+    unknown_date: "Unknown date",
+    assignment: "Assignment",
+    final_terminal_instruction: "Choose Finish task to save and view your summary.",
+    completion_page_single: "You completed the page. Your annotations have been saved.",
+    completion_page_many: "You completed all {count} pages. Your annotations have been saved.",
+    page_status_title: "Page {number}: {status}",
+    page_locked_title: "Page {number}: {status}. Complete pages in order to unlock it.",
+    enter_integer_6_99: "Enter an integer from 6 to 99.",
+    select_at_least_one: "Select at least one option.",
+    click_person_or_unboxed: "Click a person box or choose Person without bounding box.",
+    select_one_main_face: "Select one main face box.",
+    enter_short_description: "Enter a short description.",
+    select_one_option: "Select one option."
+  },
+  de: {
+    app_title: "Annotations-App V2",
+    welcome_1: "Diese App führt dich Schritt für Schritt durch die Annotation von Magazinseiten oder Doppelseiten.",
+    welcome_2: "Gesucht werden Anzeigen mit geeigneten Gesichtsdarstellungen. Ein Gesicht ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und seine Position mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter.",
+    welcome_3: "Für jede qualifizierende Anzeige zeichnest du bei Bedarf Boxen und beantwortest danach kurze visuelle Fragen. Wähle immer die eine bestpassende Antwort, wenn visuelle Hinweise vorhanden sind; nutze nicht beurteilbar nur, wenn die nötige Evidenz nicht gut genug sichtbar ist.",
+    welcome_4: "Über die Fragezeichen-Schaltfläche findest du genauere Codierregeln. Dein Fortschritt wird während der Annotation gespeichert, sodass du eine Sitzung später fortsetzen kannst.",
+    welcome_5: "Nutze die dringende Kommentar-Schaltfläche nur für Ausnahmefälle, die ungewöhnlich schwierig waren oder geprüft werden sollten; der Kommentar ersetzt keine erforderliche Antwort.",
+    manifest_path: "Pfad zur Manifest-JSON",
+    annotation_session: "Annotationssitzung",
+    new_annotation: "Neue Annotation",
+    resume_annotation: "Annotation fortsetzen",
+    saved_annotation: "Gespeicherte Annotation",
+    no_saved_sessions_loaded: "Keine gespeicherten Sitzungen geladen",
+    refresh_sessions: "Sitzungen aktualisieren",
+    start_new_annotation: "Neue Annotation starten",
+    open_saved_annotation: "Gespeicherte Annotation öffnen",
+    study_password: "Studienpasswort",
+    continue: "Weiter",
+    assignment_code: "Achtstelliger Zuweisungscode",
+    open_annotation: "Annotation öffnen",
+    annotation_set_complete: "Annotationsset abgeschlossen",
+    thank_you: "Danke.",
+    annotations_saved: "Deine Annotationen wurden gespeichert.",
+    pages: "Seiten",
+    qualifying_ads: "Qualifizierende Anzeigen",
+    faces_boxed: "Gesichter markiert",
+    groups: "Gruppen",
+    focused_time: "Aktive Zeit",
+    session: "Sitzung",
+    review_annotations: "Annotationen ansehen",
+    sign_out: "Abmelden",
+    return_to_start: "Zurück zum Start",
+    not_started: "Nicht begonnen",
+    started: "Begonnen",
+    done: "Fertig",
+    loading_page: "Seite wird geladen",
+    previous_page: "Vorherige Seite",
+    next_page: "Nächste Seite",
+    zoom_controls: "Zoom-Steuerung",
+    fit_image: "Bild einpassen",
+    fit: "Einpassen",
+    zoom_out: "Verkleinern",
+    zoom_in: "Vergroßern",
+    box_editing_controls: "Box-Bearbeitung",
+    undo_last_box: "Letzte Box rückgängig",
+    undo: "Rückgängig",
+    delete_selected_box: "Ausgewählte Box löschen",
+    delete: "Löschen",
+    show_coding_rule: "Codierregel anzeigen",
+    add_urgent_comment: "Dringenden Kommentar hinzufügen",
+    back: "Zurück",
+    next: "Weiter",
+    edit_annotation: "Annotation bearbeiten",
+    finish_task: "Aufgabe abschließen",
+    image_progress: "Bildfortschritt",
+    task_progress: "Aufgabenfortschritt",
+    task: "Aufgabe",
+    expert: "Expert",
+    exit: "Beenden",
+    urgent_comment: "Dringender Kommentar",
+    urgent_comment_placeholder: "Was war hier schwierig oder wichtig?",
+    cancel: "Abbrechen",
+    save: "Speichern",
+    save_session_number: "Sitzungsnummer sichern",
+    session_number_copy_instruction: "Kopiere diese Nummer jetzt. Mit ihr kannst du diese Annotation später fortsetzen.",
+    copy_number: "Nummer kopieren",
+    page_changed_elsewhere: "Diese Seite wurde anderswo verändert",
+    page_changed_explanation: "Ein anderer Browser oder Tab hat eine neuere Version gespeichert. Lade die Seite neu, bevor du fortfährst, damit keine Arbeit überschrieben wird.",
+    reload_page: "Seite neu laden",
+    higher_count: "Höhere Anzahl",
+    face_route: "Gesichtsroute",
+    other_covering: "Andere Verdeckung",
+    short_description: "Kurze Beschreibung",
+    person_without_box: "Person ohne Box",
+    no_target_selected: "Kein Ziel ausgewählt.",
+    selected_person_without_box: "Ausgewählt: Person ohne Box",
+    boxes: "Boxen",
+    language_group: "Sprache der Oberfläche",
+    page_overview: "Seitenübersicht",
+    page_states: "Seitenstatus",
+    open_page_overview: "Seitenübersicht öffnen",
+    open_page_overview_expert: "Seitenübersicht öffnen; alle Seiten sind verfügbar",
+    choose_saved_annotation: "Wähle eine gespeicherte Annotation zum Fortsetzen.",
+    selected_saved_unavailable: "Die ausgewählte gespeicherte Annotation ist nicht mehr verfügbar.",
+    manifest_required: "Ein Manifest-Pfad ist erforderlich.",
+    loading_saved_sessions: "Gespeicherte Sitzungen werden geladen...",
+    loading: "Laden...",
+    saved_sessions_unavailable: "Gespeicherte Sitzungen konnten nicht geladen werden",
+    no_saved_annotations: "Keine gespeicherten Annotationen gefunden.",
+    saved_annotations_found_one: "1 gespeicherte Annotation gefunden.",
+    saved_annotations_found_many: "{count} gespeicherte Annotationen gefunden.",
+    copying: "Wird kopiert...",
+    copied: "Kopiert",
+    session_number_copied: "Sitzungsnummer kopiert.",
+    copy_unavailable: "Kopieren war nicht verfügbar. Die Nummer ist markiert; nutze Strg+C.",
+    finishing_task: "Aufgabe wird abgeschlossen...",
+    final_page_not_saved: "Die letzte Seite konnte nicht gespeichert werden. Versuche es erneut.",
+    complete_every_page: "Schließe jede Seite ab, bevor du die Aufgabe beendest.",
+    image_could_not_load: "Bild konnte nicht geladen werden.",
+    opening_annotation: "Annotation wird geöffnet...",
+    signing_in: "Anmeldung läuft...",
+    unknown_date: "Unbekanntes Datum",
+    assignment: "Zuweisung",
+    final_terminal_instruction: "Wähle Aufgabe abschließen, um zu speichern und die Zusammenfassung zu sehen.",
+    completion_page_single: "Du hast die Seite abgeschlossen. Deine Annotationen wurden gespeichert.",
+    completion_page_many: "Du hast alle {count} Seiten abgeschlossen. Deine Annotationen wurden gespeichert.",
+    page_status_title: "Seite {number}: {status}",
+    page_locked_title: "Seite {number}: {status}. Schließe Seiten der Reihe nach ab, um sie freizuschalten.",
+    enter_integer_6_99: "Gib eine ganze Zahl von 6 bis 99 ein.",
+    select_at_least_one: "Wähle mindestens eine Option.",
+    click_person_or_unboxed: "Klicke eine Personen-Box oder wähle Person ohne Box.",
+    select_one_main_face: "Wähle eine Hauptgesichts-Box.",
+    enter_short_description: "Gib eine kurze Beschreibung ein.",
+    select_one_option: "Wähle eine Option."
+  }
+};
+
+function t(key, values = {}) {
+  const table = UI_TEXT[state.language] || UI_TEXT.en;
+  const fallback = UI_TEXT.en[key] || key;
+  const template = table[key] || fallback;
+  return String(template).replace(/\{(\w+)\}/g, (_, name) => values[name] ?? "");
+}
+
+function setText(selector, key) {
+  const element = $(selector);
+  if (element) element.textContent = t(key);
+}
+
+function setTitle(selector, key) {
+  const element = $(selector);
+  if (element) element.title = t(key);
+}
+
+function setAriaLabel(selector, key) {
+  const element = $(selector);
+  if (element) element.setAttribute("aria-label", t(key));
+}
+
+function setPlaceholder(selector, key) {
+  const element = $(selector);
+  if (element) element.placeholder = t(key);
+}
+
+function applyLanguage({ rerender = true } = {}) {
+  document.documentElement.lang = state.language;
+  document.title = t("app_title");
+  $$("[data-lang-option]").forEach((button) => {
+    const selected = button.dataset.langOption === state.language;
+    button.classList.toggle("selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+    button.title = LANGUAGE_LABELS[button.dataset.langOption] || button.dataset.langOption;
+  });
+  $$(".language-toggle").forEach((group) => group.setAttribute("aria-label", t("language_group")));
+
+  setText(".login-panel h1", "app_title");
+  const welcome = $$(".welcome-copy p");
+  ["welcome_1", "welcome_2", "welcome_3", "welcome_4", "welcome_5"].forEach((key, index) => {
+    if (welcome[index]) welcome[index].textContent = t(key);
+  });
+  const manifestLabel = $("#manifestPathField");
+  if (manifestLabel) {
+    for (const node of manifestLabel.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n            ${t("manifest_path")}\n            `;
+    }
+  }
+  setText(".field-label", "annotation_session");
+  $('[data-session-mode="new"]').textContent = t("new_annotation");
+  $('[data-session-mode="resume"]').textContent = t("resume_annotation");
+  const resumeLabel = $("#resumeFields label");
+  if (resumeLabel) {
+    for (const node of resumeLabel.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n              ${t("saved_annotation")}\n              `;
+    }
+  }
+  $("#refreshSessionsButton").textContent = t("refresh_sessions");
+  $("#startButton").textContent = state.startMode === "resume" ? t("open_saved_annotation") : t("start_new_annotation");
+  const passwordLabel = $("#hostedPasswordStep label");
+  if (passwordLabel) {
+    for (const node of passwordLabel.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n              ${t("study_password")}\n              `;
+    }
+  }
+  $("#hostedLoginButton").textContent = t("continue");
+  const assignmentLabel = $("#hostedAssignmentStep label");
+  if (assignmentLabel) {
+    for (const node of assignmentLabel.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n              ${t("assignment_code")}\n              `;
+    }
+  }
+  $("#hostedOpenButton").textContent = t("open_annotation");
+
+  setText(".completion-kicker", "annotation_set_complete");
+  setText("#completionTitle", "thank_you");
+  setText("#completionMessage", "annotations_saved");
+  const statKeys = ["pages", "qualifying_ads", "faces_boxed", "groups", "focused_time"];
+  $$(".completion-stats span").forEach((span, index) => {
+    span.textContent = t(statKeys[index]);
+  });
+  const completionSession = $(".completion-session");
+  if (completionSession) completionSession.firstChild.textContent = `${t("session")} `;
+  $("#reviewCompletedTaskButton").textContent = t("review_annotations");
+  if (state.completionSummary) renderCompletionSummary(state.completionSummary);
+
+  setAriaLabel("#imageList", "page_overview");
+  setText(".page-list-header > strong", "pages");
+  setAriaLabel(".page-list-legend", "page_states");
+  const legendStates = $$(".page-list-legend .page-state");
+  ["not_started", "started", "done"].forEach((key, index) => {
+    if (legendStates[index]) legendStates[index].lastChild.textContent = t(key);
+  });
+  setAriaLabel("#imageLoading", "loading_page");
+  $("#bboxDoneButton").textContent = t("done");
+  setAriaLabel("#prevImageButton", "previous_page");
+  setAriaLabel("#nextImageButton", "next_page");
+  setTitle("#prevImageButton", "previous_page");
+  setTitle("#nextImageButton", "next_page");
+  setAriaLabel(".zoom-toolbar", "zoom_controls");
+  setTitle('[data-zoom="fit"]', "fit_image");
+  $('[data-zoom="fit"]').textContent = t("fit");
+  setTitle('[data-zoom="out"]', "zoom_out");
+  setTitle('[data-zoom="in"]', "zoom_in");
+  setAriaLabel(".edit-toolbar", "box_editing_controls");
+  setTitle("#undoBoxButton", "undo_last_box");
+  $("#undoBoxButton").textContent = t("undo");
+  setTitle("#deleteBoxButton", "delete_selected_box");
+  $("#deleteBoxButton").textContent = t("delete");
+  setTitle("#helpButton", "show_coding_rule");
+  setAriaLabel("#helpButton", "show_coding_rule");
+  setTitle("#urgentCommentButton", "add_urgent_comment");
+  setAriaLabel("#urgentCommentButton", "add_urgent_comment");
+  setTitle("#imageProgress", "image_progress");
+  $("#pageListToggle").textContent = t("pages");
+  const sessionDisplay = $(".session-code-display");
+  if (sessionDisplay) sessionDisplay.firstChild.textContent = `${t("session")} `;
+  $("#taskTitle").textContent = t("task");
+  setTitle("#taskProgress", "task_progress");
+  $("#expertModeBadge").textContent = t("expert");
+  $("#hostedExitButton").textContent = t("exit");
+  $("#leaveCompletedTaskButton").textContent = state.hostedMode ? t("sign_out") : t("return_to_start");
+
+  setText("#commentDialog h2", "urgent_comment");
+  setPlaceholder("#urgentCommentText", "urgent_comment_placeholder");
+  $("#cancelCommentButton").textContent = t("cancel");
+  $("#saveCommentButton").textContent = t("save");
+  setText("#sessionCodeTitle", "save_session_number");
+  const sessionDialogText = $("#sessionCodeDialog .dialog-body > p");
+  if (sessionDialogText) sessionDialogText.textContent = t("session_number_copy_instruction");
+  $("#copySessionCodeButton").textContent = t("copy_number");
+  $("#continueSessionButton").textContent = t("continue");
+  setText("#saveConflictTitle", "page_changed_elsewhere");
+  const conflictText = $("#saveConflictDialog .instruction");
+  if (conflictText) conflictText.textContent = t("page_changed_explanation");
+  $("#reloadAfterConflictButton").textContent = t("reload_page");
+
+  if (state.manifest) {
+    $("#pageListToggle").title = state.expertMode ? t("open_page_overview_expert") : t("open_page_overview");
+  }
+  if (rerender && state.annotation) render();
+}
+
+function setLanguage(language) {
+  if (language !== "en" && language !== "de") return;
+  state.language = language;
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  if (state.resumeSessions.length) renderResumeSessions(state.resumeSessions, $("#resumeSessionSelect")?.value || null);
+  applyLanguage();
+}
 
 function labelize(value) {
   if (DISPLAY_LABELS[value]) return DISPLAY_LABELS[value];
@@ -1557,31 +2289,37 @@ function validationMessage(step = state.step) {
   const spec = currentBboxSpec(step);
   if (spec) {
     const count = spec.getBoxes().length;
-    if (count < spec.required) return `Required boxes: ${spec.required}. Current boxes: ${count}.`;
+    if (count < spec.required) return state.language === "de"
+      ? `Erforderliche Boxen: ${spec.required}. Aktuelle Boxen: ${count}.`
+      : `Required boxes: ${spec.required}. Current boxes: ${count}.`;
     if (Number.isFinite(spec.max) && spec.max === spec.required && count !== spec.max) {
-      return `Draw exactly ${spec.max} boxes. Current boxes: ${count}.`;
+      return state.language === "de"
+        ? `Zeichne genau ${spec.max} Boxen. Aktuelle Boxen: ${count}.`
+        : `Draw exactly ${spec.max} boxes. Current boxes: ${count}.`;
     }
     return "";
   }
   if (isMultiStep(step)) {
     const values = stepValue(step);
-    return Array.isArray(values) && values.length ? "" : "Select at least one option.";
+    return Array.isArray(values) && values.length ? "" : t("select_at_least_one");
   }
   if (step.id === "I5_target_person") {
     const person = personById(step.personId);
     return person?.gaze_target_person_id || person?.gaze_target_person_unboxed === true
       ? ""
-      : "Click a person box or choose Person without bounding box.";
+      : t("click_person_or_unboxed");
   }
   if (step.id === "D1_unique_face_count") {
     const total = duplicatePeopleForStep(step).length;
     const count = Number(duplicateUniqueCountForStep(step));
     return Number.isInteger(count) && count >= 1 && count < total
       ? ""
-      : `Enter a whole number from 1 to ${Math.max(total - 1, 1)}.`;
+      : state.language === "de"
+        ? `Gib eine ganze Zahl von 1 bis ${Math.max(total - 1, 1)} ein.`
+        : `Enter a whole number from 1 to ${Math.max(total - 1, 1)}.`;
   }
   if (step.id === "D2_select_main") {
-    return duplicateGroupContext(step).group.main_person_id ? "" : "Select one main face box.";
+    return duplicateGroupContext(step).group.main_person_id ? "" : t("select_one_main_face");
   }
   if (step.id === "D3_select_duplicates") {
     const { index, group, assignedBefore, candidateIds } = duplicateGroupContext(step);
@@ -1589,16 +2327,20 @@ function validationMessage(step = state.step) {
     const remainingAfter = candidateIds.filter((id) => !assignedBefore.has(id) && !selectedNow.has(id)).length;
     const groupCount = Number(duplicateUniqueCountForStep(step));
     const groupsAfter = groupCount - index - 1;
-    if (remainingAfter < groupsAfter) return `Leave at least ${groupsAfter} face${groupsAfter === 1 ? "" : "s"} for the remaining identities.`;
-    if (groupsAfter === 0 && remainingAfter > 0) return `Assign the remaining ${remainingAfter} face${remainingAfter === 1 ? "" : "s"} to this person.`;
+    if (remainingAfter < groupsAfter) return state.language === "de"
+      ? `Lass mindestens ${groupsAfter} Gesicht${groupsAfter === 1 ? "" : "er"} für die verbleibenden Identitäten übrig.`
+      : `Leave at least ${groupsAfter} face${groupsAfter === 1 ? "" : "s"} for the remaining identities.`;
+    if (groupsAfter === 0 && remainingAfter > 0) return state.language === "de"
+      ? `Ordne die verbleibenden ${remainingAfter} Gesicht${remainingAfter === 1 ? "" : "er"} dieser Person zu.`
+      : `Assign the remaining ${remainingAfter} face${remainingAfter === 1 ? "" : "s"} to this person.`;
     return "";
   }
   if (step.id === "I7_covering_other_text") {
-    return String(stepValue(step) || "").trim() ? "" : "Enter a short description.";
+    return String(stepValue(step) || "").trim() ? "" : t("enter_short_description");
   }
   if (isChoiceStep(step)) {
     const value = stepValue(step);
-    return value === null || value === undefined || value === "" ? "Select one option." : "";
+    return value === null || value === undefined || value === "" ? t("select_one_option") : "";
   }
   return "";
 }
@@ -1615,7 +2357,7 @@ function commitP1ManualInputIfPresent() {
   if (!Number.isInteger(raw) || raw < 6 || raw > 99) {
     input.setAttribute("aria-invalid", "true");
     input.focus();
-    $("#saveStatus").textContent = "Enter an integer from 6 to 99.";
+    $("#saveStatus").textContent = t("enter_integer_6_99");
     $("#saveStatus").className = "status-line error";
     return false;
   }
@@ -1886,7 +2628,7 @@ function renderP1CountInput() {
   manual.className = "manual-count-row";
   manual.innerHTML = `
     <label>
-      Higher count
+      ${escapeHtml(t("higher_count"))}
       <input id="manualAdCount" type="number" min="6" max="99" step="1" inputmode="numeric" placeholder="6-99">
     </label>
   `;
@@ -1899,7 +2641,7 @@ function renderP1CountInput() {
       if (!Number.isInteger(raw) || raw < 6 || raw > 99) {
         input.setAttribute("aria-invalid", "true");
         input.focus();
-        $("#saveStatus").textContent = "Enter an integer from 6 to 99.";
+        $("#saveStatus").textContent = t("enter_integer_6_99");
         $("#saveStatus").className = "status-line error";
         return;
       }
@@ -1967,32 +2709,38 @@ function renderDuplicateSelectionStatus() {
   const assignedNow = new Set([group.main_person_id, ...selectedDuplicates].filter(Boolean));
   const available = candidateIds.filter((id) => !assignedBefore.has(id) && !assignedNow.has(id));
   const heading = document.createElement("strong");
-  heading.textContent = `Unique face ${index + 1} of ${groupCount}`;
+  heading.textContent = state.language === "de"
+    ? `Eindeutiges Gesicht ${index + 1} von ${groupCount}`
+    : `Unique face ${index + 1} of ${groupCount}`;
   wrapper.appendChild(heading);
   const detail = document.createElement("p");
   if (state.step.id === "D2_select_main") {
-    detail.textContent = group.main_person_id ? `Main face: ${group.main_person_id}` : "No main face selected.";
+    detail.textContent = group.main_person_id
+      ? state.language === "de" ? `Hauptgesicht: ${group.main_person_id}` : `Main face: ${group.main_person_id}`
+      : state.language === "de" ? "Kein Hauptgesicht ausgewählt." : "No main face selected.";
   } else {
     detail.textContent = selectedDuplicates.length
-      ? `Selected duplicates: ${selectedDuplicates.join(", ")}`
-      : "No duplicates selected for this identity.";
+      ? state.language === "de" ? `Ausgewählte Duplikate: ${selectedDuplicates.join(", ")}` : `Selected duplicates: ${selectedDuplicates.join(", ")}`
+      : state.language === "de" ? "Keine Duplikate für diese Identität ausgewählt." : "No duplicates selected for this identity.";
   }
   wrapper.appendChild(detail);
   const remaining = document.createElement("p");
   remaining.className = "instruction";
-  remaining.textContent = `${available.length} unassigned face box${available.length === 1 ? "" : "es"} ${available.length === 1 ? "remains" : "remain"} after this group.`;
+  remaining.textContent = state.language === "de"
+    ? `${available.length} nicht zugeordnete Gesichts-Box${available.length === 1 ? "" : "en"} bleiben nach dieser Gruppe übrig.`
+    : `${available.length} unassigned face box${available.length === 1 ? "" : "es"} ${available.length === 1 ? "remains" : "remain"} after this group.`;
   wrapper.appendChild(remaining);
   return wrapper;
 }
 
 function renderCoveringOtherInput() {
   const label = document.createElement("label");
-  label.textContent = "Other covering";
+  label.textContent = t("other_covering");
   const input = document.createElement("input");
   input.id = "coveringOtherText";
   input.type = "text";
   input.maxLength = 240;
-  input.placeholder = "Short description";
+  input.placeholder = t("short_description");
   input.value = stepValue(state.step) || "";
   input.addEventListener("input", () => {
     const person = personById(state.step.personId);
@@ -2022,13 +2770,13 @@ function renderInput() {
     const count = ad.people.filter((person) => person.annotation_role === "individual" && person.face_bbox).length;
     const countText = document.createElement("p");
     countText.className = "face-box-count";
-    countText.textContent = `Faces boxed: ${count} / 9`;
+    countText.textContent = state.language === "de" ? `Gesichter markiert: ${count} / 9` : `Faces boxed: ${count} / 9`;
     area.appendChild(countText);
 
     const crowdRoute = document.createElement("div");
     crowdRoute.className = "crowd-route";
     const label = document.createElement("strong");
-    label.textContent = "Face route";
+    label.textContent = t("face_route");
     crowdRoute.appendChild(label);
     crowdRoute.appendChild(renderA3FaceRouteInput(ad));
     area.appendChild(crowdRoute);
@@ -2037,8 +2785,8 @@ function renderInput() {
   if (spec) {
     const count = spec.getBoxes().length;
     const target = Number.isFinite(spec.max) && spec.max === spec.required
-      ? `Boxes: ${count} / ${spec.required}`
-      : `Boxes: ${count}`;
+      ? `${t("boxes")}: ${count} / ${spec.required}`
+      : `${t("boxes")}: ${count}`;
     const p = document.createElement("p");
     p.className = "instruction";
     p.textContent = target;
@@ -2061,16 +2809,16 @@ function renderInput() {
     const person = personById(step.personId);
     const p = document.createElement("p");
     p.className = "instruction";
-    if (person?.gaze_target_person_id) p.textContent = `Selected: ${person.gaze_target_person_id}`;
-    else if (person?.gaze_target_person_unboxed === true) p.textContent = "Selected: person without bounding box";
-    else p.textContent = "No target selected.";
+    if (person?.gaze_target_person_id) p.textContent = state.language === "de" ? `Ausgewählt: ${person.gaze_target_person_id}` : `Selected: ${person.gaze_target_person_id}`;
+    else if (person?.gaze_target_person_unboxed === true) p.textContent = t("selected_person_without_box");
+    else p.textContent = t("no_target_selected");
     area.appendChild(p);
 
     const unboxedButton = document.createElement("button");
     unboxedButton.type = "button";
     unboxedButton.className = "choice-button";
     if (person?.gaze_target_person_unboxed === true) unboxedButton.classList.add("selected");
-    unboxedButton.textContent = "Person without bounding box";
+    unboxedButton.textContent = t("person_without_box");
     unboxedButton.addEventListener("click", () => {
       person.gaze_target_person_id = null;
       person.gaze_target_person_unboxed = true;
@@ -2095,7 +2843,7 @@ function renderInput() {
 }
 
 function stepOrdinalText() {
-  return STEP_META[state.step.id]?.unit || "Step";
+  return STEP_META[state.step.id]?.unit || (state.language === "de" ? "Schritt" : "Step");
 }
 
 function currentHierarchyParts() {
@@ -2106,7 +2854,7 @@ function currentHierarchyParts() {
   if (state.step.personId) parts.push(state.step.personId);
   if (state.step.groupId) parts.push(state.step.groupId);
   if (state.step.identityGroupIndex !== undefined) {
-    parts.push(`identity ${state.step.identityGroupIndex + 1}/${duplicateUniqueCountForStep(state.step)}`);
+    parts.push(`${state.language === "de" ? "Identität" : "identity"} ${state.step.identityGroupIndex + 1}/${duplicateUniqueCountForStep(state.step)}`);
   }
   return parts;
 }
@@ -2133,7 +2881,7 @@ function renderStepPanel() {
   const finalTerminal = state.step.id.startsWith("END_PAGE_") && state.currentIndex >= state.manifest.images.length - 1;
   $("#stepKicker").textContent = stepKickerText();
   $("#questionText").textContent = meta.prompt;
-  $("#instructionText").textContent = finalTerminal ? "Choose Finish task to save and view your summary." : meta.instruction || "";
+  $("#instructionText").textContent = finalTerminal ? t("final_terminal_instruction") : meta.instruction || "";
   $("#helpText").textContent = meta.help || "";
   $("#helpButton").disabled = !meta.help;
   renderInput();
@@ -2145,13 +2893,13 @@ function updateNavState() {
   const terminal = state.step.id.startsWith("END_PAGE_");
   const finalPage = state.currentIndex >= state.manifest.images.length - 1;
   $("#backButton").disabled = !state.annotation?.navigation_history?.length;
-  $("#backButton").textContent = terminal ? "Edit annotation" : "Back";
+  $("#backButton").textContent = terminal ? t("edit_annotation") : t("back");
   $("#nextButton").disabled = terminal
     ? state.completionLoading
     : state.step.id === "P1_qualifying_ad_count" ? false : !canAdvance();
   $("#nextButton").textContent = terminal
-    ? finalPage ? "Finish task" : "Next page"
-    : currentBboxSpec() ? "Done" : "Next";
+    ? finalPage ? t("finish_task") : t("next_page")
+    : currentBboxSpec() ? t("done") : t("next");
 }
 
 function taskIsComplete() {
@@ -2175,30 +2923,33 @@ function formatFocusedTime(milliseconds) {
 }
 
 function renderCompletionSummary(summary) {
+  state.completionSummary = summary;
   $("#completionPages").textContent = Number(summary.pages_annotated || 0).toLocaleString();
   $("#completionAds").textContent = Number(summary.qualifying_advertisements || 0).toLocaleString();
   $("#completionFaces").textContent = Number(summary.face_depictions_boxed || 0).toLocaleString();
   $("#completionGroups").textContent = Number(summary.groups_annotated || 0).toLocaleString();
   $("#completionTime").textContent = formatFocusedTime(summary.focused_time_ms);
   const pageTotal = Number(summary.pages_total || 0);
-  $("#completionMessage").textContent = `You completed ${pageTotal === 1 ? "the page" : `all ${pageTotal} pages`}. Your annotations have been saved.`;
+  $("#completionMessage").textContent = pageTotal === 1
+    ? t("completion_page_single")
+    : t("completion_page_many", { count: pageTotal });
   $("#completionSessionCode").textContent = sessionDisplayId();
-  $("#leaveCompletedTaskButton").textContent = state.hostedMode ? "Sign out" : "Return to start";
+  $("#leaveCompletedTaskButton").textContent = state.hostedMode ? t("sign_out") : t("return_to_start");
 }
 
 async function showCompletionView() {
   if (state.completionLoading) return;
   state.completionLoading = true;
   updateNavState();
-  $("#saveStatus").textContent = "Finishing task...";
+  $("#saveStatus").textContent = t("finishing_task");
   $("#saveStatus").className = "status-line";
   try {
     finishStepTimer("task_complete");
     markDirty();
     await saveAnnotationNow();
-    if (state.dirty) throw new Error("The final page could not be saved. Try again.");
+    if (state.dirty) throw new Error(t("final_page_not_saved"));
     await refreshProgress();
-    if (!taskIsComplete()) throw new Error("Complete every page before finishing the task.");
+    if (!taskIsComplete()) throw new Error(t("complete_every_page"));
     const data = await fetchJson(summaryUrl());
     renderCompletionSummary(data.summary || {});
     $("#appView").classList.add("hidden");
@@ -2265,15 +3016,15 @@ function updateProgress() {
 function pageWorkState(imageId) {
   const status = state.statuses[imageId]?.status;
   if (DONE_STATUSES.has(status)) {
-    return { key: "done", label: "Done" };
+    return { key: "done", label: t("done") };
   }
   if (status) {
-    return { key: "started", label: "Started" };
+    return { key: "started", label: t("started") };
   }
   if (state.annotation && currentImage()?.image_id === imageId && state.dirty) {
-    return { key: "started", label: "Started" };
+    return { key: "started", label: t("started") };
   }
-  return { key: "not-started", label: "Not started" };
+  return { key: "not-started", label: t("not_started") };
 }
 
 function normalNavigationLimit() {
@@ -2308,8 +3059,8 @@ function renderImageList() {
     button.dataset.pageState = workState.key;
     button.setAttribute("aria-current", index === state.currentIndex ? "page" : "false");
     button.title = canOpen
-      ? `Page ${index + 1}: ${workState.label}`
-      : `Page ${index + 1}: ${workState.label}. Complete pages in order to unlock it.`;
+      ? t("page_status_title", { number: index + 1, status: workState.label })
+      : t("page_locked_title", { number: index + 1, status: workState.label });
     button.innerHTML = `
       <span class="page-list-copy">
         <span class="image-name">${escapeHtml(image.filename)}</span>
@@ -2480,7 +3231,7 @@ function positionBboxDoneButton() {
   const duplicateAnchor = duplicateSelection
     ? (state.selectedBoxId || duplicateGroup.main_person_id)
     : null;
-  button.textContent = duplicateSelection || gazeTarget ? "Next" : "Done";
+  button.textContent = duplicateSelection || gazeTarget ? t("next") : t("done");
   if ((!spec && !gazeTarget && !duplicateAnchor) || !canAdvance()) {
     button.classList.add("hidden");
     return;
@@ -2845,7 +3596,7 @@ async function loadImage(index, options = {}) {
   };
   pageImage.onerror = () => {
     imageReady = false;
-    $("#saveStatus").textContent = "Image could not be loaded.";
+    $("#saveStatus").textContent = t("image_could_not_load");
     $("#saveStatus").className = "status-line error";
     $("#imageLoading").classList.add("hidden");
   };
@@ -2876,8 +3627,8 @@ async function loadImage(index, options = {}) {
 
 function formatSessionTimestamp(value) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unknown date";
-  return new Intl.DateTimeFormat("en-GB", {
+  if (Number.isNaN(date.getTime())) return t("unknown_date");
+  return new Intl.DateTimeFormat(state.language === "de" ? "de-DE" : "en-GB", {
     year: "numeric",
     month: "short",
     day: "2-digit",
@@ -2886,7 +3637,7 @@ function formatSessionTimestamp(value) {
   }).format(date);
 }
 
-function clearResumeSessions(message = "No saved sessions loaded") {
+function clearResumeSessions(message = t("no_saved_sessions_loaded")) {
   state.resumeSessions = [];
   const select = $("#resumeSessionSelect");
   const option = document.createElement("option");
@@ -2902,7 +3653,9 @@ function renderResumeSessions(sessions, preferredSessionId = null) {
   for (const session of sessions) {
     const option = document.createElement("option");
     option.value = session.session_id;
-    option.textContent = `Session ${sessionDisplayId(session)} | ${session.task_id} | ${session.done}/${session.total} done | ${session.started} started | ${formatSessionTimestamp(session.updated_at || session.created_at)}`;
+    option.textContent = state.language === "de"
+      ? `${t("session")} ${sessionDisplayId(session)} | ${session.task_id} | ${session.done}/${session.total} fertig | ${session.started} begonnen | ${formatSessionTimestamp(session.updated_at || session.created_at)}`
+      : `${t("session")} ${sessionDisplayId(session)} | ${session.task_id} | ${session.done}/${session.total} done | ${session.started} started | ${formatSessionTimestamp(session.updated_at || session.created_at)}`;
     select.appendChild(option);
   }
   select.disabled = sessions.length === 0;
@@ -2914,19 +3667,21 @@ async function refreshResumeSessions(preferredSessionId = null) {
   const status = $("#sessionLookupStatus");
   const token = ++state.sessionLookupToken;
   status.className = "status-line";
-  clearResumeSessions("Loading saved sessions...");
-  status.textContent = "Loading...";
+  clearResumeSessions(t("loading_saved_sessions"));
+  status.textContent = t("loading");
   try {
     const data = await fetchJson("/api/sessions");
     if (token !== state.sessionLookupToken) return;
     state.resumeSessions = data.sessions || [];
     renderResumeSessions(state.resumeSessions, preferredSessionId);
     status.textContent = state.resumeSessions.length
-      ? `${state.resumeSessions.length} saved annotation${state.resumeSessions.length === 1 ? "" : "s"} found.`
-      : "No saved annotations found.";
+      ? state.resumeSessions.length === 1
+        ? t("saved_annotations_found_one")
+        : t("saved_annotations_found_many", { count: state.resumeSessions.length })
+      : t("no_saved_annotations");
   } catch (error) {
     if (token !== state.sessionLookupToken) return;
-    clearResumeSessions("Saved sessions could not be loaded");
+    clearResumeSessions(t("saved_sessions_unavailable"));
     status.textContent = error.message;
     status.className = "status-line error";
   }
@@ -2942,7 +3697,7 @@ function setStartMode(mode, { refresh = true, preferredSessionId = null } = {}) 
   const resuming = state.startMode === "resume";
   $("#manifestPathField").classList.toggle("hidden", resuming);
   $("#resumeFields").classList.toggle("hidden", state.startMode !== "resume");
-  $("#startButton").textContent = state.startMode === "resume" ? "Open saved annotation" : "Start new annotation";
+  $("#startButton").textContent = state.startMode === "resume" ? t("open_saved_annotation") : t("start_new_annotation");
   $("#loginStatus").textContent = "";
   if (state.startMode === "resume" && refresh) {
     void refreshResumeSessions(preferredSessionId);
@@ -2975,7 +3730,7 @@ function selectSessionCodeText() {
 async function copySessionCode() {
   const code = sessionDisplayId();
   const status = $("#sessionCodeStatus");
-  status.textContent = "Copying...";
+  status.textContent = t("copying");
   status.className = "status-line";
   try {
     if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
@@ -2985,12 +3740,12 @@ async function copySessionCode() {
         window.setTimeout(() => reject(new Error("Clipboard timed out")), 1500);
       })
     ]);
-    status.textContent = "Session number copied.";
+    status.textContent = t("session_number_copied");
     status.className = "status-line saved";
-    $("#copySessionCodeButton").textContent = "Copied";
+    $("#copySessionCodeButton").textContent = t("copied");
   } catch {
     selectSessionCodeText();
-    status.textContent = "Copy was unavailable. The number is selected; use Ctrl+C.";
+    status.textContent = t("copy_unavailable");
     status.className = "status-line error";
   }
 }
@@ -3000,7 +3755,7 @@ function showSessionCodePrompt() {
   $("#sessionCodeValue").textContent = sessionDisplayId();
   $("#sessionCodeStatus").textContent = "";
   $("#sessionCodeStatus").className = "status-line";
-  $("#copySessionCodeButton").textContent = "Copy number";
+  $("#copySessionCodeButton").textContent = t("copy_number");
   dialog.showModal();
   return new Promise((resolve) => {
     $("#continueSessionButton").onclick = () => {
@@ -3021,14 +3776,14 @@ async function startApp() {
     }
     const selectedSessionId = state.startMode === "resume" ? $("#resumeSessionSelect").value : null;
     if (state.startMode === "resume" && !selectedSessionId) {
-      throw new Error("Choose a saved annotation to resume.");
+      throw new Error(t("choose_saved_annotation"));
     }
     if (state.startMode === "resume") {
       const selected = state.resumeSessions.find((session) => session.session_id === selectedSessionId);
-      if (!selected) throw new Error("The selected saved annotation is no longer available.");
+      if (!selected) throw new Error(t("selected_saved_unavailable"));
       manifestPath = selected.manifest_path;
     } else {
-      if (!manifestPath) throw new Error("Manifest path is required.");
+      if (!manifestPath) throw new Error(t("manifest_required"));
     }
     const [configData, manifestData] = await Promise.all([
       fetchJson("/api/config"),
@@ -3049,10 +3804,10 @@ async function startApp() {
     $("#taskTitle").textContent = state.manifest.task_id;
     $("#expertModeBadge").classList.toggle("hidden", !state.expertMode);
     $("#pageListToggle").title = state.expertMode
-      ? "Open page overview; all pages are available"
-      : "Open page overview";
+      ? t("open_page_overview_expert")
+      : t("open_page_overview");
     $("#sessionCodeTop").textContent = sessionDisplayId();
-    $("#sessionCodeTop").title = `Session ${sessionDisplayId()}`;
+    $("#sessionCodeTop").title = `${t("session")} ${sessionDisplayId()}`;
     const initialIndex = state.startMode === "resume" ? resumeIndexFromStatuses() : 0;
     state.currentIndex = initialIndex;
     state.maxVisitedIndex = initialIndex;
@@ -3075,7 +3830,7 @@ function setHostedEntryStep(step) {
 }
 
 async function enterHostedAssignment(code) {
-  $("#loginStatus").textContent = "Opening annotation...";
+  $("#loginStatus").textContent = t("opening_annotation");
   $("#loginStatus").className = "status-line";
   const sessionData = await postJson("/api/assignment/open", { code });
   const [configData, manifestData] = await Promise.all([
@@ -3092,10 +3847,10 @@ async function enterHostedAssignment(code) {
   $("#expertModeBadge").classList.toggle("hidden", !state.expertMode);
   $("#hostedExitButton").classList.remove("hidden");
   $("#pageListToggle").title = state.expertMode
-    ? "Open page overview; all pages are available"
-    : "Open page overview";
+    ? t("open_page_overview_expert")
+    : t("open_page_overview");
   $("#sessionCodeTop").textContent = sessionDisplayId();
-  $("#sessionCodeTop").title = `Assignment ${sessionDisplayId()}`;
+  $("#sessionCodeTop").title = `${t("assignment")} ${sessionDisplayId()}`;
   const initialIndex = resumeIndexFromStatuses();
   state.currentIndex = initialIndex;
   state.maxVisitedIndex = initialIndex;
@@ -3104,7 +3859,7 @@ async function enterHostedAssignment(code) {
 
 async function hostedLogin() {
   const password = $("#hostedPassword").value;
-  $("#loginStatus").textContent = "Signing in...";
+  $("#loginStatus").textContent = t("signing_in");
   $("#loginStatus").className = "status-line";
   try {
     await postJson("/api/auth/login", { role: "annotator", password });
@@ -3203,6 +3958,9 @@ function clearImageArrowHover() {
 }
 
 function bindEvents() {
+  $$("[data-lang-option]").forEach((button) => {
+    button.addEventListener("click", () => setLanguage(button.dataset.langOption));
+  });
   $("#startButton").addEventListener("click", () => void startApp());
   $$("[data-session-mode]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -3291,6 +4049,7 @@ function bindEvents() {
 async function boot() {
   const stored = loadLocalBootState();
   bindEvents();
+  applyLanguage({ rerender: false });
   try {
     const publicConfig = await fetchJson("/api/public-config");
     state.hostedMode = publicConfig.mode === "hosted";
