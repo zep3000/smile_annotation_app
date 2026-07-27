@@ -1,6 +1,9 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { summarizeAnnotations } = require("../src/shared/annotation-summary");
+const {
+  effectiveAnnotationStatus,
+  summarizeAnnotations,
+} = require("../src/shared/annotation-summary");
 
 test("annotation summaries count completed work without double-counting identities", () => {
   const records = [
@@ -48,4 +51,16 @@ test("annotation summaries count completed work without double-counting identiti
     groups_annotated: 1,
     focused_time_ms: 2000
   });
+});
+
+test("legacy audience/crowd group type reopens completed annotations", () => {
+  const annotation = {
+    status: "complete",
+    advertisements: [
+      {
+        groups: [{ group_type: "audience_or_crowd" }]
+      }
+    ]
+  };
+  assert.equal(effectiveAnnotationStatus(annotation), "draft");
 });

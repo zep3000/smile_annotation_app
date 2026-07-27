@@ -12,10 +12,23 @@ function missingNoQualifyingAdReason(annotation) {
   );
 }
 
+function hasLegacyAudienceCrowdGroupType(annotation) {
+  return Boolean(
+    annotation?.advertisements?.some((advertisement) =>
+      advertisement?.groups?.some(
+        (group) => group?.group_type === "audience_or_crowd",
+      ),
+    ),
+  );
+}
+
 function effectiveAnnotationStatus(record) {
   const annotation = annotationFromRecord(record);
   const status = record?.status || annotation?.status || null;
-  return missingNoQualifyingAdReason(annotation) ? "draft" : status;
+  return missingNoQualifyingAdReason(annotation) ||
+    hasLegacyAudienceCrowdGroupType(annotation)
+    ? "draft"
+    : status;
 }
 
 function finiteNonnegative(value) {
@@ -58,6 +71,7 @@ function summarizeAnnotations(records, pageTotal = null) {
 module.exports = {
   DONE_STATUSES,
   effectiveAnnotationStatus,
+  hasLegacyAudienceCrowdGroupType,
   missingNoQualifyingAdReason,
   summarizeAnnotations,
 };

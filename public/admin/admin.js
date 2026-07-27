@@ -1,4 +1,10 @@
-const state = { sets: [], selectedSetId: null, detail: null, files: [] };
+const state = {
+  sets: [],
+  selectedSetId: null,
+  detail: null,
+  files: [],
+  copySourceDetail: null,
+};
 const $ = (selector) => document.querySelector(selector);
 
 function escapeHtml(value) {
@@ -115,8 +121,74 @@ function renderDetail() {
   $("#jsonlExportLink").href = `/api/admin/sets/${set.id}/export.jsonl`;
   $("#jsonExportLink").href = `/api/admin/sets/${set.id}/export.json`;
   renderAssignments(assignments, set.image_count);
+  renderCopyControls();
   renderAudit(events);
   updateUploadSelection();
+}
+
+function assignmentOptionLabel(assignment) {
+  return `${assignment.code} | ${assignment.status.replaceAll("_", " ")} | ${assignment.pages_started} opened, ${assignment.pages_done} done`;
+}
+
+function fillSelect(select, options, placeholder) {
+  select.innerHTML = "";
+  const empty = document.createElement("option");
+  empty.value = "";
+  empty.textContent = placeholder;
+  select.appendChild(empty);
+  for (const option of options) {
+    const item = document.createElement("option");
+    item.value = option.value;
+    item.textContent = option.label;
+    select.appendChild(item);
+  }
+}
+
+function renderCopyControls() {
+  if (!state.detail) return;
+  fillSelect(
+    $("#copySourceSet"),
+    state.sets.map((set) => ({
+      value: set.id,
+      label: `${set.name} | ${set.task_id}`
+    })),
+    "Choose source set"
+  );
+  if (state.copySourceDetail?.set?.id) {
+    $("#copySourceSet").value = state.copySourceDetail.set.id;
+  }
+  renderCopyAssignmentControls();
+}
+
+function renderCopyAssignmentControls() {
+  const sourceAssignments = state.copySourceDetail?.assignments || [];
+  const targetAssignments = state.detail?.assignments || [];
+  fillSelect(
+    $("#copySourceAssignment"),
+    sourceAssignments
+      .filter((assignment) => assignment.pages_started > 0)
+      .map((assignment) => ({
+        value: assignment.id,
+        label: assignmentOptionLabel(assignment)
+      })),
+    sourceAssignments.length ? "Choose source assignment" : "Choose source set first"
+  );
+  fillSelect(
+    $("#copyTargetAssignment"),
+    targetAssignments.map((assignment) => ({
+      value: assignment.id,
+      label: assignmentOptionLabel(assignment)
+    })),
+    targetAssignments.length ? "Choose target assignment" : "No target assignments"
+  );
+  updateCopyButton();
+}
+
+function updateCopyButton() {
+  const canCopy = Boolean(
+    $("#copySourceAssignment").value && $("#copyTargetAssignment").value
+  );
+  $("#copyAnnotationsButton").disabled = !canCopy;
 }
 
 function renderAssignments(assignments, imageCount) {
@@ -175,7 +247,7 @@ async function createSet(event) {
       })
     });
     $("#createSetForm").reset();
-    $("#flowVersion").value = "1.12";
+    $("#flowVersion").value = "1.15";
     await loadSets(data.set.id);
   } catch (error) {
     setStatus("#createSetStatus", error.message, "error");
@@ -283,6 +355,49 @@ async function updateAssignment(id, changes) {
   }
 }
 
+async function loadCopySourceSet(setId) {
+  state.copySourceDetail = null;
+  renderCopyAssignmentControls();
+  if (!setId) return;
+  setStatus("#copyAnnotationsStatus", "Loading source assignments...");
+  try {
+    const data = await jsonRequest(`/api/admin/sets/${setId}`);
+    state.copySourceDetail = data;
+    renderCopyAssignmentControls();
+    setStatus("#copyAnnotationsStatus", "");
+  } catch (error) {
+    setStatus("#copyAnnotationsStatus", error.message, "error");
+  }
+}
+
+async function copyAnnotations() {
+  const sourceAssignmentId = $("#copySourceAssignment").value;
+  const targetAssignmentId = $("#copyTargetAssignment").value;
+  if (!sourceAssignmentId || !targetAssignmentId) return;
+  $("#copyAnnotationsButton").disabled = true;
+  setStatus("#copyAnnotationsStatus", "Copying missing page annotations...");
+  try {
+    const data = await jsonRequest(`/api/admin/sets/${state.selectedSetId}/copy-annotations`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        source_assignment_id: sourceAssignmentId,
+        target_assignment_id: targetAssignmentId
+      })
+    });
+    const result = data.result;
+    await loadSets(state.selectedSetId);
+    setStatus(
+      "#copyAnnotationsStatus",
+      `Copied ${result.copied} page(s). Skipped ${result.skipped_existing} already started page(s) and ${result.skipped_no_match} page(s) without source match.`,
+      "success"
+    );
+  } catch (error) {
+    setStatus("#copyAnnotationsStatus", error.message, "error");
+    updateCopyButton();
+  }
+}
+
 function bindEvents() {
   $("#adminLoginButton").addEventListener("click", () => void login());
   $("#adminPassword").addEventListener("keydown", (event) => { if (event.key === "Enter") void login(); });
@@ -296,6 +411,10 @@ function bindEvents() {
   $("#activateSetButton").addEventListener("click", () => void changeSetStatus("active"));
   $("#deactivateSetButton").addEventListener("click", () => void changeSetStatus("inactive"));
   $("#createAssignmentsButton").addEventListener("click", () => void createAssignments());
+  $("#copySourceSet").addEventListener("change", (event) => void loadCopySourceSet(event.target.value));
+  $("#copySourceAssignment").addEventListener("change", updateCopyButton);
+  $("#copyTargetAssignment").addEventListener("change", updateCopyButton);
+  $("#copyAnnotationsButton").addEventListener("click", () => void copyAnnotations());
   $("#copyCodesButton").addEventListener("click", async () => { await navigator.clipboard.writeText($("#generatedCodes").value); $("#copyCodesButton").textContent = "Copied"; });
   $("#closeCodesButton").addEventListener("click", () => { $("#codesDialog").close(); $("#copyCodesButton").textContent = "Copy codes"; });
 }

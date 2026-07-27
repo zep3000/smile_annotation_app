@@ -150,3 +150,90 @@ test("legacy zero-count pages without a reason remain started", async (t) => {
   const progress = await repository.assignmentProgress(issued.id);
   assert.equal(progress["page-1"].status, "draft");
 });
+
+test("repository copies missing annotations between assignments without overwrite", async (t) => {
+  const { pool, repository } = await testRepository();
+  t.after(() => pool.end());
+  const sourceSet = await repository.createSet({
+    name: "Source set",
+    flowVersion: "1.14",
+    manifest: {
+      task_id: "source-task",
+      images: [
+        { image_id: "source-page-1", filename: "page-1.jpg", page_type: "single" },
+        { image_id: "source-page-2", filename: "page-2.jpg", page_type: "single" }
+      ]
+    }
+  });
+  const targetSet = await repository.createSet({
+    name: "Target set",
+    flowVersion: "1.14",
+    manifest: {
+      task_id: "target-task",
+      images: [
+        { image_id: "target-page-1", filename: "page-1.jpg", page_type: "single" },
+        { image_id: "target-page-2", filename: "page-2.jpg", page_type: "single" }
+      ]
+    }
+  });
+  for (const set of [sourceSet, targetSet]) {
+    const images = await repository.setImages(set.id);
+    for (const image of images) {
+      await repository.markImageUploaded(image.id, { byteSize: 5, sha256: "d".repeat(64) });
+    }
+    await repository.setStatus(set.id, "active");
+  }
+  const [sourceAssignment] = await repository.issueAssignments(sourceSet.id, 1, false);
+  const [targetAssignment] = await repository.issueAssignments(targetSet.id, 1, false);
+
+  await repository.saveAnnotation({
+    assignmentId: sourceAssignment.id,
+    externalImageId: "source-page-1",
+    expectedRevision: 0,
+    payload: {
+      schema_version: "ad_face_annotation_v2",
+      status: "complete",
+      page: { qualifying_ad_count: "1" },
+      advertisements: []
+    }
+  });
+  await repository.saveAnnotation({
+    assignmentId: sourceAssignment.id,
+    externalImageId: "source-page-2",
+    expectedRevision: 0,
+    payload: {
+      schema_version: "ad_face_annotation_v2",
+      status: "complete",
+      page: { qualifying_ad_count: "1" },
+      advertisements: []
+    }
+  });
+  await repository.saveAnnotation({
+    assignmentId: targetAssignment.id,
+    externalImageId: "target-page-2",
+    expectedRevision: 0,
+    payload: {
+      schema_version: "ad_face_annotation_v2",
+      status: "draft",
+      page: { qualifying_ad_count: "2" },
+      advertisements: []
+    }
+  });
+
+  const result = await repository.copyAnnotations({
+    sourceAssignmentId: sourceAssignment.id,
+    targetAssignmentId: targetAssignment.id,
+    targetSetId: targetSet.id
+  });
+  assert.equal(result.copied, 1);
+  assert.equal(result.skipped_existing, 1);
+  assert.equal(result.skipped_no_match, 0);
+
+  const first = await repository.annotation(targetAssignment.id, "target-page-1");
+  const second = await repository.annotation(targetAssignment.id, "target-page-2");
+  assert.equal(first.payload.status, "complete");
+  assert.equal(first.payload.task.task_id, "target-task");
+  assert.equal(first.payload.image.image_id, "target-page-1");
+  assert.equal(first.payload.session.session_code, targetAssignment.code);
+  assert.equal(second.payload.page.qualifying_ad_count, "2");
+});

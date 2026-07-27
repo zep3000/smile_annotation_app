@@ -1,4 +1,4 @@
-schema_version: "1.14"
+schema_version: "1.15"
 title: "Advertisement Face Annotation Flow"
 companion_playbook: "annotation_playbook_v1.md"
 
@@ -134,7 +134,8 @@ enums:
   group_type:
     - interacting_group
     - posed_group
-    - audience_or_crowd
+    - audience
+    - general_crowd
     - background_population
     - separate_portraits_or_composite
   group_age_composition:
@@ -315,6 +316,10 @@ flow:
       field: advertisement.duplicate_faces_present
       ui: single_choice
       values_from: yes_no
+      coding_rule: >-
+        Duplicates are exact repeated face depictions: the same represented
+        identity with the same face/expression. The same person with a different
+        expression, pose, angle, or moment does not qualify by itself.
       transitions:
         "no":
           actions: [make_each_box_a_canonical_person]

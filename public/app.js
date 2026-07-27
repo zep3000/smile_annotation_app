@@ -73,7 +73,8 @@ const ENUMS = {
   group_type: [
     "interacting_group",
     "posed_group",
-    "audience_or_crowd",
+    "audience",
+    "general_crowd",
     "background_population",
     "separate_portraits_or_composite",
   ],
@@ -239,10 +240,10 @@ const STEP_META_EN = {
   },
   D0_duplicates_present: {
     unit: "Page",
-    prompt: "Do any individually boxed faces repeat the same face identity?",
+    prompt: "Do any individually boxed faces repeat the exact same face?",
     instruction:
-      "Consider mirrors, repeated portraits, and collage repetitions.",
-    help: "Answer once for all individually boxed faces on this page. Similar-looking faces are not duplicates unless they clearly repeat the same person, character, object, or represented identity.",
+      "Consider only exact repeated face depictions.",
+    help: "Duplicates mean the same represented identity with the same face/expression repeated, for example through a mirror, repeated portrait, collage repetition, or repeated product shot. The same person with a different expression, pose, angle, or moment does not qualify by itself.",
   },
   D1_unique_face_count: {
     unit: "Page",
@@ -254,14 +255,14 @@ const STEP_META_EN = {
     unit: "Duplicate grouping",
     prompt: "Select the main face for this identity.",
     instruction: "Click the clearest or most analytically useful face box.",
-    help: "The main face receives the detailed person annotation. Its repeated depictions remain stored as linked boxes.",
+    help: "The main face receives the detailed person annotation. Its exact repeated depictions remain stored as linked boxes.",
   },
   D3_select_duplicates: {
     unit: "Duplicate grouping",
     prompt: "Select every duplicate of this main face.",
     instruction:
       "Click matching boxes to select or deselect them, then choose Next.",
-    help: "Leave unrelated faces unselected. An identity group may have no duplicates when another group accounts for the repeated face on the page.",
+    help: "Select only boxes that repeat the same represented identity with the same face/expression. Leave the same person in a different expression, pose, or moment unselected.",
   },
   I0_person_depiction_type: {
     unit: "Person",
@@ -469,11 +470,10 @@ const STEP_META_DE = {
   },
   D0_duplicates_present: {
     unit: "Anzeige",
-    prompt:
-      "Wiederholen einzeln markierte Gesichter dieselbe Gesichtsidentitat?",
+    prompt: "Wiederholen einzeln markierte Gesichter exakt dasselbe Gesicht?",
     instruction:
-      "Berücksichtige Spiegel, wiederholte Porträts und Collage-Wiederholungen.",
-    help: "Beantworte dies für die einzeln markierten Gesichter in der aktuellen Anzeige. Ähnlich aussehende Gesichter sind keine Duplikate, außer sie wiederholen klar dieselbe Person, Figur, dasselbe Objekt oder dieselbe dargestellte Identität.",
+      "Berücksichtige nur exakt wiederholte Gesichtsdarstellungen.",
+    help: "Duplikate bedeuten, dass dieselbe dargestellte Identität mit demselben Gesicht/Ausdruck wiederholt wird, etwa durch Spiegel, wiederholte Porträts, Collage-Wiederholungen oder wiederholte Produktabbildungen. Dieselbe Person mit anderem Ausdruck, anderer Pose, anderem Winkel oder anderem Moment zählt allein nicht als Duplikat.",
   },
   D1_unique_face_count: {
     unit: "Anzeige",
@@ -486,14 +486,14 @@ const STEP_META_DE = {
     unit: "Duplikatgruppe",
     prompt: "Wähle das Hauptgesicht für diese Identität.",
     instruction: "Klicke die klarste oder analytisch nutzlichste Gesichts-Box.",
-    help: "Das Hauptgesicht erhalt die detaillierte Personenannotation. Wiederholte Darstellungen bleiben als verknupfte Boxen gespeichert.",
+    help: "Das Hauptgesicht erhält die detaillierte Personenannotation. Exakt wiederholte Darstellungen bleiben als verknüpfte Boxen gespeichert.",
   },
   D3_select_duplicates: {
     unit: "Duplikatgruppe",
     prompt: "Wähle alle Duplikate dieses Hauptgesichts.",
     instruction:
       "Klicke passende Boxen zum Aus- oder Abwählen und wähle dann Weiter.",
-    help: "Lass nicht zugehörige Gesichter ungewählt. Eine Identitätsgruppe kann keine Duplikate enthalten, wenn eine andere Gruppe das wiederholte Gesicht abdeckt.",
+    help: "Wähle nur Boxen aus, die dieselbe dargestellte Identität mit demselben Gesicht/Ausdruck wiederholen. Lass dieselbe Person mit anderem Ausdruck, anderer Pose oder anderem Moment ungewählt.",
   },
   I0_person_depiction_type: {
     unit: "Person",
@@ -702,7 +702,8 @@ const DISPLAY_LABELS_EN = {
   broad_or_laughter_like: "broad/laughter-like",
   ambiguous_or_androgynous: "ambiguous/androgynous",
   ambiguous_or_androgynous_present: "ambiguous/androgynous present",
-  audience_or_crowd: "audience/crowd",
+  audience: "audience",
+  general_crowd: "general crowd",
   three_quarter: "three-quarter",
   off_frame: "off-frame",
   crop_or_frame: "crop/frame",
@@ -785,7 +786,8 @@ const DISPLAY_LABELS_DE = {
   "3_high_legibility": "3 hohe Lesbarkeit",
   interacting_group: "interagierende Gruppe",
   posed_group: "gestellte Gruppe",
-  audience_or_crowd: "Publikum/Menge",
+  audience: "Publikum",
+  general_crowd: "allgemeine Menge",
   background_population: "Hintergrundpersonen",
   separate_portraits_or_composite: "getrennte Porträts/Komposit",
   young_only: "nur jung",
@@ -1566,7 +1568,7 @@ function defaultAnnotation(image) {
     flow_source: {
       playbook: "docs/annotation_playbook_v1.md",
       yaml: "docs/annotation_flow_v1.yaml",
-      flow_schema_version: "1.14",
+      flow_schema_version: "1.15",
     },
     session: {
       session_id: state.session.session_id,
@@ -1612,8 +1614,9 @@ function defaultAnnotation(image) {
 
 function migrateLoadedAnnotation(annotation) {
   annotation.flow_source ||= {};
-  annotation.flow_source.flow_schema_version = "1.14";
+  annotation.flow_source.flow_schema_version = "1.15";
   annotation.page ||= {};
+  let reopenedStep = null;
   if (annotation.page.qualifying_ad_count === "unclear")
     annotation.page.qualifying_ad_count = null;
   annotation.page.no_qualifying_ad_reason ??= null;
@@ -1700,6 +1703,20 @@ function migrateLoadedAnnotation(annotation) {
       for (const person of ad.people || []) person.depiction_type = null;
     }
     for (const group of ad.groups || []) {
+      if (group.group_type === "audience_or_crowd") {
+        group.group_type = null;
+        annotation.status = "draft";
+        annotation.finished_at = null;
+        if (!reopenedStep) {
+          const adIndex = annotation.advertisements.indexOf(ad);
+          reopenedStep = {
+            id: "G1_group_type",
+            adIndex,
+            groupId: group.group_id,
+            groupIndex: Math.max(0, (ad.groups || []).indexOf(group)),
+          };
+        }
+      }
       group.expression_legibility_distribution ??= null;
       if (
         group.dominant_gaze === "off_frame" ||
@@ -1721,6 +1738,7 @@ function migrateLoadedAnnotation(annotation) {
     }
   }
   delete annotation.page.depiction_type;
+  if (reopenedStep) annotation.current_step = reopenedStep;
   return annotation;
 }
 

@@ -12,6 +12,15 @@ function assignmentCode() {
   return String(crypto.randomInt(10_000_000, 100_000_000));
 }
 
+function deepClone(value) {
+  return JSON.parse(JSON.stringify(value ?? null));
+}
+
+function effectiveStoredStatus(payload, fallback = "draft") {
+  const status = effectiveAnnotationStatus({ status: fallback, payload }) || "draft";
+  return DONE_STATUSES.has(status) || status === "draft" ? status : "draft";
+}
+
 class HostedRepository {
   constructor(pool) {
     this.pool = pool;
@@ -484,6 +493,173 @@ class HostedRepository {
       );
       await client.query("COMMIT");
       return { annotation: storedPayload, revision: nextRevision, allDone };
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async copyAnnotations({ sourceAssignmentId, targetAssignmentId, targetSetId }) {
+    if (!sourceAssignmentId || !targetAssignmentId || !targetSetId) {
+      const error = new Error("source_assignment_id, target_assignment_id, and target set are required.");
+      error.statusCode = 400;
+      throw error;
+    }
+    if (sourceAssignmentId === targetAssignmentId) {
+      const error = new Error("Source and target assignments must be different.");
+      error.statusCode = 400;
+      throw error;
+    }
+    const client = await this.pool.connect();
+    try {
+      await client.query("BEGIN");
+      const assignmentResult = await client.query(
+        `SELECT a.id, a.code, a.created_at, a.annotation_set_id,
+                s.task_id, s.manifest->'metadata' AS metadata
+         FROM assignments a
+         JOIN annotation_sets s ON s.id = a.annotation_set_id
+         WHERE a.id IN ($1, $2)
+         FOR UPDATE`,
+        [sourceAssignmentId, targetAssignmentId]
+      );
+      const sourceAssignment = assignmentResult.rows.find((row) => row.id === sourceAssignmentId);
+      const targetAssignment = assignmentResult.rows.find((row) => row.id === targetAssignmentId);
+      if (!sourceAssignment || !targetAssignment) {
+        const error = new Error("Source or target assignment not found.");
+        error.statusCode = 404;
+        throw error;
+      }
+      if (targetAssignment.annotation_set_id !== targetSetId) {
+        const error = new Error("Target assignment is not part of the selected target set.");
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const sourceAnnotations = await client.query(
+        `SELECT i.image_id, i.filename, n.status, n.payload
+         FROM annotations n
+         JOIN images i ON i.id = n.image_id
+         WHERE n.assignment_id = $1`,
+        [sourceAssignmentId]
+      );
+      const sourceByImageId = new Map();
+      const sourceByFilename = new Map();
+      for (const row of sourceAnnotations.rows) {
+        sourceByImageId.set(row.image_id, row);
+        sourceByFilename.set(String(row.filename || "").toLowerCase(), row);
+      }
+      const targetImages = await client.query(
+        `SELECT i.id, i.image_id, i.filename, i.sort_order, i.page_type, i.metadata,
+                n.revision AS existing_revision
+         FROM images i
+         LEFT JOIN annotations n ON n.image_id = i.id AND n.assignment_id = $2
+         WHERE i.annotation_set_id = $1
+         ORDER BY i.sort_order`,
+        [targetSetId, targetAssignmentId]
+      );
+      const imageTotal = targetImages.rows.length;
+      let copied = 0;
+      let skippedExisting = 0;
+      let skippedNoMatch = 0;
+      const copiedImageIds = [];
+      const now = new Date().toISOString();
+      for (const targetImage of targetImages.rows) {
+        if (targetImage.existing_revision) {
+          skippedExisting += 1;
+          continue;
+        }
+        const source =
+          sourceByImageId.get(targetImage.image_id) ||
+          sourceByFilename.get(String(targetImage.filename || "").toLowerCase());
+        if (!source?.payload) {
+          skippedNoMatch += 1;
+          continue;
+        }
+        const payload = deepClone(source.payload);
+        const status = effectiveStoredStatus(payload, source.status);
+        payload.session = {
+          session_id: targetAssignment.id,
+          session_code: targetAssignment.code,
+          session_created_at: targetAssignment.created_at
+        };
+        payload.task = {
+          ...(payload.task || {}),
+          task_id: targetAssignment.task_id,
+          manifest_path: null,
+          image_index: targetImage.sort_order,
+          image_total: imageTotal
+        };
+        payload.image = {
+          ...(payload.image || {}),
+          image_id: targetImage.image_id,
+          filename: targetImage.filename,
+          path: null,
+          page_type: targetImage.page_type,
+          metadata: targetImage.metadata || {}
+        };
+        payload.status = status;
+        payload.updated_at = now;
+        payload.server_saved_at = now;
+        if (status === "draft") payload.finished_at = null;
+        payload.copied_from ||= {};
+        payload.copied_from = {
+          ...payload.copied_from,
+          source_assignment_id: sourceAssignment.id,
+          source_assignment_code: sourceAssignment.code,
+          source_annotation_set_id: sourceAssignment.annotation_set_id,
+          source_image_id: source.image_id,
+          source_filename: source.filename,
+          copied_at: now
+        };
+        const insert = await client.query(
+          `INSERT INTO annotations(assignment_id, image_id, status, payload, revision, completed_at)
+           VALUES ($1, $2, $3, $4::jsonb, 1, CASE WHEN $3 = 'draft' THEN NULL ELSE now() END)
+           ON CONFLICT (assignment_id, image_id) DO NOTHING
+           RETURNING revision`,
+          [targetAssignmentId, targetImage.id, status, jsonValue(payload)]
+        );
+        if (insert.rowCount) {
+          copied += 1;
+          copiedImageIds.push(targetImage.image_id);
+        } else {
+          skippedExisting += 1;
+        }
+      }
+
+      const counts = await client.query(
+        `SELECT i.sort_order, n.status, n.payload
+         FROM images i
+         LEFT JOIN annotations n ON n.image_id = i.id AND n.assignment_id = $1
+         WHERE i.annotation_set_id = $2`,
+        [targetAssignmentId, targetSetId]
+      );
+      const annotatedRows = counts.rows.filter((row) => row.status);
+      const done = counts.rows.filter((row) =>
+        DONE_STATUSES.has(effectiveAnnotationStatus({ status: row.status, payload: row.payload }))
+      ).length;
+      const allDone = counts.rows.length > 0 && done === counts.rows.length;
+      const maxOrder = annotatedRows.reduce(
+        (max, row) => Math.max(max, Number(row.sort_order || 0)),
+        0
+      );
+      await client.query(
+        `UPDATE assignments SET
+           status = CASE WHEN status = 'revoked' THEN status WHEN $3 THEN 'done' WHEN $4 THEN 'started' ELSE status END,
+           current_image_order = GREATEST(current_image_order, $2),
+           last_seen_at = CASE WHEN $4 THEN now() ELSE last_seen_at END,
+           completed_at = CASE WHEN $3 THEN COALESCE(completed_at, now()) WHEN $4 THEN NULL ELSE completed_at END
+         WHERE id = $1`,
+        [targetAssignmentId, maxOrder, allDone, annotatedRows.length > 0]
+      );
+      await client.query("COMMIT");
+      return {
+        copied,
+        skipped_existing: skippedExisting,
+        skipped_no_match: skippedNoMatch,
+        copied_image_ids: copiedImageIds
+      };
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;

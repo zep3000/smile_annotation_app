@@ -1,6 +1,6 @@
 # Advertisement Face Annotation Playbook
 
-Version: 1.12
+Version: 1.15
 
 This playbook defines the human annotation procedure and the behavior expected from an automated or LLM annotator. The application presents one decision at a time and stores bounding boxes as normalized page coordinates in `[x1, y1, x2, y2]` format.
 
@@ -111,7 +111,7 @@ Duplicate resolution occurs within each advertisement after that advertisement's
 
 ### D0. Are any boxed faces duplicates?
 
-Choose `yes` when two or more boxes repeat the same face identity, for example through a mirror, collage repetition, repeated portrait, or repeated product shot. For nonhuman or schematic depictions, identity refers to the same represented character, object, or symbol. Do not merge merely similar-looking faces.
+Choose `yes` only when two or more boxes repeat the exact same face depiction, for example through a mirror, collage repetition, repeated portrait, or repeated product shot. The repeated depiction should show the same represented identity with the same face/expression. For nonhuman or schematic depictions, identity refers to the same represented character, object, or symbol. Do not merge merely similar-looking faces, and do not treat the same person with a different expression, pose, angle, or moment as a duplicate by itself.
 
 - `no`: every box in the current advertisement becomes its own canonical person and duplicate resolution ends for that advertisement.
 - `yes`: continue to D1.
@@ -214,7 +214,7 @@ Choose the closest level. The scale describes visible configuration and does not
 
 For every group box, code:
 
-- Group type: `interacting_group`, `posed_group`, `audience_or_crowd`, `background_population`, `separate_portraits_or_composite`
+- Group type: `interacting_group`, `posed_group`, `audience`, `general_crowd`, `background_population`, `separate_portraits_or_composite`
 - Age composition: `young_only`, `middle_only`, `older_only`, `mostly_young`, `mostly_middle`, `mostly_older`, `mixed`, `not_assessable`
 - Gender-presentation composition: `feminine_only`, `masculine_only`, `mostly_feminine`, `mostly_masculine`, `mixed`, `ambiguous_or_androgynous_present`, `not_assessable`
 - Expression legibility distribution: `all_0_not_legible`, `mostly_0_not_legible`, `all_1_low_legibility`, `mostly_1_low_legibility`, `all_2_moderate_legibility`, `mostly_2_moderate_legibility`, `all_3_high_legibility`, `mostly_3_high_legibility`, `mixed_legibility`

@@ -61,7 +61,7 @@
               </label>
               <label>
                 Flow version
-                <input id="flowVersion" value="1.12" required maxlength="40">
+                <input id="flowVersion" value="1.15" required maxlength="40">
               </label>
               <label class="wide-field">
                 Manifest JSON
@@ -153,6 +153,31 @@
                   <a id="jsonExportLink" class="button-link" href="#">Download JSON</a>
                 </div>
               </div>
+            </section>
+
+            <section class="admin-section">
+              <div class="section-row">
+                <div>
+                  <h2>Copy existing annotations</h2>
+                  <p>Copy page annotations from one assignment into a target assignment in this set. Existing target pages are never overwritten.</p>
+                </div>
+              </div>
+              <div class="copy-grid">
+                <label>
+                  Source set
+                  <select id="copySourceSet"></select>
+                </label>
+                <label>
+                  Source assignment
+                  <select id="copySourceAssignment"></select>
+                </label>
+                <label>
+                  Target assignment
+                  <select id="copyTargetAssignment"></select>
+                </label>
+                <button id="copyAnnotationsButton" type="button" class="primary">Copy missing pages</button>
+              </div>
+              <p id="copyAnnotationsStatus" class="status"></p>
             </section>
 
             <section class="admin-section">

@@ -317,7 +317,7 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
         set = await repo.createSet({
           name: body.name,
           manifest: body.manifest,
-          flowVersion: String(body.flow_version || "1.12")
+          flowVersion: String(body.flow_version || "1.15")
         });
       } catch (error) {
         if (!error.statusCode) error.statusCode = error.code === "23505" ? 409 : 400;
@@ -373,6 +373,29 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
       const assignments = await repo.issueAssignments(assignmentsMatch[1], count, Boolean(body.expert_mode));
       await repo.audit({ role: "admin", setId: assignmentsMatch[1], eventType: "assignments_issued", details: { count, expert_mode: Boolean(body.expert_mode) }, ipAddress: ip });
       return sendJson(res, 201, { ok: true, assignments });
+    }
+    const copyMatch = pathname.match(/^\/api\/admin\/sets\/([0-9a-f-]+)\/copy-annotations$/i);
+    if (req.method === "POST" && copyMatch) {
+      const body = await readJson(req, 16 * 1024);
+      const result = await repo.copyAnnotations({
+        sourceAssignmentId: body.source_assignment_id,
+        targetAssignmentId: body.target_assignment_id,
+        targetSetId: copyMatch[1]
+      });
+      await repo.audit({
+        role: "admin",
+        setId: copyMatch[1],
+        eventType: "annotations_copied",
+        details: {
+          source_assignment_id: body.source_assignment_id,
+          target_assignment_id: body.target_assignment_id,
+          copied: result.copied,
+          skipped_existing: result.skipped_existing,
+          skipped_no_match: result.skipped_no_match
+        },
+        ipAddress: ip
+      });
+      return sendJson(res, 200, { ok: true, result });
     }
     const assignmentMatch = pathname.match(/^\/api\/admin\/assignments\/([0-9a-f-]+)$/i);
     if (req.method === "PATCH" && assignmentMatch) {
