@@ -1,4 +1,4 @@
-schema_version: "1.13"
+schema_version: "1.14"
 title: "Advertisement Face Annotation Flow"
 companion_playbook: "annotation_playbook_v1.md"
 
@@ -186,11 +186,25 @@ flow:
     P1_qualifying_ad_count:
       unit: page
       field: page.qualifying_ad_count
-      ui: count_or_zero
+      additional_field: page.no_qualifying_ad_reason
+      ui: zero_reason_or_count
       prompt: "How many advertisements on this page contain at least one eligible face depiction?"
-      constraints: {minimum: 0, maximum: 99}
+      zero_reason_values:
+        - no_ads_on_page
+        - ads_present_no_visible_faces
+      constraints: {minimum: 1, maximum: 99}
+      storage:
+        zero_reason:
+          page.qualifying_ad_count: "0"
+          page.no_qualifying_ad_reason: selected_zero_reason
+        positive_count:
+          page.qualifying_ad_count: selected_count
+          page.no_qualifying_ad_reason: null
+      legacy_incomplete:
+        condition: "page.qualifying_ad_count == '0' and page.no_qualifying_ad_reason == null"
+        action: "mark page started and reopen at P1_qualifying_ad_count"
       transitions:
-        "value == 0": END_PAGE_INELIGIBLE
+        "value in ['no_ads_on_page','ads_present_no_visible_faces']": END_PAGE_INELIGIBLE
         "value == 1": P2_single_ad_full_page
         "value > 1": DRAW_AD_BOXES
 
@@ -563,7 +577,7 @@ flow:
     END_PAGE_COMPLETE: {kind: terminal, status: complete}
 
 storage:
-  page_fields: [qualifying_ad_count, duplicate_faces_present, unique_face_count]
+  page_fields: [qualifying_ad_count, no_qualifying_ad_reason, duplicate_faces_present, unique_face_count]
   advertisement_duplicate_fields: [duplicate_faces_present, unique_face_count]
   advertisement_depiction_field: depiction_type
   identity_group_fields: [identity_group_id, scope_ad_id, main_person_id, duplicate_person_ids]
@@ -578,6 +592,8 @@ validation_rules:
     assert: "advertisement.face_depiction_count_band not in ['1','2','3','4','5','6','7','8','9'] or integer(advertisement.face_depiction_count_band) == count(advertisement.people[annotation_role == 'individual' and face_bbox != null])"
   - id: full_page_bbox_is_automatic
     assert: "advertisement.extent != 'full_page' or advertisement.bbox_source == 'automatic_full_usable_page'"
+  - id: zero_count_requires_reason
+    assert: "page.qualifying_ad_count != '0' or page.no_qualifying_ad_reason in ['no_ads_on_page','ads_present_no_visible_faces']"
   - id: duplicate_groups_partition_individual_boxes
     assert: "when advertisement.duplicate_faces_present == 'yes', every boxed person id in that advertisement occurs exactly once across same-ad identity-group main and duplicate ids"
   - id: only_canonical_people_receive_details

@@ -18,7 +18,24 @@ test("annotation summaries count completed work without double-counting identiti
         timing: { total_focused_ms: 1250 }
       }
     },
-    { status: "ineligible", payload: { status: "ineligible", advertisements: [], timing: { total_focused_ms: 750 } } },
+    {
+      status: "ineligible",
+      payload: {
+        status: "ineligible",
+        page: { qualifying_ad_count: "0", no_qualifying_ad_reason: "no_ads_on_page" },
+        advertisements: [],
+        timing: { total_focused_ms: 750 }
+      }
+    },
+    {
+      status: "ineligible",
+      payload: {
+        status: "ineligible",
+        page: { qualifying_ad_count: "0" },
+        advertisements: [],
+        timing: { total_focused_ms: 5000 }
+      }
+    },
     { status: "draft", payload: { status: "draft", advertisements: [{ people: [{}], groups: [] }] } }
   ];
 

@@ -4,6 +4,20 @@ function annotationFromRecord(record) {
   return record?.payload || record?.annotation || record || null;
 }
 
+function missingNoQualifyingAdReason(annotation) {
+  return Boolean(
+    annotation &&
+      String(annotation.page?.qualifying_ad_count) === "0" &&
+      !annotation.page?.no_qualifying_ad_reason,
+  );
+}
+
+function effectiveAnnotationStatus(record) {
+  const annotation = annotationFromRecord(record);
+  const status = record?.status || annotation?.status || null;
+  return missingNoQualifyingAdReason(annotation) ? "draft" : status;
+}
+
 function finiteNonnegative(value) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : 0;
@@ -23,7 +37,7 @@ function summarizeAnnotations(records, pageTotal = null) {
 
   for (const record of source) {
     const annotation = annotationFromRecord(record);
-    const status = record?.status || annotation?.status;
+    const status = effectiveAnnotationStatus(record);
     if (!annotation || !DONE_STATUSES.has(status)) continue;
     summary.pages_annotated += 1;
     const advertisements = Array.isArray(annotation.advertisements) ? annotation.advertisements : [];
@@ -41,4 +55,9 @@ function summarizeAnnotations(records, pageTotal = null) {
   return summary;
 }
 
-module.exports = { DONE_STATUSES, summarizeAnnotations };
+module.exports = {
+  DONE_STATUSES,
+  effectiveAnnotationStatus,
+  missingNoQualifyingAdReason,
+  summarizeAnnotations,
+};

@@ -40,11 +40,14 @@ If individual `face_expression_legibility` is `0_not_legible`, do not infer gaze
 
 Count advertisements containing at least one eligible face depiction.
 
-Input: `0` through `5` as direct buttons, or an exact integer from `6` through `99`.
+Input: one zero-case reason, `1` through `5` as direct buttons, or an exact integer from `6` through `99`.
 
-- `0` finishes the page as ineligible.
+- `no_ads_on_page` finishes the page as ineligible and records that no advertisement is present.
+- `ads_present_no_visible_faces` finishes the page as ineligible and records that advertisements are present, but none contains an eligible visible face depiction.
 - `1` continues to P2.
 - More than one continues to drawing all advertisement boxes.
+
+For both zero-case reasons, store `page.qualifying_ad_count` as `"0"` and store the reason in `page.no_qualifying_ad_reason`. Legacy annotations with `page.qualifying_ad_count` equal to `"0"` but no `page.no_qualifying_ad_reason` are incomplete for the current flow and must be reopened at P1.
 
 Count advertisements, not faces. When an advertisement boundary is difficult, draw and count the best defensible advertising unit and add an urgent comment only if the boundary could materially affect analysis.
 

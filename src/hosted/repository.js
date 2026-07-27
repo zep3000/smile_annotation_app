@@ -1,5 +1,6 @@
 const crypto = require("node:crypto");
 const { normalizeHostedManifest, safeObjectFilename } = require("./manifest");
+const { effectiveAnnotationStatus } = require("../shared/annotation-summary");
 
 const DONE_STATUSES = new Set(["complete", "ineligible", "needs_review"]);
 
@@ -343,19 +344,24 @@ class HostedRepository {
 
   async assignmentProgress(assignmentId) {
     const result = await this.pool.query(
-      `SELECT i.image_id, n.status, n.updated_at, n.completed_at AS finished_at, n.revision
+      `SELECT i.image_id, n.status, n.payload, n.updated_at, n.completed_at AS finished_at, n.revision
        FROM assignments a
        JOIN images i ON i.annotation_set_id = a.annotation_set_id
        LEFT JOIN annotations n ON n.assignment_id = a.id AND n.image_id = i.id
        WHERE a.id = $1 ORDER BY i.sort_order`,
       [assignmentId]
     );
-    return Object.fromEntries(result.rows.map((row) => [row.image_id, row.status ? {
-      status: row.status,
-      updated_at: row.updated_at,
-      finished_at: row.finished_at,
-      revision: row.revision
-    } : null]));
+    return Object.fromEntries(result.rows.map((row) => {
+      const effectiveStatus = row.status
+        ? effectiveAnnotationStatus({ status: row.status, payload: row.payload })
+        : null;
+      return [row.image_id, effectiveStatus ? {
+        status: effectiveStatus,
+        updated_at: row.updated_at,
+        finished_at: DONE_STATUSES.has(effectiveStatus) ? row.finished_at : null,
+        revision: row.revision
+      } : null];
+    }));
   }
 
   async assignmentSummaryRecords(assignmentId) {
@@ -456,14 +462,17 @@ class HostedRepository {
         [assignmentId, image.id, status, jsonValue(storedPayload), nextRevision]
       );
       const counts = await client.query(
-        `SELECT count(i.id)::integer AS total,
-                count(n.image_id) FILTER (WHERE n.status IN ('complete', 'ineligible', 'needs_review'))::integer AS done
+        `SELECT n.status, n.payload
          FROM images i
          LEFT JOIN annotations n ON n.image_id = i.id AND n.assignment_id = $1
          WHERE i.annotation_set_id = $2`,
         [assignmentId, image.annotation_set_id]
       );
-      const allDone = counts.rows[0].total > 0 && counts.rows[0].done === counts.rows[0].total;
+      const total = counts.rows.length;
+      const done = counts.rows.filter((row) =>
+        DONE_STATUSES.has(effectiveAnnotationStatus({ status: row.status, payload: row.payload }))
+      ).length;
+      const allDone = total > 0 && done === total;
       await client.query(
         `UPDATE assignments SET
            status = CASE WHEN status = 'revoked' THEN status WHEN $3 THEN 'done' ELSE 'started' END,

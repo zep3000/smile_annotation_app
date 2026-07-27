@@ -3,7 +3,10 @@ const crypto = require("node:crypto");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const url = require("node:url");
-const { summarizeAnnotations } = require("../shared/annotation-summary");
+const {
+  effectiveAnnotationStatus,
+  summarizeAnnotations
+} = require("../shared/annotation-summary");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const PUBLIC_DIR = path.join(ROOT, "public");
@@ -368,10 +371,11 @@ async function writeAnnotation(sessionId, imageId, annotation) {
 async function statusesForManifest(sessionId, manifest) {
   const pairs = await Promise.all(manifest.images.map(async (image) => {
     const saved = await readAnnotation(sessionId, image.image_id);
+    const effectiveStatus = saved ? effectiveAnnotationStatus(saved) || "draft" : null;
     return [image.image_id, saved ? {
-      status: saved.status || "draft",
+      status: effectiveStatus,
       updated_at: saved.updated_at || saved.server_saved_at || null,
-      finished_at: saved.finished_at || null
+      finished_at: isDoneStatus(effectiveStatus) ? saved.finished_at || null : null
     } : null];
   }));
   return Object.fromEntries(pairs);
@@ -391,7 +395,7 @@ async function sessionSummary(sessionId, manifestPath) {
   const manifest = await readManifest(manifestPath);
   const records = await Promise.all(manifest.images.map(async (image) => {
     const annotation = await readAnnotation(sessionId, image.image_id);
-    return annotation ? { status: annotation.status, annotation } : null;
+    return annotation ? { status: effectiveAnnotationStatus(annotation), annotation } : null;
   }));
   return summarizeAnnotations(records.filter(Boolean), manifest.images.length);
 }

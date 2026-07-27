@@ -90,7 +90,13 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
     assignmentId: issued.id,
     externalImageId: "page-2",
     expectedRevision: 0,
-    payload: { status: "ineligible", page: { qualifying_ad_count: 0 } }
+    payload: {
+      status: "ineligible",
+      page: {
+        qualifying_ad_count: 0,
+        no_qualifying_ad_reason: "ads_present_no_visible_faces"
+      }
+    }
   });
   assert.equal(finalSave.allDone, true);
 
@@ -117,4 +123,30 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
     }),
     (error) => error.statusCode === 403 && /not currently active/.test(error.message)
   );
+});
+
+test("legacy zero-count pages without a reason remain started", async (t) => {
+  const { pool, repository } = await testRepository();
+  t.after(() => pool.end());
+  const set = await repository.createSet({
+    name: "Legacy set",
+    flowVersion: "1.13",
+    manifest: {
+      task_id: "legacy-task",
+      images: [{ image_id: "page-1", filename: "page-1.jpg", page_type: "single" }]
+    }
+  });
+  const [image] = await repository.setImages(set.id);
+  await repository.markImageUploaded(image.id, { byteSize: 5, sha256: "c".repeat(64) });
+  await repository.setStatus(set.id, "active");
+  const [issued] = await repository.issueAssignments(set.id, 1, false);
+  const save = await repository.saveAnnotation({
+    assignmentId: issued.id,
+    externalImageId: "page-1",
+    expectedRevision: 0,
+    payload: { status: "ineligible", page: { qualifying_ad_count: "0" } }
+  });
+  assert.equal(save.allDone, false);
+  const progress = await repository.assignmentProgress(issued.id);
+  assert.equal(progress["page-1"].status, "draft");
 });

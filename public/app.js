@@ -12,20 +12,88 @@ const ENUMS = {
     "personified_object",
     "nonhuman_creature_with_face",
     "schematic_icon_or_logo_face",
-    "multiple_types_present"
+    "multiple_types_present",
   ],
-  individual_age: ["infant", "child", "adolescent", "young_adult", "middle_adult", "older_adult", "not_assessable"],
-  gender_presentation: ["feminine", "masculine", "ambiguous_or_androgynous", "not_assessable"],
-  face_orientation: ["beyond_profile", "profile", "three_quarter", "frontal", "tilted_down", "tilted_up", "not_assessable"],
-  face_expression_legibility: ["0_not_legible", "1_low_legibility", "2_moderate_legibility", "3_high_legibility"],
-  gaze_target: ["viewer_camera", "another_person", "advertised_product", "other_object", "off_frame_or_scene_direction", "eyes_covered", "closed_eyes", "not_assessable"],
+  individual_age: [
+    "infant",
+    "child",
+    "adolescent",
+    "young_adult",
+    "middle_adult",
+    "older_adult",
+    "not_assessable",
+  ],
+  gender_presentation: [
+    "feminine",
+    "masculine",
+    "ambiguous_or_androgynous",
+    "not_assessable",
+  ],
+  face_orientation: [
+    "beyond_profile",
+    "profile",
+    "three_quarter",
+    "frontal",
+    "tilted_down",
+    "tilted_up",
+    "not_assessable",
+  ],
+  face_expression_legibility: [
+    "0_not_legible",
+    "1_low_legibility",
+    "2_moderate_legibility",
+    "3_high_legibility",
+  ],
+  gaze_target: [
+    "viewer_camera",
+    "another_person",
+    "advertised_product",
+    "other_object",
+    "off_frame_or_scene_direction",
+    "eyes_covered",
+    "closed_eyes",
+    "not_assessable",
+  ],
   mouth_covered: ["no", "yes", "partly", "not_assessable"],
-  mouth_covering: ["hand", "beard", "other_body_part", "part_of_another_person", "object", "object_in_mouth", "text_or_graphic_overlay", "other", "not_assessable"],
+  mouth_covering: [
+    "hand",
+    "beard",
+    "other_body_part",
+    "part_of_another_person",
+    "object",
+    "object_in_mouth",
+    "text_or_graphic_overlay",
+    "other",
+    "not_assessable",
+  ],
   smile_presence: ["yes", "no", "not_assessable"],
   smile_intensity: ["1_slight", "2_clear", "3_broad", "4_laughter_like"],
-  group_type: ["interacting_group", "posed_group", "audience_or_crowd", "background_population", "separate_portraits_or_composite"],
-  group_age_composition: ["young_only", "middle_only", "older_only", "mostly_young", "mostly_middle", "mostly_older", "mixed", "not_assessable"],
-  group_gender_composition: ["feminine_only", "masculine_only", "mostly_feminine", "mostly_masculine", "mixed", "ambiguous_or_androgynous_present", "not_assessable"],
+  group_type: [
+    "interacting_group",
+    "posed_group",
+    "audience_or_crowd",
+    "background_population",
+    "separate_portraits_or_composite",
+  ],
+  group_age_composition: [
+    "young_only",
+    "middle_only",
+    "older_only",
+    "mostly_young",
+    "mostly_middle",
+    "mostly_older",
+    "mixed",
+    "not_assessable",
+  ],
+  group_gender_composition: [
+    "feminine_only",
+    "masculine_only",
+    "mostly_feminine",
+    "mostly_masculine",
+    "mixed",
+    "ambiguous_or_androgynous_present",
+    "not_assessable",
+  ],
   group_expression_legibility: [
     "all_0_not_legible",
     "mostly_0_not_legible",
@@ -35,441 +103,486 @@ const ENUMS = {
     "mostly_2_moderate_legibility",
     "all_3_high_legibility",
     "mostly_3_high_legibility",
-    "mixed_legibility"
+    "mixed_legibility",
   ],
-  group_gaze: ["toward_viewer_camera", "toward_each_other", "toward_object", "off_frame_or_scene_direction", "mixed", "not_assessable"],
-  group_smile_prevalence: ["none", "minority", "about_half", "majority", "all", "not_assessable"],
-  group_smile_intensity: ["slight", "clear", "broad_or_laughter_like", "mixed"]
+  group_gaze: [
+    "toward_viewer_camera",
+    "toward_each_other",
+    "toward_object",
+    "off_frame_or_scene_direction",
+    "mixed",
+    "not_assessable",
+  ],
+  group_smile_prevalence: [
+    "none",
+    "minority",
+    "about_half",
+    "majority",
+    "all",
+    "not_assessable",
+  ],
+  group_smile_intensity: ["slight", "clear", "broad_or_laughter_like", "mixed"],
 };
 
-const PERSON_DEPICTION_TYPES = ENUMS.depiction_type.filter((value) => value !== "multiple_types_present");
+const PERSON_DEPICTION_TYPES = ENUMS.depiction_type.filter(
+  (value) => value !== "multiple_types_present",
+);
 const CROWD_FACE_BAND_VALUES = ["10_20", "20_plus"];
 const CROWD_FACE_BANDS = new Set(CROWD_FACE_BAND_VALUES);
+const NO_QUALIFYING_AD_REASON_VALUES = [
+  "no_ads_on_page",
+  "ads_present_no_visible_faces",
+];
+const NO_QUALIFYING_AD_REASONS = new Set(NO_QUALIFYING_AD_REASON_VALUES);
 
 const STEP_META_EN = {
   P1_qualifying_ad_count: {
     unit: "Page",
-    prompt: "How many advertisements on this page contain at least one eligible face depiction?",
-    instruction: "Choose 0-5 directly, or enter a higher exact count.",
-    help: "Count advertisements, not faces. A depiction is eligible when more than an ear or back of a head is visible and a face can be located. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included."
+    prompt:
+      "How many advertisements on this page contain at least one eligible face depiction?",
+    instruction:
+      "Choose a zero-case reason, choose 1-5 directly, or enter a higher exact count.",
+    help: "Count advertisements, not faces. A depiction is eligible when more than an ear or back of a head is visible and a face can be located. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.",
   },
   P2_single_ad_full_page: {
     unit: "Advertisement",
     prompt: "Is the single qualifying advertisement full-page?",
     instruction: "If it fills the usable page, no ad box is needed.",
-    help: "Full-page means the qualifying advertisement occupies the page as the main unit. If other page content is present, choose partial page."
+    help: "Full-page means the qualifying advertisement occupies the page as the main unit. If other page content is present, choose partial page.",
   },
   A1_ad_bbox: {
     unit: "Advertisement",
     prompt: "Draw the complete advertisement bounding box.",
     instruction: "Draw or adjust one box around the full advertisement.",
-    help: "Include the visual and text belonging to the ad. Exclude neighboring editorial content or other advertisements."
+    help: "Include the visual and text belonging to the ad. Exclude neighboring editorial content or other advertisements.",
   },
   DRAW_AD_BOXES: {
     unit: "Advertisement",
     prompt: "Draw one box for each qualifying advertisement.",
     instruction: "Draw all qualifying ad boxes, then choose Next.",
-    help: "Use this when multiple qualifying ads are present. Each box should include one full advertisement."
+    help: "Use this when multiple qualifying ads are present. Each box should include one full advertisement.",
   },
   A2_ad_depiction_type: {
     unit: "Advertisement",
     prompt: "How are the eligible faces in this advertisement depicted?",
     instruction: "Choose one shared type, or Multiple types present.",
-    help: "Choose a single type only when it applies to every individually coded face in this advertisement. If more than one type occurs within this advertisement, choose Multiple types present; each coded person in this advertisement will then receive a depiction type."
+    help: "Choose a single type only when it applies to every individually coded face in this advertisement. If more than one type occurs within this advertisement, choose Multiple types present; each coded person in this advertisement will then receive a depiction type.",
   },
   A3_unique_person_count: {
     unit: "Advertisement",
     prompt: "Draw a box around every eligible face depiction.",
-    instruction: "Keep Only individuals selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd.",
-    help: "For one to nine faces, leave Only individuals selected, draw every face, and choose Done only after all boxes are drawn. The exact count is recorded automatically. Include mirrors and repetitions. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a crowd band after drawing, provisional individual boxes are removed. You can switch back to Only individuals before continuing."
+    instruction:
+      "Keep Only individuals selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd.",
+    help: "For one to nine faces, leave Only individuals selected, draw every face, and choose Done only after all boxes are drawn. The exact count is recorded automatically. Include mirrors and repetitions. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a crowd band after drawing, provisional individual boxes are removed. You can switch back to Only individuals before continuing.",
   },
   C1_outstanding_present: {
     unit: "Crowd",
-    prompt: "Are there outstanding individuals that should be annotated separately?",
-    instruction: "Choose yes only for visually prominent individuals inside a larger crowd.",
-    help: "Outstanding individuals are central, large, singled out, or otherwise analytically important. They will receive full individual coding before group coding."
+    prompt:
+      "Are there outstanding individuals that should be annotated separately?",
+    instruction:
+      "Choose yes only for visually prominent individuals inside a larger crowd.",
+    help: "Outstanding individuals are central, large, singled out, or otherwise analytically important. They will receive full individual coding before group coding.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "People",
     prompt: "Draw outstanding individual face boxes.",
     instruction: "Draw every outstanding face box before choosing Done.",
-    help: "Use this only for individuals who should be coded separately from the remaining crowd or group. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses."
+    help: "Use this only for individuals who should be coded separately from the remaining crowd or group. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses.",
   },
   DRAW_GROUP_BOXES: {
     unit: "Groups",
     prompt: "Draw one box for each visually distinct remaining group.",
     instruction: "Each group box should include all faces in that group.",
-    help: "Use group boxes for crowds or many small faces where individual annotation would be slow or unreliable."
+    help: "Use group boxes for crowds or many small faces where individual annotation would be slow or unreliable.",
   },
   G1_group_type: {
     unit: "Group",
     prompt: "Choose the group type.",
     instruction: "",
-    help: "Code the dominant visual organization of the boxed group."
+    help: "Code the dominant visual organization of the boxed group.",
   },
   G2_group_age: {
     unit: "Group",
     prompt: "Choose the group's apparent age composition.",
     instruction: "",
-    help: "Code broad perceived age composition only from visible evidence."
+    help: "Code broad perceived age composition only from visible evidence.",
   },
   G3_group_gender: {
     unit: "Group",
     prompt: "Choose the group's perceived gender-presentation composition.",
     instruction: "",
-    help: "Code presentation, not identity. Use not assessable only when the necessary visual evidence is unavailable."
+    help: "Code presentation, not identity. Use not assessable only when the necessary visual evidence is unavailable.",
   },
   G4_group_expression_legibility: {
     unit: "Group",
     prompt: "How legible are facial expressions in this group?",
     instruction: "Choose the closest distribution across the grouped faces.",
-    help: "Score the overall expression-coding legibility across the group. Low, moderate, or high legibility can result from any combination of limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Choose mixed when no single level or mostly-level describes the group well. If no grouped faces are legible, gaze and smile questions are skipped."
+    help: "Score the overall expression-coding legibility across the group. Low, moderate, or high legibility can result from any combination of limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Choose mixed when no single level or mostly-level describes the group well. If no grouped faces are legible, gaze and smile questions are skipped.",
   },
   G5_group_gaze: {
     unit: "Group",
     prompt: "Choose the group's dominant gaze pattern.",
     instruction: "",
-    help: "Code the dominant visible gaze pattern among assessable faces."
+    help: "Code the dominant visible gaze pattern among assessable faces.",
   },
   G6_group_smile: {
     unit: "Group",
     prompt: "How prevalent is visible smiling among assessable group members?",
     instruction: "",
-    help: "Estimate prevalence among group members whose mouths/faces are visible enough to assess."
+    help: "Estimate prevalence among group members whose mouths/faces are visible enough to assess.",
   },
   G7_group_smile_intensity: {
     unit: "Group",
     prompt: "What smile intensity predominates among smiling group members?",
     instruction: "",
-    help: "Code only among those visibly smiling. Use mixed if no single intensity predominates."
+    help: "Code only among those visibly smiling. Use mixed if no single intensity predominates.",
   },
   D0_duplicates_present: {
     unit: "Page",
     prompt: "Do any individually boxed faces repeat the same face identity?",
-    instruction: "Consider mirrors, repeated portraits, and collage repetitions.",
-    help: "Answer once for all individually boxed faces on this page. Similar-looking faces are not duplicates unless they clearly repeat the same person, character, object, or represented identity."
+    instruction:
+      "Consider mirrors, repeated portraits, and collage repetitions.",
+    help: "Answer once for all individually boxed faces on this page. Similar-looking faces are not duplicates unless they clearly repeat the same person, character, object, or represented identity.",
   },
   D1_unique_face_count: {
     unit: "Page",
     prompt: "How many unique face identities are represented by the boxes?",
     instruction: "Count each repeated identity once.",
-    help: "This number must be smaller than the number of drawn face boxes because at least one person is repeated."
+    help: "This number must be smaller than the number of drawn face boxes because at least one person is repeated.",
   },
   D2_select_main: {
     unit: "Duplicate grouping",
     prompt: "Select the main face for this identity.",
     instruction: "Click the clearest or most analytically useful face box.",
-    help: "The main face receives the detailed person annotation. Its repeated depictions remain stored as linked boxes."
+    help: "The main face receives the detailed person annotation. Its repeated depictions remain stored as linked boxes.",
   },
   D3_select_duplicates: {
     unit: "Duplicate grouping",
     prompt: "Select every duplicate of this main face.",
-    instruction: "Click matching boxes to select or deselect them, then choose Next.",
-    help: "Leave unrelated faces unselected. An identity group may have no duplicates when another group accounts for the repeated face on the page."
+    instruction:
+      "Click matching boxes to select or deselect them, then choose Next.",
+    help: "Leave unrelated faces unselected. An identity group may have no duplicates when another group accounts for the repeated face on the page.",
   },
   I0_person_depiction_type: {
     unit: "Person",
     prompt: "How is this person depicted?",
     instruction: "Choose the best-fitting depiction type.",
-    help: "This question appears per person only because Multiple types present was selected for this advertisement."
+    help: "This question appears per person only because Multiple types present was selected for this advertisement.",
   },
   I1_age: {
     unit: "Person",
     prompt: "Choose this person's perceived age band.",
     instruction: "",
-    help: "Use broad apparent age from visible evidence. Choose not assessable when the face/body evidence is insufficient."
+    help: "Use broad apparent age from visible evidence. Choose not assessable when the face/body evidence is insufficient.",
   },
   I2_gender: {
     unit: "Person",
     prompt: "Choose this person's perceived gender presentation.",
     instruction: "",
-    help: "Code presentation, not identity. Use ambiguous/androgynous only when that is the visible presentation."
+    help: "Code presentation, not identity. Use ambiguous/androgynous only when that is the visible presentation.",
   },
   I3_orientation: {
     unit: "Person",
     prompt: "Choose the face orientation.",
     instruction: "",
-    help: "Less than profile means less of the face is visible than in a conventional profile. Choose tilted down or tilted up when vertical head angle is the clearest orientation feature."
+    help: "Less than profile means less of the face is visible than in a conventional profile. Choose tilted down or tilted up when vertical head angle is the clearest orientation feature.",
   },
   I4_expression_legibility: {
     unit: "Person",
     prompt: "How legible is this person's facial expression?",
     instruction: "Choose the closest level on the four-point scale.",
-    help: "Score the overall result, not the cause. Low, moderate, or high legibility can result from any combination of limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Judge their combined effect on expression coding. Level 0 skips gaze and smile coding; orientation and mouth covering are still recorded."
+    help: "Score the overall result, not the cause. Low, moderate, or high legibility can result from any combination of limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Judge their combined effect on expression coding. Level 0 skips gaze and smile coding; orientation and mouth covering are still recorded.",
   },
   I5_gaze_target: {
     unit: "Person",
     prompt: "What is this person's gaze?",
     instruction: "Choose one.",
-    help: "Code visible direction, not implied attention. Choose closed eyes only when the eyelids are visibly closed. Choose not assessable when gaze cannot be judged for another reason."
+    help: "Code visible direction, not implied attention. Choose closed eyes only when the eyelids are visibly closed. Choose not assessable when gaze cannot be judged for another reason.",
   },
   I5_target_person: {
     unit: "Person",
     prompt: "Which other person is the gaze directed at?",
     instruction: "Click a boxed person, or choose Person without bounding box.",
-    help: "A boxed target is stored by person id. Use Person without bounding box for someone visible in the ad who was not individually boxed."
+    help: "A boxed target is stored by person id. Use Person without bounding box for someone visible in the ad who was not individually boxed.",
   },
   I6_mouth_covered: {
     unit: "Person",
     prompt: "Is the mouth covered by something?",
     instruction: "Choose one.",
-    help: "Choose partly when a covering blocks only part of the mouth. Choose not assessable only when the mouth region is absent or unusable. For a difficult but visible case, select the best-fitting substantive answer."
+    help: "Choose partly when a covering blocks only part of the mouth. Choose not assessable only when the mouth region is absent or unusable. For a difficult but visible case, select the best-fitting substantive answer.",
   },
   I7_mouth_covering: {
     unit: "Person",
     prompt: "What covers the mouth?",
     instruction: "",
-    help: "Choose the main visible covering. Record what covers the mouth, not whether the covering is intentional."
+    help: "Choose the main visible covering. Record what covers the mouth, not whether the covering is intentional.",
   },
   I7_covering_other_text: {
     unit: "Person",
     prompt: "Briefly describe the other mouth covering.",
     instruction: "Use a short, concrete description.",
-    help: "Describe what visibly covers the mouth. Do not infer intention or emotion."
+    help: "Describe what visibly covers the mouth. Do not infer intention or emotion.",
   },
   I8_smile_present: {
     unit: "Person",
     prompt: "Is a smile visibly present?",
     instruction: "",
-    help: "Code visible mouth/facial configuration only. Do not infer felt emotion."
+    help: "Code visible mouth/facial configuration only. Do not infer felt emotion.",
   },
   I9_smile_intensity: {
     unit: "Person",
     prompt: "Choose the visible smile intensity.",
     instruction: "",
-    help: "Use the four-level verbal scale without external examples: slight, clear, broad, laughter-like."
+    help: "Use the four-level verbal scale without external examples: slight, clear, broad, laughter-like.",
   },
   END_PAGE_COMPLETE: {
     unit: "Finished",
     prompt: "Image annotation complete.",
     instruction: "Use Next page to continue.",
-    help: ""
+    help: "",
   },
   END_PAGE_INELIGIBLE: {
     unit: "Finished",
     prompt: "No qualifying advertisement on this image.",
     instruction: "Use Next page to continue.",
-    help: ""
+    help: "",
   },
   END_PAGE_REVIEW: {
     unit: "Finished",
     prompt: "Image marked for review.",
     instruction: "Use Next page to continue.",
-    help: ""
-  }
+    help: "",
+  },
 };
 
 const STEP_META_DE = {
   P1_qualifying_ad_count: {
     unit: "Seite",
-    prompt: "Wie viele Anzeigen auf dieser Seite enthalten mindestens eine geeignete Gesichtsdarstellung?",
-    instruction: "Wähle 0-5 direkt aus oder gib eine höhere genaue Anzahl ein.",
-    help: "Zahle Anzeigen, nicht Gesichter. Eine Darstellung ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und das Gesicht mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter."
+    prompt:
+      "Wie viele Anzeigen auf dieser Seite enthalten mindestens eine geeignete Gesichtsdarstellung?",
+    instruction:
+      "Wähle einen Null-Fall, wähle 1-5 direkt aus oder gib eine höhere genaue Anzahl ein.",
+    help: "Zahle Anzeigen, nicht Gesichter. Eine Darstellung ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und das Gesicht mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter.",
   },
   P2_single_ad_full_page: {
     unit: "Anzeige",
     prompt: "Ist die einzige qualifizierende Anzeige ganzseitig?",
-    instruction: "Wenn sie die nutzbare Seite ausfüllt, ist keine Anzeigen-Box nötig.",
-    help: "Ganzseitig bedeutet, dass die qualifizierende Anzeige die Seite als Haupteinheit einnimmt. Wenn weitere Seiteninhalte vorhanden sind, wähle Teilseite."
+    instruction:
+      "Wenn sie die nutzbare Seite ausfüllt, ist keine Anzeigen-Box nötig.",
+    help: "Ganzseitig bedeutet, dass die qualifizierende Anzeige die Seite als Haupteinheit einnimmt. Wenn weitere Seiteninhalte vorhanden sind, wähle Teilseite.",
   },
   A1_ad_bbox: {
     unit: "Anzeige",
     prompt: "Zeichne die vollständige Anzeigen-Box.",
     instruction: "Zeichne oder korrigiere eine Box um die gesamte Anzeige.",
-    help: "Schließe Bild und Text ein, die zur Anzeige gehören. Schließe benachbarte redaktionelle Inhalte oder andere Anzeigen aus."
+    help: "Schließe Bild und Text ein, die zur Anzeige gehören. Schließe benachbarte redaktionelle Inhalte oder andere Anzeigen aus.",
   },
   DRAW_AD_BOXES: {
     unit: "Anzeige",
     prompt: "Zeichne eine Box für jede qualifizierende Anzeige.",
-    instruction: "Zeichne alle qualifizierenden Anzeigen-Boxen und wähle dann Weiter.",
-    help: "Nutze dies, wenn mehrere qualifizierende Anzeigen vorhanden sind. Jede Box soll eine vollständige Anzeige einschließen."
+    instruction:
+      "Zeichne alle qualifizierenden Anzeigen-Boxen und wähle dann Weiter.",
+    help: "Nutze dies, wenn mehrere qualifizierende Anzeigen vorhanden sind. Jede Box soll eine vollständige Anzeige einschließen.",
   },
   A2_ad_depiction_type: {
     unit: "Anzeige",
     prompt: "Wie sind die geeigneten Gesichter in dieser Anzeige dargestellt?",
     instruction: "Wähle einen gemeinsamen Typ oder mehrere Typen vorhanden.",
-    help: "Wähle nur dann einen einzelnen Typ, wenn er für alle einzeln codierten Gesichter in dieser Anzeige gilt. Wenn innerhalb dieser Anzeige mehr als ein Typ vorkommt, wähle mehrere Typen vorhanden; dann wird der Darstellungstyp pro codierter Person abgefragt."
+    help: "Wähle nur dann einen einzelnen Typ, wenn er für alle einzeln codierten Gesichter in dieser Anzeige gilt. Wenn innerhalb dieser Anzeige mehr als ein Typ vorkommt, wähle mehrere Typen vorhanden; dann wird der Darstellungstyp pro codierter Person abgefragt.",
   },
   A3_unique_person_count: {
     unit: "Anzeige",
     prompt: "Zeichne eine Box um jede geeignete Gesichtsdarstellung.",
-    instruction: "Lass Nur Einzelpersonen ausgewählt und zeichne 1-9 Boxen, oder wähle 10-20 bzw. 20+ für eine Menge.",
-    help: "Bei ein bis neun Gesichtern lass Nur Einzelpersonen ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, werden vorläufige Einzelpersonen-Boxen entfernt. Du kannst vor dem Fortfahren wieder zu Nur Einzelpersonen wechseln."
+    instruction:
+      "Lass Nur Einzelpersonen ausgewählt und zeichne 1-9 Boxen, oder wähle 10-20 bzw. 20+ für eine Menge.",
+    help: "Bei ein bis neun Gesichtern lass Nur Einzelpersonen ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, werden vorläufige Einzelpersonen-Boxen entfernt. Du kannst vor dem Fortfahren wieder zu Nur Einzelpersonen wechseln.",
   },
   C1_outstanding_present: {
     unit: "Menge",
-    prompt: "Gibt es herausstechende Einzelpersonen, die separat annotiert werden sollten?",
-    instruction: "Wähle ja nur für visuell hervorgehobene Personen innerhalb einer größeren Menge.",
-    help: "Herausstechende Einzelpersonen sind zentral, groß, hervorgehoben oder anderweitig analytisch wichtig. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung."
+    prompt:
+      "Gibt es herausstechende Einzelpersonen, die separat annotiert werden sollten?",
+    instruction:
+      "Wähle ja nur für visuell hervorgehobene Personen innerhalb einer größeren Menge.",
+    help: "Herausstechende Einzelpersonen sind zentral, groß, hervorgehoben oder anderweitig analytisch wichtig. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "Personen",
     prompt: "Zeichne Boxen für herausstechende Einzelpersonen.",
-    instruction: "Zeichne jede herausstechende Gesichts-Box, bevor du Fertig wählst.",
-    help: "Nutze dies nur für Personen, die separat von der restlichen Menge oder Gruppe codiert werden sollen. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen."
+    instruction:
+      "Zeichne jede herausstechende Gesichts-Box, bevor du Fertig wählst.",
+    help: "Nutze dies nur für Personen, die separat von der restlichen Menge oder Gruppe codiert werden sollen. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen.",
   },
   DRAW_GROUP_BOXES: {
     unit: "Gruppen",
-    prompt: "Zeichne eine Box für jede visuell abgrenzbare verbleibende Gruppe.",
-    instruction: "Jede Gruppen-Box soll alle Gesichter dieser Gruppe einschließen.",
-    help: "Nutze Gruppen-Boxen für Mengen oder viele kleine Gesichter, bei denen Einzelannotation langsam oder unzuverlässig wäre."
+    prompt:
+      "Zeichne eine Box für jede visuell abgrenzbare verbleibende Gruppe.",
+    instruction:
+      "Jede Gruppen-Box soll alle Gesichter dieser Gruppe einschließen.",
+    help: "Nutze Gruppen-Boxen für Mengen oder viele kleine Gesichter, bei denen Einzelannotation langsam oder unzuverlässig wäre.",
   },
   G1_group_type: {
     unit: "Gruppe",
     prompt: "Wähle den Gruppentyp.",
     instruction: "",
-    help: "Codiere die dominierende visuelle Organisation der markierten Gruppe."
+    help: "Codiere die dominierende visuelle Organisation der markierten Gruppe.",
   },
   G2_group_age: {
     unit: "Gruppe",
     prompt: "Wähle die ungefähre Alterszusammensetzung der Gruppe.",
     instruction: "",
-    help: "Codiere nur die grobe wahrgenommene Alterszusammensetzung anhand sichtbarer Hinweise."
+    help: "Codiere nur die grobe wahrgenommene Alterszusammensetzung anhand sichtbarer Hinweise.",
   },
   G3_group_gender: {
     unit: "Gruppe",
     prompt: "Wähle die wahrgenommene Geschlechterpräsentation der Gruppe.",
     instruction: "",
-    help: "Codiere Präsentation, nicht Identität. Nutze nicht beurteilbar nur, wenn die nötigen visuellen Hinweise fehlen."
+    help: "Codiere Präsentation, nicht Identität. Nutze nicht beurteilbar nur, wenn die nötigen visuellen Hinweise fehlen.",
   },
   G4_group_expression_legibility: {
     unit: "Gruppe",
     prompt: "Wie gut sind Gesichtsausdrücke in dieser Gruppe lesbar?",
-    instruction: "Wähle die passendste Verteilung über die gruppierten Gesichter.",
-    help: "Bewerte die allgemeine Lesbarkeit für Ausdruckscodierung in der Gruppe. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Gesichtsdetails, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Wähle gemischt, wenn kein einzelnes Niveau oder mehrheitliches Niveau gut passt. Wenn keine gruppierten Gesichter lesbar sind, werden Blick- und Lächelfragen übersprungen."
+    instruction:
+      "Wähle die passendste Verteilung über die gruppierten Gesichter.",
+    help: "Bewerte die allgemeine Lesbarkeit für Ausdruckscodierung in der Gruppe. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Gesichtsdetails, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Wähle gemischt, wenn kein einzelnes Niveau oder mehrheitliches Niveau gut passt. Wenn keine gruppierten Gesichter lesbar sind, werden Blick- und Lächelfragen übersprungen.",
   },
   G5_group_gaze: {
     unit: "Gruppe",
     prompt: "Wähle das dominierende Blickmuster der Gruppe.",
     instruction: "",
-    help: "Codiere das dominierende sichtbare Blickmuster unter den beurteilbaren Gesichtern."
+    help: "Codiere das dominierende sichtbare Blickmuster unter den beurteilbaren Gesichtern.",
   },
   G6_group_smile: {
     unit: "Gruppe",
-    prompt: "Wie verbreitet ist sichtbares Lächeln unter den beurteilbaren Gruppenmitgliedern?",
+    prompt:
+      "Wie verbreitet ist sichtbares Lächeln unter den beurteilbaren Gruppenmitgliedern?",
     instruction: "",
-    help: "Schätze die Häufigkeit unter Gruppenmitgliedern, deren Mund/Gesicht sichtbar genug ist."
+    help: "Schätze die Häufigkeit unter Gruppenmitgliedern, deren Mund/Gesicht sichtbar genug ist.",
   },
   G7_group_smile_intensity: {
     unit: "Gruppe",
-    prompt: "Welche Lächelintensität überwiegt unter den lächelnden Gruppenmitgliedern?",
+    prompt:
+      "Welche Lächelintensität überwiegt unter den lächelnden Gruppenmitgliedern?",
     instruction: "",
-    help: "Codiere nur unter sichtbar lächelnden Personen. Nutze gemischt, wenn keine Intensität klar überwiegt."
+    help: "Codiere nur unter sichtbar lächelnden Personen. Nutze gemischt, wenn keine Intensität klar überwiegt.",
   },
   D0_duplicates_present: {
     unit: "Anzeige",
-    prompt: "Wiederholen einzeln markierte Gesichter dieselbe Gesichtsidentitat?",
-    instruction: "Berücksichtige Spiegel, wiederholte Porträts und Collage-Wiederholungen.",
-    help: "Beantworte dies für die einzeln markierten Gesichter in der aktuellen Anzeige. Ähnlich aussehende Gesichter sind keine Duplikate, außer sie wiederholen klar dieselbe Person, Figur, dasselbe Objekt oder dieselbe dargestellte Identität."
+    prompt:
+      "Wiederholen einzeln markierte Gesichter dieselbe Gesichtsidentitat?",
+    instruction:
+      "Berücksichtige Spiegel, wiederholte Porträts und Collage-Wiederholungen.",
+    help: "Beantworte dies für die einzeln markierten Gesichter in der aktuellen Anzeige. Ähnlich aussehende Gesichter sind keine Duplikate, außer sie wiederholen klar dieselbe Person, Figur, dasselbe Objekt oder dieselbe dargestellte Identität.",
   },
   D1_unique_face_count: {
     unit: "Anzeige",
-    prompt: "Wie viele eindeutige Gesichtsidentitaten sind durch die Boxen dargestellt?",
+    prompt:
+      "Wie viele eindeutige Gesichtsidentitaten sind durch die Boxen dargestellt?",
     instruction: "Zähle jede wiederholte Identität nur einmal.",
-    help: "Diese Anzahl muss kleiner sein als die Anzahl der gezeichneten Gesichts-Boxen, weil mindestens eine Person wiederholt wird."
+    help: "Diese Anzahl muss kleiner sein als die Anzahl der gezeichneten Gesichts-Boxen, weil mindestens eine Person wiederholt wird.",
   },
   D2_select_main: {
     unit: "Duplikatgruppe",
     prompt: "Wähle das Hauptgesicht für diese Identität.",
     instruction: "Klicke die klarste oder analytisch nutzlichste Gesichts-Box.",
-    help: "Das Hauptgesicht erhalt die detaillierte Personenannotation. Wiederholte Darstellungen bleiben als verknupfte Boxen gespeichert."
+    help: "Das Hauptgesicht erhalt die detaillierte Personenannotation. Wiederholte Darstellungen bleiben als verknupfte Boxen gespeichert.",
   },
   D3_select_duplicates: {
     unit: "Duplikatgruppe",
     prompt: "Wähle alle Duplikate dieses Hauptgesichts.",
-    instruction: "Klicke passende Boxen zum Aus- oder Abwählen und wähle dann Weiter.",
-    help: "Lass nicht zugehörige Gesichter ungewählt. Eine Identitätsgruppe kann keine Duplikate enthalten, wenn eine andere Gruppe das wiederholte Gesicht abdeckt."
+    instruction:
+      "Klicke passende Boxen zum Aus- oder Abwählen und wähle dann Weiter.",
+    help: "Lass nicht zugehörige Gesichter ungewählt. Eine Identitätsgruppe kann keine Duplikate enthalten, wenn eine andere Gruppe das wiederholte Gesicht abdeckt.",
   },
   I0_person_depiction_type: {
     unit: "Person",
     prompt: "Wie ist diese Person dargestellt?",
     instruction: "Wähle den passendsten Darstellungstyp.",
-    help: "Diese Frage erscheint pro Person nur, weil für diese Anzeige mehrere Typen vorhanden ausgewählt wurde."
+    help: "Diese Frage erscheint pro Person nur, weil für diese Anzeige mehrere Typen vorhanden ausgewählt wurde.",
   },
   I1_age: {
     unit: "Person",
     prompt: "Wähle die wahrgenommene Altersgruppe dieser Person.",
     instruction: "",
-    help: "Nutze das grobe sichtbare Alter. Wähle nicht beurteilbar, wenn Gesicht/Körper nicht genug Hinweise liefern."
+    help: "Nutze das grobe sichtbare Alter. Wähle nicht beurteilbar, wenn Gesicht/Körper nicht genug Hinweise liefern.",
   },
   I2_gender: {
     unit: "Person",
     prompt: "Wähle die wahrgenommene Geschlechterpräsentation dieser Person.",
     instruction: "",
-    help: "Codiere Präsentation, nicht Identität. Nutze ambig/androgyn nur, wenn das die sichtbare Präsentation ist."
+    help: "Codiere Präsentation, nicht Identität. Nutze ambig/androgyn nur, wenn das die sichtbare Präsentation ist.",
   },
   I3_orientation: {
     unit: "Person",
     prompt: "Wähle die Gesichtsausrichtung.",
     instruction: "",
-    help: "Weniger als Profil bedeutet, dass weniger vom Gesicht sichtbar ist als bei einem konventionellen Profil. Wähle nach unten geneigt oder nach oben geneigt, wenn der vertikale Kopfwinkel das klarste Ausrichtungsmerkmal ist."
+    help: "Weniger als Profil bedeutet, dass weniger vom Gesicht sichtbar ist als bei einem konventionellen Profil. Wähle nach unten geneigt oder nach oben geneigt, wenn der vertikale Kopfwinkel das klarste Ausrichtungsmerkmal ist.",
   },
   I4_expression_legibility: {
     unit: "Person",
     prompt: "Wie gut ist der Gesichtsausdruck dieser Person lesbar?",
     instruction: "Wähle die passendste Stufe auf der Vier-Punkte-Skala.",
-    help: "Bewerte das Ergebnis, nicht die Ursache. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Details, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Beurteile die kombinierte Wirkung auf die Ausdruckscodierung. Stufe 0 überspringt Blick- und Lächelcodierung; Ausrichtung und Mundverdeckung werden weiterhin erfasst."
+    help: "Bewerte das Ergebnis, nicht die Ursache. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Details, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Beurteile die kombinierte Wirkung auf die Ausdruckscodierung. Stufe 0 überspringt Blick- und Lächelcodierung; Ausrichtung und Mundverdeckung werden weiterhin erfasst.",
   },
   I5_gaze_target: {
     unit: "Person",
     prompt: "Wohin geht der Blick dieser Person?",
     instruction: "Wähle eine Option.",
-    help: "Codiere die sichtbare Richtung, nicht die vermutete Aufmerksamkeit. Wähle Augen bedeckt, wenn die Augenregion sichtbar verdeckt ist. Wähle Augen geschlossen nur, wenn die Augenlider sichtbar geschlossen sind. Wähle nicht beurteilbar, wenn der Blick aus anderem Grund nicht eingeschätzt werden kann."
+    help: "Codiere die sichtbare Richtung, nicht die vermutete Aufmerksamkeit. Wähle Augen bedeckt, wenn die Augenregion sichtbar verdeckt ist. Wähle Augen geschlossen nur, wenn die Augenlider sichtbar geschlossen sind. Wähle nicht beurteilbar, wenn der Blick aus anderem Grund nicht eingeschätzt werden kann.",
   },
   I5_target_person: {
     unit: "Person",
     prompt: "Auf welche andere Person ist der Blick gerichtet?",
     instruction: "Klicke eine markierte Person oder wähle Person ohne Box.",
-    help: "Ein markiertes Ziel wird über die Personen-ID gespeichert. Nutze Person ohne Box für eine sichtbare Person in der Anzeige, die nicht einzeln markiert wurde."
+    help: "Ein markiertes Ziel wird über die Personen-ID gespeichert. Nutze Person ohne Box für eine sichtbare Person in der Anzeige, die nicht einzeln markiert wurde.",
   },
   I6_mouth_covered: {
     unit: "Person",
     prompt: "Ist der Mund durch etwas verdeckt?",
     instruction: "Wähle eine Option.",
-    help: "Wähle teilweise, wenn eine Verdeckung nur einen Teil des Mundes blockiert. Wähle nicht beurteilbar nur, wenn die Mundregion fehlt oder nicht nutzbar ist. Bei schwierigen, aber sichtbaren Fällen wähle die beste substantielle Option."
+    help: "Wähle teilweise, wenn eine Verdeckung nur einen Teil des Mundes blockiert. Wähle nicht beurteilbar nur, wenn die Mundregion fehlt oder nicht nutzbar ist. Bei schwierigen, aber sichtbaren Fällen wähle die beste substantielle Option.",
   },
   I7_mouth_covering: {
     unit: "Person",
     prompt: "Was verdeckt den Mund?",
     instruction: "",
-    help: "Wähle die hauptsächliche sichtbare Verdeckung. Erfasse, was den Mund verdeckt, nicht ob die Verdeckung absichtlich ist."
+    help: "Wähle die hauptsächliche sichtbare Verdeckung. Erfasse, was den Mund verdeckt, nicht ob die Verdeckung absichtlich ist.",
   },
   I7_covering_other_text: {
     unit: "Person",
     prompt: "Beschreibe kurz die andere Mundverdeckung.",
     instruction: "Nutze eine kurze, konkrete Beschreibung.",
-    help: "Beschreibe, was den Mund sichtbar verdeckt. Interpretiere keine Absicht oder Emotion."
+    help: "Beschreibe, was den Mund sichtbar verdeckt. Interpretiere keine Absicht oder Emotion.",
   },
   I8_smile_present: {
     unit: "Person",
     prompt: "Ist ein Lächeln sichtbar?",
     instruction: "",
-    help: "Codiere nur sichtbare Mund-/Gesichtskonfiguration. Schließe nicht auf gefühlte Emotion."
+    help: "Codiere nur sichtbare Mund-/Gesichtskonfiguration. Schließe nicht auf gefühlte Emotion.",
   },
   I9_smile_intensity: {
     unit: "Person",
     prompt: "Wähle die sichtbare Lächelintensität.",
     instruction: "",
-    help: "Nutze die vierstufige verbale Skala ohne externe Beispiele: leicht, deutlich, breit, lachend."
+    help: "Nutze die vierstufige verbale Skala ohne externe Beispiele: leicht, deutlich, breit, lachend.",
   },
   END_PAGE_COMPLETE: {
     unit: "Fertig",
     prompt: "Annotation des Bildes abgeschlossen.",
     instruction: "Nutze Nächste Seite, um fortzufahren.",
-    help: ""
+    help: "",
   },
   END_PAGE_INELIGIBLE: {
     unit: "Fertig",
     prompt: "Keine qualifizierende Anzeige auf diesem Bild.",
     instruction: "Nutze Nächste Seite, um fortzufahren.",
-    help: ""
+    help: "",
   },
   END_PAGE_REVIEW: {
     unit: "Fertig",
     prompt: "Bild zur Prufung markiert.",
     instruction: "Nutze Nächste Seite, um fortzufahren.",
-    help: ""
-  }
+    help: "",
+  },
 };
 
 const LANGUAGE_STORAGE_KEY = "annotationAppV2Language";
@@ -478,7 +591,9 @@ const LANGUAGE_LABELS = { en: "English", de: "Deutsch" };
 function initialLanguage() {
   const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
   if (saved === "en" || saved === "de") return saved;
-  return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
+  return (navigator.language || "").toLowerCase().startsWith("de")
+    ? "de"
+    : "en";
 }
 
 const state = {
@@ -513,11 +628,12 @@ const state = {
   stepTimer: null,
   lastFocusStart: null,
   completionLoading: false,
-  completionSummary: null
+  completionSummary: null,
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+const $$ = (selector, root = document) =>
+  Array.from(root.querySelectorAll(selector));
 
 function sessionDisplayId(session = state.session) {
   return String(session?.session_code || session?.session_id || "");
@@ -534,10 +650,13 @@ function escapeHtml(value) {
 }
 
 const DISPLAY_LABELS_EN = {
+  no_ads_on_page: "no ad(s) on this page",
+  ads_present_no_visible_faces: "ads present, but none with visible faces",
   photo_of_person: "photo of person",
   cartoon_or_caricature: "cartoon/caricature",
   photo_of_artwork_or_statue: "photo of artwork/statue",
-  drawing_of_statue_monument_or_public_symbol: "drawing of statue, monument, or public symbol",
+  drawing_of_statue_monument_or_public_symbol:
+    "drawing of statue, monument, or public symbol",
   mask_mannequin_doll_or_puppet: "mask, mannequin, doll, or puppet",
   schematic_icon_or_logo_face: "schematic icon/logo face",
   multiple_types_present: "multiple types present",
@@ -588,13 +707,16 @@ const DISPLAY_LABELS_EN = {
   part_of_another_person: "(part of) another person",
   object_in_mouth: "object in mouth",
   tilted_down: "tilted down",
-  tilted_up: "tilted up"
+  tilted_up: "tilted up",
 };
 
 const DISPLAY_LABELS_DE = {
   yes: "ja",
   no: "nein",
   partly: "teilweise",
+  no_ads_on_page: "keine Anzeige(n) auf dieser Seite",
+  ads_present_no_visible_faces:
+    "Anzeigen vorhanden, aber keine mit sichtbaren Gesichtern",
   full_page: "ganzseitig",
   partial_page: "Teilseite",
   photo_of_person: "Foto einer Person",
@@ -603,8 +725,10 @@ const DISPLAY_LABELS_DE = {
   cartoon_or_caricature: "Cartoon/Karikatur",
   generic_human_figure: "generische menschliche Figur",
   photo_of_artwork_or_statue: "Foto von Kunstwerk/Statue",
-  drawing_of_statue_monument_or_public_symbol: "Zeichnung von Statue, Denkmal oder öffentlichem Symbol",
-  mask_mannequin_doll_or_puppet: "Maske, Schaufensterpuppe, Puppe oder Marionette",
+  drawing_of_statue_monument_or_public_symbol:
+    "Zeichnung von Statue, Denkmal oder öffentlichem Symbol",
+  mask_mannequin_doll_or_puppet:
+    "Maske, Schaufensterpuppe, Puppe oder Marionette",
   personified_object: "personifiziertes Objekt",
   nonhuman_creature_with_face: "nichtmenschliches Wesen mit Gesicht",
   schematic_icon_or_logo_face: "schematisches Icon/Logo-Gesicht",
@@ -699,29 +823,40 @@ const DISPLAY_LABELS_DE = {
   partly_visible: "teilweise sichtbar",
   fully_visible: "vollständig sichtbar",
   off_frame: "außerhalb des Bildes",
-  crop_or_frame: "Beschnitt/Rahmen"
+  crop_or_frame: "Beschnitt/Rahmen",
 };
 
 const STEP_META = new Proxy(STEP_META_EN, {
   get(target, property) {
-    return (state.language === "de" ? STEP_META_DE[property] : null) || target[property];
-  }
+    return (
+      (state.language === "de" ? STEP_META_DE[property] : null) ||
+      target[property]
+    );
+  },
 });
 
 const DISPLAY_LABELS = new Proxy(DISPLAY_LABELS_EN, {
   get(target, property) {
-    return (state.language === "de" ? DISPLAY_LABELS_DE[property] : null) || target[property];
-  }
+    return (
+      (state.language === "de" ? DISPLAY_LABELS_DE[property] : null) ||
+      target[property]
+    );
+  },
 });
 
 const UI_TEXT = {
   en: {
     app_title: "Annotation App V2",
-    welcome_1: "This app guides you through one annotation decision at a time for magazine pages or page spreads.",
-    welcome_2: "We are looking for advertisements containing eligible face depictions. A face is eligible when more than an ear or the back of a head is visible and its location can be boxed. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.",
-    welcome_3: "For each qualifying ad, you will draw boxes where needed and then answer short visual questions. Always choose the single best-fitting answer when visual evidence is available; use not assessable only when the required evidence cannot be seen well enough.",
-    welcome_4: "Use the question-mark button for detailed coding rules. Your progress is saved during annotation so a session can be resumed later.",
-    welcome_5: "Use the urgent comment button during annotation only for exceptional cases that were unusually difficult or may need review; it adds a note but does not replace the required answer.",
+    welcome_1:
+      "This app guides you through one annotation decision at a time for magazine pages or page spreads.",
+    welcome_2:
+      "We are looking for advertisements containing eligible face depictions. A face is eligible when more than an ear or the back of a head is visible and its location can be boxed. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.",
+    welcome_3:
+      "For each qualifying ad, you will draw boxes where needed and then answer short visual questions. Always choose the single best-fitting answer when visual evidence is available; use not assessable only when the required evidence cannot be seen well enough.",
+    welcome_4:
+      "Use the question-mark button for detailed coding rules. Your progress is saved during annotation so a session can be resumed later.",
+    welcome_5:
+      "Use the urgent comment button during annotation only for exceptional cases that were unusually difficult or may need review; it adds a note but does not replace the required answer.",
     manifest_path: "Manifest JSON path",
     annotation_session: "Annotation session",
     new_annotation: "New annotation",
@@ -779,10 +914,12 @@ const UI_TEXT = {
     cancel: "Cancel",
     save: "Save",
     save_session_number: "Save your session number",
-    session_number_copy_instruction: "Copy this number now. It identifies this annotation if you need to resume it later.",
+    session_number_copy_instruction:
+      "Copy this number now. It identifies this annotation if you need to resume it later.",
     copy_number: "Copy number",
     page_changed_elsewhere: "This page changed elsewhere",
-    page_changed_explanation: "Another browser or tab saved a newer version. Reload this page before continuing so that work is not overwritten.",
+    page_changed_explanation:
+      "Another browser or tab saved a newer version. Reload this page before continuing so that work is not overwritten.",
     reload_page: "Reload page",
     higher_count: "Higher count",
     face_route: "Face route",
@@ -798,7 +935,8 @@ const UI_TEXT = {
     open_page_overview: "Open page overview",
     open_page_overview_expert: "Open page overview; all pages are available",
     choose_saved_annotation: "Choose a saved annotation to resume.",
-    selected_saved_unavailable: "The selected saved annotation is no longer available.",
+    selected_saved_unavailable:
+      "The selected saved annotation is no longer available.",
     manifest_required: "Manifest path is required.",
     loading_saved_sessions: "Loading saved sessions...",
     loading: "Loading...",
@@ -809,7 +947,8 @@ const UI_TEXT = {
     copying: "Copying...",
     copied: "Copied",
     session_number_copied: "Session number copied.",
-    copy_unavailable: "Copy was unavailable. The number is selected; use Ctrl+C.",
+    copy_unavailable:
+      "Copy was unavailable. The number is selected; use Ctrl+C.",
     finishing_task: "Finishing task...",
     final_page_not_saved: "The final page could not be saved. Try again.",
     complete_every_page: "Complete every page before finishing the task.",
@@ -818,25 +957,35 @@ const UI_TEXT = {
     signing_in: "Signing in...",
     unknown_date: "Unknown date",
     assignment: "Assignment",
-    final_terminal_instruction: "Choose Finish task to save and view your summary.",
-    completion_page_single: "You completed the page. Your annotations have been saved.",
-    completion_page_many: "You completed all {count} pages. Your annotations have been saved.",
+    final_terminal_instruction:
+      "Choose Finish task to save and view your summary.",
+    completion_page_single:
+      "You completed the page. Your annotations have been saved.",
+    completion_page_many:
+      "You completed all {count} pages. Your annotations have been saved.",
     page_status_title: "Page {number}: {status}",
-    page_locked_title: "Page {number}: {status}. Complete pages in order to unlock it.",
+    page_locked_title:
+      "Page {number}: {status}. Complete pages in order to unlock it.",
     enter_integer_6_99: "Enter an integer from 6 to 99.",
     select_at_least_one: "Select at least one option.",
-    click_person_or_unboxed: "Click a person box or choose Person without bounding box.",
+    click_person_or_unboxed:
+      "Click a person box or choose Person without bounding box.",
     select_one_main_face: "Select one main face box.",
     enter_short_description: "Enter a short description.",
-    select_one_option: "Select one option."
+    select_one_option: "Select one option.",
   },
   de: {
     app_title: "Annotations-App V2",
-    welcome_1: "Diese App führt dich Schritt für Schritt durch die Annotation von Magazinseiten oder Doppelseiten.",
-    welcome_2: "Gesucht werden Anzeigen mit geeigneten Gesichtsdarstellungen. Ein Gesicht ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und seine Position mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter.",
-    welcome_3: "Für jede qualifizierende Anzeige zeichnest du bei Bedarf Boxen und beantwortest danach kurze visuelle Fragen. Wähle immer die eine bestpassende Antwort, wenn visuelle Hinweise vorhanden sind; nutze nicht beurteilbar nur, wenn die nötige Evidenz nicht gut genug sichtbar ist.",
-    welcome_4: "Über die Fragezeichen-Schaltfläche findest du genauere Codierregeln. Dein Fortschritt wird während der Annotation gespeichert, sodass du eine Sitzung später fortsetzen kannst.",
-    welcome_5: "Nutze die dringende Kommentar-Schaltfläche nur für Ausnahmefälle, die ungewöhnlich schwierig waren oder geprüft werden sollten; der Kommentar ersetzt keine erforderliche Antwort.",
+    welcome_1:
+      "Diese App führt dich Schritt für Schritt durch die Annotation von Magazinseiten oder Doppelseiten.",
+    welcome_2:
+      "Gesucht werden Anzeigen mit geeigneten Gesichtsdarstellungen. Ein Gesicht ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und seine Position mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter.",
+    welcome_3:
+      "Für jede qualifizierende Anzeige zeichnest du bei Bedarf Boxen und beantwortest danach kurze visuelle Fragen. Wähle immer die eine bestpassende Antwort, wenn visuelle Hinweise vorhanden sind; nutze nicht beurteilbar nur, wenn die nötige Evidenz nicht gut genug sichtbar ist.",
+    welcome_4:
+      "Über die Fragezeichen-Schaltfläche findest du genauere Codierregeln. Dein Fortschritt wird während der Annotation gespeichert, sodass du eine Sitzung später fortsetzen kannst.",
+    welcome_5:
+      "Nutze die dringende Kommentar-Schaltfläche nur für Ausnahmefälle, die ungewöhnlich schwierig waren oder geprüft werden sollten; der Kommentar ersetzt keine erforderliche Antwort.",
     manifest_path: "Pfad zur Manifest-JSON",
     annotation_session: "Annotationssitzung",
     new_annotation: "Neue Annotation",
@@ -894,10 +1043,12 @@ const UI_TEXT = {
     cancel: "Abbrechen",
     save: "Speichern",
     save_session_number: "Sitzungsnummer sichern",
-    session_number_copy_instruction: "Kopiere diese Nummer jetzt. Mit ihr kannst du diese Annotation später fortsetzen.",
+    session_number_copy_instruction:
+      "Kopiere diese Nummer jetzt. Mit ihr kannst du diese Annotation später fortsetzen.",
     copy_number: "Nummer kopieren",
     page_changed_elsewhere: "Diese Seite wurde anderswo verändert",
-    page_changed_explanation: "Ein anderer Browser oder Tab hat eine neuere Version gespeichert. Lade die Seite neu, bevor du fortfährst, damit keine Arbeit überschrieben wird.",
+    page_changed_explanation:
+      "Ein anderer Browser oder Tab hat eine neuere Version gespeichert. Lade die Seite neu, bevor du fortfährst, damit keine Arbeit überschrieben wird.",
     reload_page: "Seite neu laden",
     higher_count: "Höhere Anzahl",
     face_route: "Gesichtsroute",
@@ -911,47 +1062,62 @@ const UI_TEXT = {
     page_overview: "Seitenübersicht",
     page_states: "Seitenstatus",
     open_page_overview: "Seitenübersicht öffnen",
-    open_page_overview_expert: "Seitenübersicht öffnen; alle Seiten sind verfügbar",
-    choose_saved_annotation: "Wähle eine gespeicherte Annotation zum Fortsetzen.",
-    selected_saved_unavailable: "Die ausgewählte gespeicherte Annotation ist nicht mehr verfügbar.",
+    open_page_overview_expert:
+      "Seitenübersicht öffnen; alle Seiten sind verfügbar",
+    choose_saved_annotation:
+      "Wähle eine gespeicherte Annotation zum Fortsetzen.",
+    selected_saved_unavailable:
+      "Die ausgewählte gespeicherte Annotation ist nicht mehr verfügbar.",
     manifest_required: "Ein Manifest-Pfad ist erforderlich.",
     loading_saved_sessions: "Gespeicherte Sitzungen werden geladen...",
     loading: "Laden...",
-    saved_sessions_unavailable: "Gespeicherte Sitzungen konnten nicht geladen werden",
+    saved_sessions_unavailable:
+      "Gespeicherte Sitzungen konnten nicht geladen werden",
     no_saved_annotations: "Keine gespeicherten Annotationen gefunden.",
     saved_annotations_found_one: "1 gespeicherte Annotation gefunden.",
     saved_annotations_found_many: "{count} gespeicherte Annotationen gefunden.",
     copying: "Wird kopiert...",
     copied: "Kopiert",
     session_number_copied: "Sitzungsnummer kopiert.",
-    copy_unavailable: "Kopieren war nicht verfügbar. Die Nummer ist markiert; nutze Strg+C.",
+    copy_unavailable:
+      "Kopieren war nicht verfügbar. Die Nummer ist markiert; nutze Strg+C.",
     finishing_task: "Aufgabe wird abgeschlossen...",
-    final_page_not_saved: "Die letzte Seite konnte nicht gespeichert werden. Versuche es erneut.",
-    complete_every_page: "Schließe jede Seite ab, bevor du die Aufgabe beendest.",
+    final_page_not_saved:
+      "Die letzte Seite konnte nicht gespeichert werden. Versuche es erneut.",
+    complete_every_page:
+      "Schließe jede Seite ab, bevor du die Aufgabe beendest.",
     image_could_not_load: "Bild konnte nicht geladen werden.",
     opening_annotation: "Annotation wird geöffnet...",
     signing_in: "Anmeldung läuft...",
     unknown_date: "Unbekanntes Datum",
     assignment: "Zuweisung",
-    final_terminal_instruction: "Wähle Aufgabe abschließen, um zu speichern und die Zusammenfassung zu sehen.",
-    completion_page_single: "Du hast die Seite abgeschlossen. Deine Annotationen wurden gespeichert.",
-    completion_page_many: "Du hast alle {count} Seiten abgeschlossen. Deine Annotationen wurden gespeichert.",
+    final_terminal_instruction:
+      "Wähle Aufgabe abschließen, um zu speichern und die Zusammenfassung zu sehen.",
+    completion_page_single:
+      "Du hast die Seite abgeschlossen. Deine Annotationen wurden gespeichert.",
+    completion_page_many:
+      "Du hast alle {count} Seiten abgeschlossen. Deine Annotationen wurden gespeichert.",
     page_status_title: "Seite {number}: {status}",
-    page_locked_title: "Seite {number}: {status}. Schließe Seiten der Reihe nach ab, um sie freizuschalten.",
+    page_locked_title:
+      "Seite {number}: {status}. Schließe Seiten der Reihe nach ab, um sie freizuschalten.",
     enter_integer_6_99: "Gib eine ganze Zahl von 6 bis 99 ein.",
     select_at_least_one: "Wähle mindestens eine Option.",
-    click_person_or_unboxed: "Klicke eine Personen-Box oder wähle Person ohne Box.",
+    click_person_or_unboxed:
+      "Klicke eine Personen-Box oder wähle Person ohne Box.",
     select_one_main_face: "Wähle eine Hauptgesichts-Box.",
     enter_short_description: "Gib eine kurze Beschreibung ein.",
-    select_one_option: "Wähle eine Option."
-  }
+    select_one_option: "Wähle eine Option.",
+  },
 };
 
 function t(key, values = {}) {
   const table = UI_TEXT[state.language] || UI_TEXT.en;
   const fallback = UI_TEXT.en[key] || key;
   const template = table[key] || fallback;
-  return String(template).replace(/\{(\w+)\}/g, (_, name) => values[name] ?? "");
+  return String(template).replace(
+    /\{(\w+)\}/g,
+    (_, name) => values[name] ?? "",
+  );
 }
 
 function setText(selector, key) {
@@ -981,19 +1147,26 @@ function applyLanguage({ rerender = true } = {}) {
     const selected = button.dataset.langOption === state.language;
     button.classList.toggle("selected", selected);
     button.setAttribute("aria-pressed", String(selected));
-    button.title = LANGUAGE_LABELS[button.dataset.langOption] || button.dataset.langOption;
+    button.title =
+      LANGUAGE_LABELS[button.dataset.langOption] || button.dataset.langOption;
   });
-  $$(".language-toggle").forEach((group) => group.setAttribute("aria-label", t("language_group")));
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: <explanation>
+  $$(".language-toggle").forEach((group) =>
+    group.setAttribute("aria-label", t("language_group")),
+  );
 
   setText(".login-panel h1", "app_title");
   const welcome = $$(".welcome-copy p");
-  ["welcome_1", "welcome_2", "welcome_3", "welcome_4", "welcome_5"].forEach((key, index) => {
-    if (welcome[index]) welcome[index].textContent = t(key);
-  });
+  ["welcome_1", "welcome_2", "welcome_3", "welcome_4", "welcome_5"].forEach(
+    (key, index) => {
+      if (welcome[index]) welcome[index].textContent = t(key);
+    },
+  );
   const manifestLabel = $("#manifestPathField");
   if (manifestLabel) {
     for (const node of manifestLabel.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n            ${t("manifest_path")}\n            `;
+      if (node.nodeType === Node.TEXT_NODE)
+        node.textContent = `\n            ${t("manifest_path")}\n            `;
     }
   }
   setText(".field-label", "annotation_session");
@@ -1002,22 +1175,28 @@ function applyLanguage({ rerender = true } = {}) {
   const resumeLabel = $("#resumeFields label");
   if (resumeLabel) {
     for (const node of resumeLabel.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n              ${t("saved_annotation")}\n              `;
+      if (node.nodeType === Node.TEXT_NODE)
+        node.textContent = `\n              ${t("saved_annotation")}\n              `;
     }
   }
   $("#refreshSessionsButton").textContent = t("refresh_sessions");
-  $("#startButton").textContent = state.startMode === "resume" ? t("open_saved_annotation") : t("start_new_annotation");
+  $("#startButton").textContent =
+    state.startMode === "resume"
+      ? t("open_saved_annotation")
+      : t("start_new_annotation");
   const passwordLabel = $("#hostedPasswordStep label");
   if (passwordLabel) {
     for (const node of passwordLabel.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n              ${t("study_password")}\n              `;
+      if (node.nodeType === Node.TEXT_NODE)
+        node.textContent = `\n              ${t("study_password")}\n              `;
     }
   }
   $("#hostedLoginButton").textContent = t("continue");
   const assignmentLabel = $("#hostedAssignmentStep label");
   if (assignmentLabel) {
     for (const node of assignmentLabel.childNodes) {
-      if (node.nodeType === Node.TEXT_NODE) node.textContent = `\n              ${t("assignment_code")}\n              `;
+      if (node.nodeType === Node.TEXT_NODE)
+        node.textContent = `\n              ${t("assignment_code")}\n              `;
     }
   }
   $("#hostedOpenButton").textContent = t("open_annotation");
@@ -1025,12 +1204,19 @@ function applyLanguage({ rerender = true } = {}) {
   setText(".completion-kicker", "annotation_set_complete");
   setText("#completionTitle", "thank_you");
   setText("#completionMessage", "annotations_saved");
-  const statKeys = ["pages", "qualifying_ads", "faces_boxed", "groups", "focused_time"];
+  const statKeys = [
+    "pages",
+    "qualifying_ads",
+    "faces_boxed",
+    "groups",
+    "focused_time",
+  ];
   $$(".completion-stats span").forEach((span, index) => {
     span.textContent = t(statKeys[index]);
   });
   const completionSession = $(".completion-session");
-  if (completionSession) completionSession.firstChild.textContent = `${t("session")} `;
+  if (completionSession)
+    completionSession.firstChild.textContent = `${t("session")} `;
   $("#reviewCompletedTaskButton").textContent = t("review_annotations");
   if (state.completionSummary) renderCompletionSummary(state.completionSummary);
 
@@ -1064,12 +1250,15 @@ function applyLanguage({ rerender = true } = {}) {
   setTitle("#imageProgress", "image_progress");
   $("#pageListToggle").textContent = t("pages");
   const sessionDisplay = $(".session-code-display");
-  if (sessionDisplay) sessionDisplay.firstChild.textContent = `${t("session")} `;
+  if (sessionDisplay)
+    sessionDisplay.firstChild.textContent = `${t("session")} `;
   $("#taskTitle").textContent = t("task");
   setTitle("#taskProgress", "task_progress");
   $("#expertModeBadge").textContent = t("expert");
   $("#hostedExitButton").textContent = t("exit");
-  $("#leaveCompletedTaskButton").textContent = state.hostedMode ? t("sign_out") : t("return_to_start");
+  $("#leaveCompletedTaskButton").textContent = state.hostedMode
+    ? t("sign_out")
+    : t("return_to_start");
 
   setText("#commentDialog h2", "urgent_comment");
   setPlaceholder("#urgentCommentText", "urgent_comment_placeholder");
@@ -1077,7 +1266,8 @@ function applyLanguage({ rerender = true } = {}) {
   $("#saveCommentButton").textContent = t("save");
   setText("#sessionCodeTitle", "save_session_number");
   const sessionDialogText = $("#sessionCodeDialog .dialog-body > p");
-  if (sessionDialogText) sessionDialogText.textContent = t("session_number_copy_instruction");
+  if (sessionDialogText)
+    sessionDialogText.textContent = t("session_number_copy_instruction");
   $("#copySessionCodeButton").textContent = t("copy_number");
   $("#continueSessionButton").textContent = t("continue");
   setText("#saveConflictTitle", "page_changed_elsewhere");
@@ -1086,7 +1276,9 @@ function applyLanguage({ rerender = true } = {}) {
   $("#reloadAfterConflictButton").textContent = t("reload_page");
 
   if (state.manifest) {
-    $("#pageListToggle").title = state.expertMode ? t("open_page_overview_expert") : t("open_page_overview");
+    $("#pageListToggle").title = state.expertMode
+      ? t("open_page_overview_expert")
+      : t("open_page_overview");
   }
   if (rerender && state.annotation) render();
 }
@@ -1095,7 +1287,11 @@ function setLanguage(language) {
   if (language !== "en" && language !== "de") return;
   state.language = language;
   localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  if (state.resumeSessions.length) renderResumeSessions(state.resumeSessions, $("#resumeSessionSelect")?.value || null);
+  if (state.resumeSessions.length)
+    renderResumeSessions(
+      state.resumeSessions,
+      $("#resumeSessionSelect")?.value || null,
+    );
   applyLanguage();
 }
 
@@ -1117,11 +1313,16 @@ function roundRel(value) {
 }
 
 function compactTimestamp(date = new Date()) {
-  return date.toISOString().replace(/[-:.]/g, "").replace("T", "_").replace("Z", "");
+  return date
+    .toISOString()
+    .replace(/[-:.]/g, "")
+    .replace("T", "_")
+    .replace("Z", "");
 }
 
 function imageUrl(image) {
-  if (state.hostedMode) return `/api/image?image_id=${encodeURIComponent(image.image_id)}`;
+  if (state.hostedMode)
+    return `/api/image?image_id=${encodeURIComponent(image.image_id)}`;
   return `/api/image?path=${encodeURIComponent(image.path)}`;
 }
 
@@ -1143,7 +1344,7 @@ function prefetchImage(index) {
     imageId: image.image_id,
     objectUrl: null,
     cancelled: false,
-    promise: null
+    promise: null,
   };
   entry.promise = (async () => {
     const response = await fetch(imageUrl(image), { cache: "no-store" });
@@ -1226,7 +1427,7 @@ function defaultAd(number) {
     duplicate_faces_present: null,
     unique_face_count: null,
     people: [],
-    groups: []
+    groups: [],
   };
 }
 
@@ -1251,7 +1452,7 @@ function defaultPerson(ad, role = "individual") {
     mouth_covering: null,
     mouth_covering_other_text: null,
     smile_present: null,
-    smile_intensity: null
+    smile_intensity: null,
   };
 }
 
@@ -1266,7 +1467,7 @@ function defaultGroup(ad) {
     expression_legibility_distribution: null,
     dominant_gaze: null,
     smile_prevalence: null,
-    dominant_smile_intensity: null
+    dominant_smile_intensity: null,
   };
 }
 
@@ -1278,7 +1479,9 @@ function setInitialFaceRoute(ad, route) {
   state.dragging = null;
 
   if (route === "only_individuals") {
-    ad.people = ad.people.filter((person) => person.annotation_role === "individual");
+    ad.people = ad.people.filter(
+      (person) => person.annotation_role === "individual",
+    );
     ad.groups = [];
     ad.has_outstanding_individuals = null;
     const count = ad.people.filter((person) => person.face_bbox).length;
@@ -1295,7 +1498,9 @@ function setInitialFaceRoute(ad, route) {
     ad.groups = [];
     ad.has_outstanding_individuals = null;
   } else {
-    ad.people = ad.people.filter((person) => person.annotation_role !== "individual");
+    ad.people = ad.people.filter(
+      (person) => person.annotation_role !== "individual",
+    );
   }
   invalidateDuplicateResolution(ad);
 }
@@ -1306,25 +1511,25 @@ function defaultAnnotation(image) {
     flow_source: {
       playbook: "docs/annotation_playbook_v1.md",
       yaml: "docs/annotation_flow_v1.yaml",
-      flow_schema_version: "1.13"
+      flow_schema_version: "1.14",
     },
     session: {
       session_id: state.session.session_id,
       session_code: sessionDisplayId(),
-      session_created_at: state.session.created_at
+      session_created_at: state.session.created_at,
     },
     task: {
       task_id: state.manifest.task_id,
       manifest_path: state.manifest.manifest_path,
       image_index: image.index,
-      image_total: image.total
+      image_total: image.total,
     },
     image: {
       image_id: image.image_id,
       filename: image.filename,
       path: image.path,
       page_type: image.page_type,
-      metadata: image.metadata || {}
+      metadata: image.metadata || {},
     },
     status: "draft",
     created_at: nowIso(),
@@ -1333,8 +1538,9 @@ function defaultAnnotation(image) {
     current_step: { id: "P1_qualifying_ad_count" },
     page: {
       qualifying_ad_count: null,
+      no_qualifying_ad_reason: null,
       duplicate_faces_present: null,
-      unique_face_count: null
+      unique_face_count: null,
     },
     face_identity_groups: [],
     advertisements: [],
@@ -1343,17 +1549,27 @@ function defaultAnnotation(image) {
     timing: {
       screen_times: [],
       total_elapsed_ms: 0,
-      total_focused_ms: 0
+      total_focused_ms: 0,
     },
-    navigation_history: []
+    navigation_history: [],
   };
 }
 
 function migrateLoadedAnnotation(annotation) {
   annotation.flow_source ||= {};
-  annotation.flow_source.flow_schema_version = "1.13";
+  annotation.flow_source.flow_schema_version = "1.14";
   annotation.page ||= {};
-  if (annotation.page.qualifying_ad_count === "unclear") annotation.page.qualifying_ad_count = null;
+  if (annotation.page.qualifying_ad_count === "unclear")
+    annotation.page.qualifying_ad_count = null;
+  annotation.page.no_qualifying_ad_reason ??= null;
+  if (
+    String(annotation.page.qualifying_ad_count) === "0" &&
+    !annotation.page.no_qualifying_ad_reason
+  ) {
+    annotation.status = "draft";
+    annotation.finished_at = null;
+    annotation.current_step = { id: "P1_qualifying_ad_count" };
+  }
   const legacyPageDepictionType = annotation.page.depiction_type || null;
   annotation.page.duplicate_faces_present ??= null;
   annotation.page.unique_face_count ??= null;
@@ -1362,17 +1578,24 @@ function migrateLoadedAnnotation(annotation) {
     if (!("depiction_type" in ad)) {
       if (legacyPageDepictionType === "multiple_types_present") {
         const personTypes = new Set(
-          (ad.people || []).map((person) => person.depiction_type).filter(Boolean)
+          (ad.people || [])
+            .map((person) => person.depiction_type)
+            .filter(Boolean),
         );
-        ad.depiction_type = personTypes.size === 1 ? [...personTypes][0] : legacyPageDepictionType;
+        ad.depiction_type =
+          personTypes.size === 1
+            ? [...personTypes][0]
+            : legacyPageDepictionType;
       } else {
         ad.depiction_type = legacyPageDepictionType;
       }
     }
     ad.face_depiction_count_band ??= ad.unique_person_count_band ?? null;
     if (ad.extent === "unclear") ad.extent = null;
-    if (ad.face_depiction_count_band === "unclear") ad.face_depiction_count_band = null;
-    if (ad.has_outstanding_individuals === "unclear") ad.has_outstanding_individuals = null;
+    if (ad.face_depiction_count_band === "unclear")
+      ad.face_depiction_count_band = null;
+    if (ad.has_outstanding_individuals === "unclear")
+      ad.has_outstanding_individuals = null;
     ad.duplicate_faces_present ??= null;
     ad.unique_face_count ??= null;
     for (const person of ad.people || []) {
@@ -1380,23 +1603,32 @@ function migrateLoadedAnnotation(annotation) {
       person.duplicate_person_ids ||= [];
       person.depiction_type ??= null;
       person.face_expression_legibility ??= null;
-      person.face_expression_legibility = ({
-        "1_not_legible": "0_not_legible",
-        "2_low_legibility": "1_low_legibility",
-        "3_moderate_legibility": "2_moderate_legibility",
-        "4_high_legibility": "3_high_legibility"
-      })[person.face_expression_legibility] || person.face_expression_legibility;
+      person.face_expression_legibility =
+        {
+          "1_not_legible": "0_not_legible",
+          "2_low_legibility": "1_low_legibility",
+          "3_moderate_legibility": "2_moderate_legibility",
+          "4_high_legibility": "3_high_legibility",
+        }[person.face_expression_legibility] ||
+        person.face_expression_legibility;
       if (!("gaze_target_person_unboxed" in person)) {
-        person.gaze_target_person_unboxed = person.gaze_target_unboxed_person_confirmed === "yes" ? true : null;
+        person.gaze_target_person_unboxed =
+          person.gaze_target_unboxed_person_confirmed === "yes" ? true : null;
       }
-      if (person.gaze_target === "off_frame" || person.gaze_target === "scene_direction") {
+      if (
+        person.gaze_target === "off_frame" ||
+        person.gaze_target === "scene_direction"
+      ) {
         person.gaze_target = "off_frame_or_scene_direction";
       }
       if (!("mouth_covered" in person)) person.mouth_covered = null;
       if (!("mouth_covering" in person)) person.mouth_covering = null;
-      if (person.mouth_covering === "own_body_part") person.mouth_covering = "other_body_part";
-      if (person.mouth_covering === "another_person") person.mouth_covering = "part_of_another_person";
-      if (!("mouth_covering_other_text" in person)) person.mouth_covering_other_text = null;
+      if (person.mouth_covering === "own_body_part")
+        person.mouth_covering = "other_body_part";
+      if (person.mouth_covering === "another_person")
+        person.mouth_covering = "part_of_another_person";
+      if (!("mouth_covering_other_text" in person))
+        person.mouth_covering_other_text = null;
       for (const field of [
         "perceived_age",
         "perceived_gender_presentation",
@@ -1404,7 +1636,7 @@ function migrateLoadedAnnotation(annotation) {
         "gaze_target",
         "mouth_covered",
         "mouth_covering",
-        "smile_present"
+        "smile_present",
       ]) {
         if (person[field] === "unclear") person[field] = null;
       }
@@ -1414,7 +1646,10 @@ function migrateLoadedAnnotation(annotation) {
     }
     for (const group of ad.groups || []) {
       group.expression_legibility_distribution ??= null;
-      if (group.dominant_gaze === "off_frame" || group.dominant_gaze === "scene_direction") {
+      if (
+        group.dominant_gaze === "off_frame" ||
+        group.dominant_gaze === "scene_direction"
+      ) {
         group.dominant_gaze = "off_frame_or_scene_direction";
       }
       for (const field of [
@@ -1424,7 +1659,7 @@ function migrateLoadedAnnotation(annotation) {
         "expression_legibility_distribution",
         "dominant_gaze",
         "smile_prevalence",
-        "dominant_smile_intensity"
+        "dominant_smile_intensity",
       ]) {
         if (group[field] === "unclear") group[field] = null;
       }
@@ -1445,11 +1680,17 @@ function normalizeLoadedStep(step) {
     I5_confirm_unboxed_target: "I5_target_person",
     I6_mouth_visibility: "I6_mouth_covered",
     I7_occlusion_reason: "I6_mouth_covered",
-    I7_occlusion_other_text: "I6_mouth_covered"
+    I7_occlusion_other_text: "I6_mouth_covered",
   };
   if (step.id === "I0_duplicate") {
     const ad = adByIndex(step.adIndex);
-    return { ...step, id: ad?.depiction_type === "multiple_types_present" ? "I0_person_depiction_type" : "I1_age" };
+    return {
+      ...step,
+      id:
+        ad?.depiction_type === "multiple_types_present"
+          ? "I0_person_depiction_type"
+          : "I1_age",
+    };
   }
   if (step.id === "I10_teeth_visibility") return nextPersonOrAfter(step);
   if (step.id === "P3_page_depiction_type") {
@@ -1461,11 +1702,14 @@ function normalizeLoadedStep(step) {
 function saveLocalBootState() {
   if (state.hostedMode) return;
   if (!state.session || !state.manifest) return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    session_id: state.session.session_id,
-    manifest_path: state.manifest.manifest_path,
-    start_mode: "resume"
-  }));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      session_id: state.session.session_id,
+      manifest_path: state.manifest.manifest_path,
+      start_mode: "resume",
+    }),
+  );
 }
 
 function loadLocalBootState() {
@@ -1480,7 +1724,7 @@ async function postJson(url, body) {
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
   const data = await response.json();
   if (!response.ok) {
@@ -1510,7 +1754,8 @@ function currentStepKey(step = state.step) {
   if (step.adIndex !== undefined) parts.push(`ad${step.adIndex}`);
   if (step.personId) parts.push(step.personId);
   if (step.groupId) parts.push(step.groupId);
-  if (step.identityGroupIndex !== undefined) parts.push(`identity${step.identityGroupIndex}`);
+  if (step.identityGroupIndex !== undefined)
+    parts.push(`identity${step.identityGroupIndex}`);
   return parts.join(":");
 }
 
@@ -1520,15 +1765,18 @@ function startStepTimer(step) {
     step_id: step.id,
     step_key: currentStepKey(step),
     context: {
-      ad_id: step.adIndex !== undefined ? adByIndex(step.adIndex)?.ad_id || null : null,
+      ad_id:
+        step.adIndex !== undefined
+          ? adByIndex(step.adIndex)?.ad_id || null
+          : null,
       person_id: step.personId || null,
       group_id: step.groupId || null,
-      identity_group_index: step.identityGroupIndex ?? null
+      identity_group_index: step.identityGroupIndex ?? null,
     },
     entered_at: nowIso(),
     start_ms: performance.now(),
     focused_ms: 0,
-    focus_start_ms: document.hidden ? null : performance.now()
+    focus_start_ms: document.hidden ? null : performance.now(),
   };
 }
 
@@ -1549,7 +1797,7 @@ function finishStepTimer(answerEvent = "leave") {
     left_at: nowIso(),
     elapsed_ms_total: Math.round(end - timer.start_ms),
     elapsed_ms_focused: Math.round(timer.focused_ms),
-    event: answerEvent
+    event: answerEvent,
   };
   state.annotation.timing.screen_times.push(record);
   state.annotation.timing.total_elapsed_ms += record.elapsed_ms_total;
@@ -1600,11 +1848,15 @@ function restorePreviousStep() {
     state.statuses[currentImage().image_id] = {
       status: "draft",
       updated_at: nowIso(),
-      finished_at: null
+      finished_at: null,
     };
   }
   let previous = state.annotation.navigation_history.pop();
-  while (previous && ["I4_gaze_eligible", "I10_teeth_visibility"].includes(previous.id) && state.annotation.navigation_history.length) {
+  while (
+    previous &&
+    ["I4_gaze_eligible", "I10_teeth_visibility"].includes(previous.id) &&
+    state.annotation.navigation_history.length
+  ) {
     previous = state.annotation.navigation_history.pop();
   }
   enterStep(normalizeLoadedStep(previous));
@@ -1622,18 +1874,23 @@ function addReviewFlagOnce(reason, step = state.step) {
   const flag = {
     step_id: step.id,
     reason,
-    ad_id: step.adIndex !== undefined ? adByIndex(step.adIndex)?.ad_id || null : null,
+    ad_id:
+      step.adIndex !== undefined
+        ? adByIndex(step.adIndex)?.ad_id || null
+        : null,
     person_id: step.personId || null,
-    group_id: step.groupId || null
+    group_id: step.groupId || null,
   };
-  const exists = state.annotation.review_flags.some((item) =>
-    item.step_id === flag.step_id &&
-    item.reason === flag.reason &&
-    (item.ad_id || null) === flag.ad_id &&
-    (item.person_id || null) === flag.person_id &&
-    (item.group_id || null) === flag.group_id
+  const exists = state.annotation.review_flags.some(
+    (item) =>
+      item.step_id === flag.step_id &&
+      item.reason === flag.reason &&
+      (item.ad_id || null) === flag.ad_id &&
+      (item.person_id || null) === flag.person_id &&
+      (item.group_id || null) === flag.group_id,
   );
-  if (!exists) state.annotation.review_flags.push({ ...flag, created_at: nowIso() });
+  if (!exists)
+    state.annotation.review_flags.push({ ...flag, created_at: nowIso() });
 }
 
 function exactCountValue(value) {
@@ -1642,14 +1899,18 @@ function exactCountValue(value) {
 
 function exactAdCountValue(value) {
   const number = Number(value);
-  return Number.isInteger(number) && number >= 1 && number <= 99 ? number : null;
+  return Number.isInteger(number) && number >= 1 && number <= 99
+    ? number
+    : null;
 }
 
 function ensureAdsForCount(value) {
   const count = exactAdCountValue(value);
   if (!count) return;
   while (state.annotation.advertisements.length < count) {
-    state.annotation.advertisements.push(defaultAd(state.annotation.advertisements.length + 1));
+    state.annotation.advertisements.push(
+      defaultAd(state.annotation.advertisements.length + 1),
+    );
   }
   state.annotation.advertisements.length = count;
 }
@@ -1672,16 +1933,21 @@ function allBoxedPeople(adIndex = null) {
 }
 
 function canonicalPeople(ad) {
-  return ad.people.filter((person) => person.face_bbox && !person.duplicate_of_person_id);
+  return ad.people.filter(
+    (person) => person.face_bbox && !person.duplicate_of_person_id,
+  );
 }
 
 function personStartStep(adIndex, person) {
   const ad = adByIndex(adIndex);
   return {
-    id: ad.depiction_type === "multiple_types_present" ? "I0_person_depiction_type" : "I1_age",
+    id:
+      ad.depiction_type === "multiple_types_present"
+        ? "I0_person_depiction_type"
+        : "I1_age",
     adIndex,
     personId: person.person_id,
-    personIndex: adByIndex(adIndex).people.indexOf(person)
+    personIndex: adByIndex(adIndex).people.indexOf(person),
   };
 }
 
@@ -1698,15 +1964,25 @@ function firstDetailsInAd(adIndex) {
   const people = canonicalPeople(ad);
   if (people.length) return personStartStep(adIndex, people[0]);
   if (ad.groups.length) {
-    return { id: "G1_group_type", adIndex, groupId: ad.groups[0].group_id, groupIndex: 0 };
+    return {
+      id: "G1_group_type",
+      adIndex,
+      groupId: ad.groups[0].group_id,
+      groupIndex: 0,
+    };
   }
   return nextAdAfterCompletedAd(adIndex);
 }
 
 function firstDetailsFromAd(startAdIndex = 0) {
-  for (let adIndex = startAdIndex; adIndex < state.annotation.advertisements.length; adIndex += 1) {
+  for (
+    let adIndex = startAdIndex;
+    adIndex < state.annotation.advertisements.length;
+    adIndex += 1
+  ) {
     const ad = adByIndex(adIndex);
-    if (canonicalPeople(ad).length || ad.groups.length) return firstDetailsInAd(adIndex);
+    if (canonicalPeople(ad).length || ad.groups.length)
+      return firstDetailsInAd(adIndex);
   }
   return terminalStep("complete", "END_PAGE_COMPLETE");
 }
@@ -1716,7 +1992,9 @@ function duplicateStepAd(step = state.step) {
 }
 
 function duplicatePeopleForStep(step = state.step) {
-  return step.adIndex !== undefined ? allBoxedPeople(step.adIndex) : allBoxedPeople();
+  return step.adIndex !== undefined
+    ? allBoxedPeople(step.adIndex)
+    : allBoxedPeople();
 }
 
 function duplicateScopeId(step = state.step) {
@@ -1726,12 +2004,16 @@ function duplicateScopeId(step = state.step) {
 function duplicateIdentityGroups(step = state.step) {
   const scopeId = duplicateScopeId(step);
   if (!scopeId) return state.annotation.face_identity_groups;
-  return state.annotation.face_identity_groups.filter((group) => group.scope_ad_id === scopeId);
+  return state.annotation.face_identity_groups.filter(
+    (group) => group.scope_ad_id === scopeId,
+  );
 }
 
 function duplicatePresenceForStep(step = state.step) {
   const ad = duplicateStepAd(step);
-  return ad ? ad.duplicate_faces_present : state.annotation.page.duplicate_faces_present;
+  return ad
+    ? ad.duplicate_faces_present
+    : state.annotation.page.duplicate_faces_present;
 }
 
 function duplicateUniqueCountForStep(step = state.step) {
@@ -1740,7 +2022,9 @@ function duplicateUniqueCountForStep(step = state.step) {
 }
 
 function duplicatePersonIdsForStep(step = state.step) {
-  return new Set(duplicatePeopleForStep(step).map(({ person }) => person.person_id));
+  return new Set(
+    duplicatePeopleForStep(step).map(({ person }) => person.person_id),
+  );
 }
 
 function syncPageDuplicateSummary() {
@@ -1751,19 +2035,25 @@ function syncPageDuplicateSummary() {
     : values.length === ads.length && ads.length
       ? "no"
       : null;
-  state.annotation.page.unique_face_count = allBoxedPeople().filter(({ person }) => !person.duplicate_of_person_id).length || null;
+  state.annotation.page.unique_face_count =
+    allBoxedPeople().filter(({ person }) => !person.duplicate_of_person_id)
+      .length || null;
 }
 
 function clearDuplicateLinks(step = state.step) {
   const personIds = duplicatePersonIdsForStep(step);
   const scopeId = duplicateScopeId(step);
   if (!personIds.size && !scopeId) return;
-  state.annotation.face_identity_groups = state.annotation.face_identity_groups.filter((group) => {
-    if (scopeId && group.scope_ad_id === scopeId) return false;
-    if (!scopeId) return false;
-    const ids = [group.main_person_id, ...(group.duplicate_person_ids || [])].filter(Boolean);
-    return !ids.some((id) => personIds.has(id));
-  });
+  state.annotation.face_identity_groups =
+    state.annotation.face_identity_groups.filter((group) => {
+      if (scopeId && group.scope_ad_id === scopeId) return false;
+      if (!scopeId) return false;
+      const ids = [
+        group.main_person_id,
+        ...(group.duplicate_person_ids || []),
+      ].filter(Boolean);
+      return !ids.some((id) => personIds.has(id));
+    });
   for (const { person } of duplicatePeopleForStep(step)) {
     person.duplicate_of_person_id = null;
     person.duplicate_person_ids = [];
@@ -1819,15 +2109,26 @@ function nextPersonOrAfter(step) {
     return personStartStep(step.adIndex, next);
   }
   if (ad.groups.length) {
-    return { id: "G1_group_type", adIndex: step.adIndex, groupId: ad.groups[0].group_id, groupIndex: 0 };
+    return {
+      id: "G1_group_type",
+      adIndex: step.adIndex,
+      groupId: ad.groups[0].group_id,
+      groupIndex: 0,
+    };
   }
   return nextAdAfterCompletedAd(step.adIndex);
 }
 
 function firstGroupDetailOr(adIndex, fallback) {
   const ad = adByIndex(adIndex);
-  if (!ad.groups.length) return typeof fallback === "function" ? fallback() : fallback;
-  return { id: "G1_group_type", adIndex, groupId: ad.groups[0].group_id, groupIndex: 0 };
+  if (!ad.groups.length)
+    return typeof fallback === "function" ? fallback() : fallback;
+  return {
+    id: "G1_group_type",
+    adIndex,
+    groupId: ad.groups[0].group_id,
+    groupIndex: 0,
+  };
 }
 
 function nextGroupOrEnd(step) {
@@ -1836,7 +2137,12 @@ function nextGroupOrEnd(step) {
   const index = ad.groups.indexOf(group);
   const next = ad.groups[index + 1];
   if (next) {
-    return { id: "G1_group_type", adIndex: step.adIndex, groupId: next.group_id, groupIndex: index + 1 };
+    return {
+      id: "G1_group_type",
+      adIndex: step.adIndex,
+      groupId: next.group_id,
+      groupIndex: index + 1,
+    };
   }
   return nextAdAfterCompletedAd(step.adIndex);
 }
@@ -1855,7 +2161,13 @@ function stepValue(step = state.step) {
   const person = step.personId ? getPersonField(step) : null;
   const group = step.groupId ? getGroupField(step) : null;
   const map = {
-    P1_qualifying_ad_count: () => state.annotation.page.qualifying_ad_count,
+    P1_qualifying_ad_count: () => {
+      const page = state.annotation.page;
+      if (String(page.qualifying_ad_count) === "0") {
+        return page.no_qualifying_ad_reason || null;
+      }
+      return page.qualifying_ad_count;
+    },
     P2_single_ad_full_page: () => ad?.extent,
     A2_ad_depiction_type: () => ad?.depiction_type,
     A3_unique_person_count: () => ad?.face_depiction_count_band,
@@ -1865,7 +2177,8 @@ function stepValue(step = state.step) {
     G1_group_type: () => group?.group_type,
     G2_group_age: () => group?.age_composition,
     G3_group_gender: () => group?.gender_presentation_composition,
-    G4_group_expression_legibility: () => group?.expression_legibility_distribution,
+    G4_group_expression_legibility: () =>
+      group?.expression_legibility_distribution,
     G5_group_gaze: () => group?.dominant_gaze,
     G6_group_smile: () => group?.smile_prevalence,
     G7_group_smile_intensity: () => group?.dominant_smile_intensity,
@@ -1879,7 +2192,7 @@ function stepValue(step = state.step) {
     I7_mouth_covering: () => person?.mouth_covering,
     I7_covering_other_text: () => person?.mouth_covering_other_text,
     I8_smile_present: () => person?.smile_present,
-    I9_smile_intensity: () => person?.smile_intensity
+    I9_smile_intensity: () => person?.smile_intensity,
   };
   return map[step.id] ? map[step.id]() : null;
 }
@@ -1890,10 +2203,17 @@ function setStepValue(value, step = state.step) {
   const group = step.groupId ? getGroupField(step) : null;
   const map = {
     P1_qualifying_ad_count: () => {
+      if (NO_QUALIFYING_AD_REASONS.has(value)) {
+        state.annotation.page.qualifying_ad_count = "0";
+        state.annotation.page.no_qualifying_ad_reason = value;
+        state.annotation.advertisements = [];
+        return;
+      }
       state.annotation.page.qualifying_ad_count = value;
-      if (value === "0") state.annotation.advertisements = [];
+      state.annotation.page.no_qualifying_ad_reason = null;
       if (value === "1") ensureSingleAd();
-      if (exactAdCountValue(value) && Number(value) > 1) ensureAdsForCount(value);
+      if (exactAdCountValue(value) && Number(value) > 1)
+        ensureAdsForCount(value);
     },
     P2_single_ad_full_page: () => {
       ad.extent = value;
@@ -1921,10 +2241,12 @@ function setStepValue(value, step = state.step) {
       const targetAd = duplicateStepAd(step);
       if (targetAd) {
         targetAd.duplicate_faces_present = value;
-        targetAd.unique_face_count = value === "no" ? duplicatePeopleForStep(step).length : null;
+        targetAd.unique_face_count =
+          value === "no" ? duplicatePeopleForStep(step).length : null;
       } else {
         state.annotation.page.duplicate_faces_present = value;
-        state.annotation.page.unique_face_count = value === "no" ? allBoxedPeople().length : null;
+        state.annotation.page.unique_face_count =
+          value === "no" ? allBoxedPeople().length : null;
       }
       clearDuplicateLinks(step);
       syncPageDuplicateSummary();
@@ -2023,7 +2345,7 @@ function setStepValue(value, step = state.step) {
     },
     I9_smile_intensity: () => {
       person.smile_intensity = value;
-    }
+    },
   };
   if (map[step.id]) {
     map[step.id]();
@@ -2037,7 +2359,14 @@ function setStepValue(value, step = state.step) {
 
 function choiceValuesForStep(step) {
   const map = {
-    P1_qualifying_ad_count: ["0", "1", "2", "3", "4", "5"],
+    P1_qualifying_ad_count: [
+      ...NO_QUALIFYING_AD_REASON_VALUES,
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+    ],
     P2_single_ad_full_page: ["full_page", "partial_page"],
     A2_ad_depiction_type: ENUMS.depiction_type,
     A3_unique_person_count: CROWD_FACE_BAND_VALUES,
@@ -2059,7 +2388,7 @@ function choiceValuesForStep(step) {
     I6_mouth_covered: ENUMS.mouth_covered,
     I7_mouth_covering: ENUMS.mouth_covering,
     I8_smile_present: ENUMS.smile_presence,
-    I9_smile_intensity: ENUMS.smile_intensity
+    I9_smile_intensity: ENUMS.smile_intensity,
   };
   return map[step.id] || [];
 }
@@ -2080,7 +2409,17 @@ function currentBboxSpec(step = state.step) {
       mode: "single",
       type: "ad",
       labelPrefix: "Ad",
-      getBoxes: () => ad.bbox ? [{ id: `${ad.ad_id}:bbox`, bbox: ad.bbox, type: "ad", label: ad.ad_id }] : [],
+      getBoxes: () =>
+        ad.bbox
+          ? [
+              {
+                id: `${ad.ad_id}:bbox`,
+                bbox: ad.bbox,
+                type: "ad",
+                label: ad.ad_id,
+              },
+            ]
+          : [],
       setBox: (bbox) => {
         ad.bbox = bbox;
         ad.bbox_source = "manual";
@@ -2090,7 +2429,7 @@ function currentBboxSpec(step = state.step) {
         ad.bbox_source = null;
       },
       required: 1,
-      max: 1
+      max: 1,
     };
   }
   if (step.id === "DRAW_AD_BOXES") {
@@ -2100,33 +2439,55 @@ function currentBboxSpec(step = state.step) {
       type: "ad",
       labelPrefix: "Ad",
       collection: state.annotation.advertisements,
-      getBoxes: () => state.annotation.advertisements.filter((item) => item.bbox).map((item) => ({ id: `${item.ad_id}:bbox`, bbox: item.bbox, type: "ad", label: item.ad_id })),
+      getBoxes: () =>
+        state.annotation.advertisements
+          .filter((item) => item.bbox)
+          .map((item) => ({
+            id: `${item.ad_id}:bbox`,
+            bbox: item.bbox,
+            type: "ad",
+            label: item.ad_id,
+          })),
       create: (bbox) => {
-        const adItem = state.annotation.advertisements.find((item) => !item.bbox);
+        const adItem = state.annotation.advertisements.find(
+          (item) => !item.bbox,
+        );
         if (!adItem) return;
         adItem.bbox = bbox;
         adItem.bbox_source = "manual";
       },
       update: (id, bbox) => {
-        const found = state.annotation.advertisements.find((item) => `${item.ad_id}:bbox` === id);
+        const found = state.annotation.advertisements.find(
+          (item) => `${item.ad_id}:bbox` === id,
+        );
         if (found) found.bbox = bbox;
       },
       remove: (id) => {
-        const found = state.annotation.advertisements.find((item) => `${item.ad_id}:bbox` === id);
+        const found = state.annotation.advertisements.find(
+          (item) => `${item.ad_id}:bbox` === id,
+        );
         if (found) {
           found.bbox = null;
           found.bbox_source = null;
         }
       },
       required: exact || 1,
-      max: exact || Infinity
+      max: exact || Infinity,
     };
   }
-  if (step.id === "A3_unique_person_count" || step.id === "DRAW_OUTSTANDING_INDIVIDUAL_BOXES") {
+  if (
+    step.id === "A3_unique_person_count" ||
+    step.id === "DRAW_OUTSTANDING_INDIVIDUAL_BOXES"
+  ) {
     const isInitialFaceDrawing = step.id === "A3_unique_person_count";
-    if (isInitialFaceDrawing && CROWD_FACE_BANDS.has(ad.face_depiction_count_band)) return null;
+    if (
+      isInitialFaceDrawing &&
+      CROWD_FACE_BANDS.has(ad.face_depiction_count_band)
+    )
+      return null;
     const role = isInitialFaceDrawing ? "individual" : "outstanding_individual";
-    const pool = () => ad.people.filter((person) => person.annotation_role === role);
+    const pool = () =>
+      ad.people.filter((person) => person.annotation_role === role);
     const syncDerivedCount = () => {
       if (isInitialFaceDrawing) {
         const count = pool().filter((person) => person.face_bbox).length;
@@ -2137,7 +2498,15 @@ function currentBboxSpec(step = state.step) {
       mode: "collection",
       type: "person",
       labelPrefix: "P",
-      getBoxes: () => pool().filter((person) => person.face_bbox).map((person) => ({ id: person.person_id, bbox: person.face_bbox, type: "person", label: person.person_id })),
+      getBoxes: () =>
+        pool()
+          .filter((person) => person.face_bbox)
+          .map((person) => ({
+            id: person.person_id,
+            bbox: person.face_bbox,
+            type: "person",
+            label: person.person_id,
+          })),
       create: (bbox) => {
         const person = defaultPerson(ad, role);
         person.face_bbox = bbox;
@@ -2162,7 +2531,7 @@ function currentBboxSpec(step = state.step) {
         }
       },
       required: 1,
-      max: isInitialFaceDrawing ? 9 : Infinity
+      max: isInitialFaceDrawing ? 9 : Infinity,
     };
   }
   if (step.id === "DRAW_GROUP_BOXES") {
@@ -2170,7 +2539,15 @@ function currentBboxSpec(step = state.step) {
       mode: "collection",
       type: "group",
       labelPrefix: "G",
-      getBoxes: () => ad.groups.filter((group) => group.bbox).map((group) => ({ id: group.group_id, bbox: group.bbox, type: "group", label: group.group_id })),
+      getBoxes: () =>
+        ad.groups
+          .filter((group) => group.bbox)
+          .map((group) => ({
+            id: group.group_id,
+            bbox: group.bbox,
+            type: "group",
+            label: group.group_id,
+          })),
       create: (bbox) => {
         const group = defaultGroup(ad);
         group.bbox = bbox;
@@ -2184,7 +2561,7 @@ function currentBboxSpec(step = state.step) {
         ad.groups = ad.groups.filter((group) => group.group_id !== id);
       },
       required: 1,
-      max: Infinity
+      max: Infinity,
     };
   }
   return null;
@@ -2194,16 +2571,40 @@ function allRenderableBoxes() {
   if (!state.annotation) return [];
   const boxes = [];
   for (const ad of state.annotation.advertisements) {
-    if (ad.bbox) boxes.push({ id: `${ad.ad_id}:bbox`, bbox: ad.bbox, type: "ad", label: ad.ad_id });
+    if (ad.bbox)
+      boxes.push({
+        id: `${ad.ad_id}:bbox`,
+        bbox: ad.bbox,
+        type: "ad",
+        label: ad.ad_id,
+      });
     for (const group of ad.groups) {
-      if (group.bbox) boxes.push({ id: group.group_id, bbox: group.bbox, type: "group", label: group.group_id });
+      if (group.bbox)
+        boxes.push({
+          id: group.group_id,
+          bbox: group.bbox,
+          type: "group",
+          label: group.group_id,
+        });
     }
     for (const person of ad.people) {
-      if (person.face_bbox) boxes.push({ id: person.person_id, bbox: person.face_bbox, type: "person", label: person.person_id });
+      if (person.face_bbox)
+        boxes.push({
+          id: person.person_id,
+          bbox: person.face_bbox,
+          type: "person",
+          label: person.person_id,
+        });
     }
   }
   if (state.drawing?.bbox) {
-    boxes.push({ id: "pending", bbox: state.drawing.bbox, type: currentBboxSpec()?.type || "person", label: "", pending: true });
+    boxes.push({
+      id: "pending",
+      bbox: state.drawing.bbox,
+      type: currentBboxSpec()?.type || "person",
+      label: "",
+      pending: true,
+    });
   }
   return boxes;
 }
@@ -2217,7 +2618,7 @@ function identityGroupAt(index, create = false, step = state.step) {
       const group = {
         identity_group_id: `identity_${next}`,
         main_person_id: null,
-        duplicate_person_ids: []
+        duplicate_person_ids: [],
       };
       if (scopeId) group.scope_ad_id = scopeId;
       state.annotation.face_identity_groups.push(group);
@@ -2241,7 +2642,9 @@ function duplicateGroupContext(step = state.step) {
   const index = step.identityGroupIndex || 0;
   const group = identityGroupAt(index, true, step);
   const assignedBefore = assignedFaceIds(index, step);
-  const candidateIds = duplicatePeopleForStep(step).map(({ person }) => person.person_id);
+  const candidateIds = duplicatePeopleForStep(step).map(
+    ({ person }) => person.person_id,
+  );
   return { index, group, assignedBefore, candidateIds };
 }
 
@@ -2265,7 +2668,8 @@ function applyIdentityGroups(step = state.step) {
 function handleDuplicateFaceSelection(id) {
   const person = personById(id);
   if (!person?.face_bbox) return;
-  const { index, group, assignedBefore, candidateIds } = duplicateGroupContext();
+  const { index, group, assignedBefore, candidateIds } =
+    duplicateGroupContext();
   if (!candidateIds.includes(id)) return;
   if (assignedBefore.has(id)) return;
   state.annotation.face_identity_groups.length = index + 1;
@@ -2273,7 +2677,10 @@ function handleDuplicateFaceSelection(id) {
     group.main_person_id = id;
     group.duplicate_person_ids = [];
     state.selectedBoxId = id;
-  } else if (state.step.id === "D3_select_duplicates" && id !== group.main_person_id) {
+  } else if (
+    state.step.id === "D3_select_duplicates" &&
+    id !== group.main_person_id
+  ) {
     const selected = new Set(group.duplicate_person_ids);
     if (selected.has(id)) selected.delete(id);
     else selected.add(id);
@@ -2289,10 +2696,15 @@ function validationMessage(step = state.step) {
   const spec = currentBboxSpec(step);
   if (spec) {
     const count = spec.getBoxes().length;
-    if (count < spec.required) return state.language === "de"
-      ? `Erforderliche Boxen: ${spec.required}. Aktuelle Boxen: ${count}.`
-      : `Required boxes: ${spec.required}. Current boxes: ${count}.`;
-    if (Number.isFinite(spec.max) && spec.max === spec.required && count !== spec.max) {
+    if (count < spec.required)
+      return state.language === "de"
+        ? `Erforderliche Boxen: ${spec.required}. Aktuelle Boxen: ${count}.`
+        : `Required boxes: ${spec.required}. Current boxes: ${count}.`;
+    if (
+      Number.isFinite(spec.max) &&
+      spec.max === spec.required &&
+      count !== spec.max
+    ) {
       return state.language === "de"
         ? `Zeichne genau ${spec.max} Boxen. Aktuelle Boxen: ${count}.`
         : `Draw exactly ${spec.max} boxes. Current boxes: ${count}.`;
@@ -2301,11 +2713,14 @@ function validationMessage(step = state.step) {
   }
   if (isMultiStep(step)) {
     const values = stepValue(step);
-    return Array.isArray(values) && values.length ? "" : t("select_at_least_one");
+    return Array.isArray(values) && values.length
+      ? ""
+      : t("select_at_least_one");
   }
   if (step.id === "I5_target_person") {
     const person = personById(step.personId);
-    return person?.gaze_target_person_id || person?.gaze_target_person_unboxed === true
+    return person?.gaze_target_person_id ||
+      person?.gaze_target_person_unboxed === true
       ? ""
       : t("click_person_or_unboxed");
   }
@@ -2319,28 +2734,42 @@ function validationMessage(step = state.step) {
         : `Enter a whole number from 1 to ${Math.max(total - 1, 1)}.`;
   }
   if (step.id === "D2_select_main") {
-    return duplicateGroupContext(step).group.main_person_id ? "" : t("select_one_main_face");
+    return duplicateGroupContext(step).group.main_person_id
+      ? ""
+      : t("select_one_main_face");
   }
   if (step.id === "D3_select_duplicates") {
-    const { index, group, assignedBefore, candidateIds } = duplicateGroupContext(step);
-    const selectedNow = new Set([group.main_person_id, ...(group.duplicate_person_ids || [])]);
-    const remainingAfter = candidateIds.filter((id) => !assignedBefore.has(id) && !selectedNow.has(id)).length;
+    const { index, group, assignedBefore, candidateIds } =
+      duplicateGroupContext(step);
+    const selectedNow = new Set([
+      group.main_person_id,
+      ...(group.duplicate_person_ids || []),
+    ]);
+    const remainingAfter = candidateIds.filter(
+      (id) => !assignedBefore.has(id) && !selectedNow.has(id),
+    ).length;
     const groupCount = Number(duplicateUniqueCountForStep(step));
     const groupsAfter = groupCount - index - 1;
-    if (remainingAfter < groupsAfter) return state.language === "de"
-      ? `Lass mindestens ${groupsAfter} Gesicht${groupsAfter === 1 ? "" : "er"} für die verbleibenden Identitäten übrig.`
-      : `Leave at least ${groupsAfter} face${groupsAfter === 1 ? "" : "s"} for the remaining identities.`;
-    if (groupsAfter === 0 && remainingAfter > 0) return state.language === "de"
-      ? `Ordne die verbleibenden ${remainingAfter} Gesicht${remainingAfter === 1 ? "" : "er"} dieser Person zu.`
-      : `Assign the remaining ${remainingAfter} face${remainingAfter === 1 ? "" : "s"} to this person.`;
+    if (remainingAfter < groupsAfter)
+      return state.language === "de"
+        ? `Lass mindestens ${groupsAfter} Gesicht${groupsAfter === 1 ? "" : "er"} für die verbleibenden Identitäten übrig.`
+        : `Leave at least ${groupsAfter} face${groupsAfter === 1 ? "" : "s"} for the remaining identities.`;
+    if (groupsAfter === 0 && remainingAfter > 0)
+      return state.language === "de"
+        ? `Ordne die verbleibenden ${remainingAfter} Gesicht${remainingAfter === 1 ? "" : "er"} dieser Person zu.`
+        : `Assign the remaining ${remainingAfter} face${remainingAfter === 1 ? "" : "s"} to this person.`;
     return "";
   }
   if (step.id === "I7_covering_other_text") {
-    return String(stepValue(step) || "").trim() ? "" : t("enter_short_description");
+    return String(stepValue(step) || "").trim()
+      ? ""
+      : t("enter_short_description");
   }
   if (isChoiceStep(step)) {
     const value = stepValue(step);
-    return value === null || value === undefined || value === "" ? t("select_one_option") : "";
+    return value === null || value === undefined || value === ""
+      ? t("select_one_option")
+      : "";
   }
   return "";
 }
@@ -2373,14 +2802,18 @@ function nextStepForCurrent() {
   const group = step.groupId ? groupById(step.groupId) : null;
   switch (step.id) {
     case "P1_qualifying_ad_count": {
-      const value = state.annotation.page.qualifying_ad_count;
-      if (value === "0") return terminalStep("ineligible", "END_PAGE_INELIGIBLE");
+      const page = state.annotation.page;
+      const value = page.qualifying_ad_count;
+      if (String(value) === "0" && page.no_qualifying_ad_reason)
+        return terminalStep("ineligible", "END_PAGE_INELIGIBLE");
       if (value === "1") return { id: "P2_single_ad_full_page", adIndex: 0 };
       if (exactAdCountValue(value)) return { id: "DRAW_AD_BOXES" };
       return step;
     }
     case "P2_single_ad_full_page":
-      return ad.extent === "full_page" ? { id: "A2_ad_depiction_type", adIndex: 0 } : { id: "A1_ad_bbox", adIndex: 0 };
+      return ad.extent === "full_page"
+        ? { id: "A2_ad_depiction_type", adIndex: 0 }
+        : { id: "A1_ad_bbox", adIndex: 0 };
     case "A1_ad_bbox":
       return { id: "A2_ad_depiction_type", adIndex: step.adIndex };
     case "DRAW_AD_BOXES":
@@ -2406,38 +2839,85 @@ function nextStepForCurrent() {
     case "D0_duplicates_present":
       if (duplicatePresenceForStep(step) === "no") {
         applyNoDuplicateLinks(step);
-        return step.adIndex !== undefined ? firstDetailsInAd(step.adIndex) : firstDetailsFromAd(0);
+        return step.adIndex !== undefined
+          ? firstDetailsInAd(step.adIndex)
+          : firstDetailsFromAd(0);
       }
       clearDuplicateLinks(step);
       return { id: "D1_unique_face_count", adIndex: step.adIndex };
     case "D1_unique_face_count":
-      return { id: "D2_select_main", adIndex: step.adIndex, identityGroupIndex: 0 };
+      return {
+        id: "D2_select_main",
+        adIndex: step.adIndex,
+        identityGroupIndex: 0,
+      };
     case "D2_select_main":
-      return { id: "D3_select_duplicates", adIndex: step.adIndex, identityGroupIndex: step.identityGroupIndex };
+      return {
+        id: "D3_select_duplicates",
+        adIndex: step.adIndex,
+        identityGroupIndex: step.identityGroupIndex,
+      };
     case "D3_select_duplicates": {
       const nextGroupIndex = step.identityGroupIndex + 1;
       if (nextGroupIndex < Number(duplicateUniqueCountForStep(step))) {
-        return { id: "D2_select_main", adIndex: step.adIndex, identityGroupIndex: nextGroupIndex };
+        return {
+          id: "D2_select_main",
+          adIndex: step.adIndex,
+          identityGroupIndex: nextGroupIndex,
+        };
       }
       applyIdentityGroups(step);
-      return step.adIndex !== undefined ? firstDetailsInAd(step.adIndex) : firstDetailsFromAd(0);
+      return step.adIndex !== undefined
+        ? firstDetailsInAd(step.adIndex)
+        : firstDetailsFromAd(0);
     }
     case "G1_group_type":
-      return { id: "G2_group_age", adIndex: step.adIndex, groupId: step.groupId, groupIndex: step.groupIndex };
+      return {
+        id: "G2_group_age",
+        adIndex: step.adIndex,
+        groupId: step.groupId,
+        groupIndex: step.groupIndex,
+      };
     case "G2_group_age":
-      return { id: "G3_group_gender", adIndex: step.adIndex, groupId: step.groupId, groupIndex: step.groupIndex };
+      return {
+        id: "G3_group_gender",
+        adIndex: step.adIndex,
+        groupId: step.groupId,
+        groupIndex: step.groupIndex,
+      };
     case "G3_group_gender":
-      return { id: "G4_group_expression_legibility", adIndex: step.adIndex, groupId: step.groupId, groupIndex: step.groupIndex };
+      return {
+        id: "G4_group_expression_legibility",
+        adIndex: step.adIndex,
+        groupId: step.groupId,
+        groupIndex: step.groupIndex,
+      };
     case "G4_group_expression_legibility":
       return group.expression_legibility_distribution === "all_0_not_legible"
         ? nextGroupOrEnd(step)
-        : { id: "G5_group_gaze", adIndex: step.adIndex, groupId: step.groupId, groupIndex: step.groupIndex };
+        : {
+            id: "G5_group_gaze",
+            adIndex: step.adIndex,
+            groupId: step.groupId,
+            groupIndex: step.groupIndex,
+          };
     case "G5_group_gaze":
-      return { id: "G6_group_smile", adIndex: step.adIndex, groupId: step.groupId, groupIndex: step.groupIndex };
+      return {
+        id: "G6_group_smile",
+        adIndex: step.adIndex,
+        groupId: step.groupId,
+        groupIndex: step.groupIndex,
+      };
     case "G6_group_smile":
-      return group.smile_prevalence === "none" || group.smile_prevalence === "not_assessable"
+      return group.smile_prevalence === "none" ||
+        group.smile_prevalence === "not_assessable"
         ? nextGroupOrEnd(step)
-        : { id: "G7_group_smile_intensity", adIndex: step.adIndex, groupId: step.groupId, groupIndex: step.groupIndex };
+        : {
+            id: "G7_group_smile_intensity",
+            adIndex: step.adIndex,
+            groupId: step.groupId,
+            groupIndex: step.groupIndex,
+          };
     case "G7_group_smile_intensity":
       return nextGroupOrEnd(step);
     case "I0_person_depiction_type":
@@ -2475,7 +2955,8 @@ function nextStepForCurrent() {
           ? nextPersonOrAfter(step)
           : { ...step, id: "I8_smile_present" };
     case "I7_mouth_covering":
-      if (person.mouth_covering === "other") return { ...step, id: "I7_covering_other_text" };
+      if (person.mouth_covering === "other")
+        return { ...step, id: "I7_covering_other_text" };
       return person.face_expression_legibility === "0_not_legible"
         ? nextPersonOrAfter(step)
         : { ...step, id: "I8_smile_present" };
@@ -2484,7 +2965,9 @@ function nextStepForCurrent() {
         ? nextPersonOrAfter(step)
         : { ...step, id: "I8_smile_present" };
     case "I8_smile_present":
-      return person.smile_present === "yes" ? { ...step, id: "I9_smile_intensity" } : nextPersonOrAfter(step);
+      return person.smile_present === "yes"
+        ? { ...step, id: "I9_smile_intensity" }
+        : nextPersonOrAfter(step);
     case "I9_smile_intensity":
       return nextPersonOrAfter(step);
     default:
@@ -2539,13 +3022,15 @@ async function saveAnnotationNow() {
         session_id: state.session.session_id,
         image_id: image.image_id,
         revision: state.annotationRevision,
-        annotation
+        annotation,
       });
-      state.annotationRevision = Number(saved.revision || state.annotationRevision);
+      state.annotationRevision = Number(
+        saved.revision || state.annotationRevision,
+      );
       state.statuses[image.image_id] = {
         status: annotation.status,
         updated_at: annotation.updated_at,
-        finished_at: annotation.finished_at
+        finished_at: annotation.finished_at,
       };
       state.annotationPersisted = true;
       state.dirty = state.changeVersion !== saveVersion;
@@ -2582,7 +3067,12 @@ function saveAnnotationDebounced() {
 function autoAdvanceAfterChoice() {
   const sourceStepKey = currentStepKey();
   window.setTimeout(() => {
-    if (currentStepKey() === sourceStepKey && !state.step.id.startsWith("END_PAGE_") && state.step.id !== "I5_target_person" && !currentBboxSpec()) {
+    if (
+      currentStepKey() === sourceStepKey &&
+      !state.step.id.startsWith("END_PAGE_") &&
+      state.step.id !== "I5_target_person" &&
+      !currentBboxSpec()
+    ) {
       advance();
     }
   }, 120);
@@ -2598,7 +3088,8 @@ function renderChoice(values, selected, multi = false) {
     button.type = "button";
     button.className = "choice-button";
     button.dataset.value = value;
-    if (value === "multiple_types_present") button.classList.add("multiple-types-choice");
+    if (value === "multiple_types_present")
+      button.classList.add("multiple-types-choice");
     const isSelected = multi ? selected.includes(value) : selected === value;
     if (isSelected) button.classList.add("selected");
     button.textContent = labelize(value);
@@ -2621,7 +3112,18 @@ function renderChoice(values, selected, multi = false) {
 function renderP1CountInput() {
   const wrapper = document.createElement("div");
   wrapper.className = "count-input";
-  const quickCounts = renderChoice(["0", "1", "2", "3", "4", "5"], stepValue(state.step), false);
+  const quickCounts = renderChoice(
+    [
+      ...NO_QUALIFYING_AD_REASON_VALUES,
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+    ],
+    stepValue(state.step),
+    false,
+  );
   wrapper.appendChild(quickCounts);
 
   const manual = document.createElement("div");
@@ -2670,7 +3172,9 @@ function renderP1CountInput() {
 
 function renderUniqueFaceCountInput() {
   const total = duplicatePeopleForStep(state.step).length;
-  const values = Array.from({ length: Math.max(total - 1, 0) }, (_, index) => String(index + 1));
+  const values = Array.from({ length: Math.max(total - 1, 0) }, (_, index) =>
+    String(index + 1),
+  );
   return renderChoice(values, String(stepValue(state.step) || ""), false);
 }
 
@@ -2701,34 +3205,49 @@ function renderA3FaceRouteInput(ad) {
 }
 
 function renderDuplicateSelectionStatus() {
-  const { index, group, assignedBefore, candidateIds } = duplicateGroupContext();
+  const { index, group, assignedBefore, candidateIds } =
+    duplicateGroupContext();
   const wrapper = document.createElement("div");
   wrapper.className = "selection-status";
   const groupCount = Number(duplicateUniqueCountForStep(state.step));
   const selectedDuplicates = group.duplicate_person_ids || [];
-  const assignedNow = new Set([group.main_person_id, ...selectedDuplicates].filter(Boolean));
-  const available = candidateIds.filter((id) => !assignedBefore.has(id) && !assignedNow.has(id));
+  const assignedNow = new Set(
+    [group.main_person_id, ...selectedDuplicates].filter(Boolean),
+  );
+  const available = candidateIds.filter(
+    (id) => !assignedBefore.has(id) && !assignedNow.has(id),
+  );
   const heading = document.createElement("strong");
-  heading.textContent = state.language === "de"
-    ? `Eindeutiges Gesicht ${index + 1} von ${groupCount}`
-    : `Unique face ${index + 1} of ${groupCount}`;
+  heading.textContent =
+    state.language === "de"
+      ? `Eindeutiges Gesicht ${index + 1} von ${groupCount}`
+      : `Unique face ${index + 1} of ${groupCount}`;
   wrapper.appendChild(heading);
   const detail = document.createElement("p");
   if (state.step.id === "D2_select_main") {
     detail.textContent = group.main_person_id
-      ? state.language === "de" ? `Hauptgesicht: ${group.main_person_id}` : `Main face: ${group.main_person_id}`
-      : state.language === "de" ? "Kein Hauptgesicht ausgewählt." : "No main face selected.";
+      ? state.language === "de"
+        ? `Hauptgesicht: ${group.main_person_id}`
+        : `Main face: ${group.main_person_id}`
+      : state.language === "de"
+        ? "Kein Hauptgesicht ausgewählt."
+        : "No main face selected.";
   } else {
     detail.textContent = selectedDuplicates.length
-      ? state.language === "de" ? `Ausgewählte Duplikate: ${selectedDuplicates.join(", ")}` : `Selected duplicates: ${selectedDuplicates.join(", ")}`
-      : state.language === "de" ? "Keine Duplikate für diese Identität ausgewählt." : "No duplicates selected for this identity.";
+      ? state.language === "de"
+        ? `Ausgewählte Duplikate: ${selectedDuplicates.join(", ")}`
+        : `Selected duplicates: ${selectedDuplicates.join(", ")}`
+      : state.language === "de"
+        ? "Keine Duplikate für diese Identität ausgewählt."
+        : "No duplicates selected for this identity.";
   }
   wrapper.appendChild(detail);
   const remaining = document.createElement("p");
   remaining.className = "instruction";
-  remaining.textContent = state.language === "de"
-    ? `${available.length} nicht zugeordnete Gesichts-Box${available.length === 1 ? "" : "en"} bleiben nach dieser Gruppe übrig.`
-    : `${available.length} unassigned face box${available.length === 1 ? "" : "es"} ${available.length === 1 ? "remains" : "remain"} after this group.`;
+  remaining.textContent =
+    state.language === "de"
+      ? `${available.length} nicht zugeordnete Gesichts-Box${available.length === 1 ? "" : "en"} bleiben nach dieser Gruppe übrig.`
+      : `${available.length} unassigned face box${available.length === 1 ? "" : "es"} ${available.length === 1 ? "remains" : "remain"} after this group.`;
   wrapper.appendChild(remaining);
   return wrapper;
 }
@@ -2767,10 +3286,15 @@ function renderInput() {
   const spec = currentBboxSpec(step);
   if (step.id === "A3_unique_person_count") {
     const ad = adByIndex(step.adIndex);
-    const count = ad.people.filter((person) => person.annotation_role === "individual" && person.face_bbox).length;
+    const count = ad.people.filter(
+      (person) => person.annotation_role === "individual" && person.face_bbox,
+    ).length;
     const countText = document.createElement("p");
     countText.className = "face-box-count";
-    countText.textContent = state.language === "de" ? `Gesichter markiert: ${count} / 9` : `Faces boxed: ${count} / 9`;
+    countText.textContent =
+      state.language === "de"
+        ? `Gesichter markiert: ${count} / 9`
+        : `Faces boxed: ${count} / 9`;
     area.appendChild(countText);
 
     const crowdRoute = document.createElement("div");
@@ -2784,9 +3308,10 @@ function renderInput() {
   }
   if (spec) {
     const count = spec.getBoxes().length;
-    const target = Number.isFinite(spec.max) && spec.max === spec.required
-      ? `${t("boxes")}: ${count} / ${spec.required}`
-      : `${t("boxes")}: ${count}`;
+    const target =
+      Number.isFinite(spec.max) && spec.max === spec.required
+        ? `${t("boxes")}: ${count} / ${spec.required}`
+        : `${t("boxes")}: ${count}`;
     const p = document.createElement("p");
     p.className = "instruction";
     p.textContent = target;
@@ -2809,15 +3334,21 @@ function renderInput() {
     const person = personById(step.personId);
     const p = document.createElement("p");
     p.className = "instruction";
-    if (person?.gaze_target_person_id) p.textContent = state.language === "de" ? `Ausgewählt: ${person.gaze_target_person_id}` : `Selected: ${person.gaze_target_person_id}`;
-    else if (person?.gaze_target_person_unboxed === true) p.textContent = t("selected_person_without_box");
+    if (person?.gaze_target_person_id)
+      p.textContent =
+        state.language === "de"
+          ? `Ausgewählt: ${person.gaze_target_person_id}`
+          : `Selected: ${person.gaze_target_person_id}`;
+    else if (person?.gaze_target_person_unboxed === true)
+      p.textContent = t("selected_person_without_box");
     else p.textContent = t("no_target_selected");
     area.appendChild(p);
 
     const unboxedButton = document.createElement("button");
     unboxedButton.type = "button";
     unboxedButton.className = "choice-button";
-    if (person?.gaze_target_person_unboxed === true) unboxedButton.classList.add("selected");
+    if (person?.gaze_target_person_unboxed === true)
+      unboxedButton.classList.add("selected");
     unboxedButton.textContent = t("person_without_box");
     unboxedButton.addEventListener("click", () => {
       person.gaze_target_person_id = null;
@@ -2843,18 +3374,25 @@ function renderInput() {
 }
 
 function stepOrdinalText() {
-  return STEP_META[state.step.id]?.unit || (state.language === "de" ? "Schritt" : "Step");
+  return (
+    STEP_META[state.step.id]?.unit ||
+    (state.language === "de" ? "Schritt" : "Step")
+  );
 }
 
 function currentHierarchyParts() {
   const parts = [];
   if (state.step.adIndex !== undefined) {
-    parts.push(adByIndex(state.step.adIndex)?.ad_id || `ad${state.step.adIndex + 1}`);
+    parts.push(
+      adByIndex(state.step.adIndex)?.ad_id || `ad${state.step.adIndex + 1}`,
+    );
   }
   if (state.step.personId) parts.push(state.step.personId);
   if (state.step.groupId) parts.push(state.step.groupId);
   if (state.step.identityGroupIndex !== undefined) {
-    parts.push(`${state.language === "de" ? "Identität" : "identity"} ${state.step.identityGroupIndex + 1}/${duplicateUniqueCountForStep(state.step)}`);
+    parts.push(
+      `${state.language === "de" ? "Identität" : "identity"} ${state.step.identityGroupIndex + 1}/${duplicateUniqueCountForStep(state.step)}`,
+    );
   }
   return parts;
 }
@@ -2878,10 +3416,14 @@ function renderContextSummary() {
 
 function renderStepPanel() {
   const meta = STEP_META[state.step.id] || STEP_META.P1_qualifying_ad_count;
-  const finalTerminal = state.step.id.startsWith("END_PAGE_") && state.currentIndex >= state.manifest.images.length - 1;
+  const finalTerminal =
+    state.step.id.startsWith("END_PAGE_") &&
+    state.currentIndex >= state.manifest.images.length - 1;
   $("#stepKicker").textContent = stepKickerText();
   $("#questionText").textContent = meta.prompt;
-  $("#instructionText").textContent = finalTerminal ? t("final_terminal_instruction") : meta.instruction || "";
+  $("#instructionText").textContent = finalTerminal
+    ? t("final_terminal_instruction")
+    : meta.instruction || "";
   $("#helpText").textContent = meta.help || "";
   $("#helpButton").disabled = !meta.help;
   renderInput();
@@ -2896,15 +3438,24 @@ function updateNavState() {
   $("#backButton").textContent = terminal ? t("edit_annotation") : t("back");
   $("#nextButton").disabled = terminal
     ? state.completionLoading
-    : state.step.id === "P1_qualifying_ad_count" ? false : !canAdvance();
+    : state.step.id === "P1_qualifying_ad_count"
+      ? false
+      : !canAdvance();
   $("#nextButton").textContent = terminal
-    ? finalPage ? t("finish_task") : t("next_page")
-    : currentBboxSpec() ? t("done") : t("next");
+    ? finalPage
+      ? t("finish_task")
+      : t("next_page")
+    : currentBboxSpec()
+      ? t("done")
+      : t("next");
 }
 
 function taskIsComplete() {
-  return Boolean(state.manifest?.images?.length) && state.manifest.images.every((image) =>
-    DONE_STATUSES.has(state.statuses[image.image_id]?.status)
+  return (
+    Boolean(state.manifest?.images?.length) &&
+    state.manifest.images.every((image) =>
+      DONE_STATUSES.has(state.statuses[image.image_id]?.status),
+    )
   );
 }
 
@@ -2924,17 +3475,28 @@ function formatFocusedTime(milliseconds) {
 
 function renderCompletionSummary(summary) {
   state.completionSummary = summary;
-  $("#completionPages").textContent = Number(summary.pages_annotated || 0).toLocaleString();
-  $("#completionAds").textContent = Number(summary.qualifying_advertisements || 0).toLocaleString();
-  $("#completionFaces").textContent = Number(summary.face_depictions_boxed || 0).toLocaleString();
-  $("#completionGroups").textContent = Number(summary.groups_annotated || 0).toLocaleString();
+  $("#completionPages").textContent = Number(
+    summary.pages_annotated || 0,
+  ).toLocaleString();
+  $("#completionAds").textContent = Number(
+    summary.qualifying_advertisements || 0,
+  ).toLocaleString();
+  $("#completionFaces").textContent = Number(
+    summary.face_depictions_boxed || 0,
+  ).toLocaleString();
+  $("#completionGroups").textContent = Number(
+    summary.groups_annotated || 0,
+  ).toLocaleString();
   $("#completionTime").textContent = formatFocusedTime(summary.focused_time_ms);
   const pageTotal = Number(summary.pages_total || 0);
-  $("#completionMessage").textContent = pageTotal === 1
-    ? t("completion_page_single")
-    : t("completion_page_many", { count: pageTotal });
+  $("#completionMessage").textContent =
+    pageTotal === 1
+      ? t("completion_page_single")
+      : t("completion_page_many", { count: pageTotal });
   $("#completionSessionCode").textContent = sessionDisplayId();
-  $("#leaveCompletedTaskButton").textContent = state.hostedMode ? t("sign_out") : t("return_to_start");
+  $("#leaveCompletedTaskButton").textContent = state.hostedMode
+    ? t("sign_out")
+    : t("return_to_start");
 }
 
 async function showCompletionView() {
@@ -3005,12 +3567,16 @@ function updateProgress() {
     const status = state.statuses[image.image_id]?.status;
     return DONE_STATUSES.has(status);
   }).length;
-  $("#taskProgress").value = Math.round((completeCount / state.manifest.images.length) * 100);
+  $("#taskProgress").value = Math.round(
+    (completeCount / state.manifest.images.length) * 100,
+  );
   const completedScreens = state.annotation?.timing?.screen_times?.length || 0;
   const remaining = estimateRemainingScreens();
   $("#imageProgress").value = state.step.id.startsWith("END_PAGE_")
     ? 100
-    : Math.round((completedScreens / Math.max(completedScreens + remaining, 1)) * 100);
+    : Math.round(
+        (completedScreens / Math.max(completedScreens + remaining, 1)) * 100,
+      );
 }
 
 function pageWorkState(imageId) {
@@ -3057,7 +3623,10 @@ function renderImageList() {
     const canOpen = canNavigateToImageIndex(index);
     button.disabled = !canOpen;
     button.dataset.pageState = workState.key;
-    button.setAttribute("aria-current", index === state.currentIndex ? "page" : "false");
+    button.setAttribute(
+      "aria-current",
+      index === state.currentIndex ? "page" : "false",
+    );
     button.title = canOpen
       ? t("page_status_title", { number: index + 1, status: workState.label })
       : t("page_locked_title", { number: index + 1, status: workState.label });
@@ -3082,11 +3651,20 @@ function currentVisibleRegion() {
     "P1_qualifying_ad_count",
     "P2_single_ad_full_page",
     "A1_ad_bbox",
-    "DRAW_AD_BOXES"
+    "DRAW_AD_BOXES",
   ]);
-  if (fullPageSteps.has(step.id) || step.id?.startsWith("END_PAGE_")) return full;
-  if (["D0_duplicates_present", "D1_unique_face_count", "D2_select_main", "D3_select_duplicates"].includes(step.id)) {
-    if (step.adIndex !== undefined) return adByIndex(step.adIndex)?.bbox || full;
+  if (fullPageSteps.has(step.id) || step.id?.startsWith("END_PAGE_"))
+    return full;
+  if (
+    [
+      "D0_duplicates_present",
+      "D1_unique_face_count",
+      "D2_select_main",
+      "D3_select_duplicates",
+    ].includes(step.id)
+  ) {
+    if (step.adIndex !== undefined)
+      return adByIndex(step.adIndex)?.bbox || full;
     const boxed = allBoxedPeople();
     const adIndexes = new Set(boxed.map((item) => item.adIndex));
     if (adIndexes.size === 1) {
@@ -3105,7 +3683,9 @@ function regionKey(region = currentVisibleRegion()) {
 }
 
 function isFullRegion(region = currentVisibleRegion()) {
-  return region[0] === 0 && region[1] === 0 && region[2] === 1 && region[3] === 1;
+  return (
+    region[0] === 0 && region[1] === 0 && region[2] === 1 && region[3] === 1
+  );
 }
 
 function setStageSize() {
@@ -3126,7 +3706,11 @@ function setStageSize() {
   const availableWidth = Math.max(260, scroll.clientWidth - 32);
   const availableHeight = Math.max(260, scroll.clientHeight - 32);
   if (!state.fitBaseWidth || state.fitBaseWidth <= 1) {
-    const scale = Math.min(availableWidth / regionPixelWidth, availableHeight / regionPixelHeight, 1);
+    const scale = Math.min(
+      availableWidth / regionPixelWidth,
+      availableHeight / regionPixelHeight,
+      1,
+    );
     state.fitBaseWidth = Math.max(260, Math.round(regionPixelWidth * scale));
   }
   const width = Math.round(state.fitBaseWidth * state.zoom);
@@ -3134,13 +3718,17 @@ function setStageSize() {
   stage.style.aspectRatio = `${regionPixelWidth} / ${regionPixelHeight}`;
   stage.classList.toggle("full-region", isFullRegion(region));
   const fullDisplayWidth = width / regionWidth;
-  const fullDisplayHeight = fullDisplayWidth * (state.naturalSize.height / state.naturalSize.width);
+  const fullDisplayHeight =
+    fullDisplayWidth * (state.naturalSize.height / state.naturalSize.width);
   image.style.width = `${fullDisplayWidth}px`;
   image.style.height = `${fullDisplayHeight}px`;
   image.style.left = `${-region[0] * fullDisplayWidth}px`;
   image.style.top = `${-region[1] * fullDisplayHeight}px`;
   const viewHeight = Math.round(width * (regionPixelHeight / regionPixelWidth));
-  $("#overlay").setAttribute("viewBox", `0 0 ${stage.clientWidth || width} ${stage.clientHeight || viewHeight}`);
+  $("#overlay").setAttribute(
+    "viewBox",
+    `0 0 ${stage.clientWidth || width} ${stage.clientHeight || viewHeight}`,
+  );
 }
 
 function svgEl(name, attrs = {}) {
@@ -3161,20 +3749,27 @@ function renderOverlay() {
   overlay.innerHTML = "";
   overlay.setAttribute("viewBox", `0 0 ${width} ${height}`);
   const boxes = allRenderableBoxes();
-  const duplicateSelection = state.step.id === "D2_select_main" || state.step.id === "D3_select_duplicates";
-  const duplicateContext = duplicateSelection ? duplicateGroupContext(state.step) : null;
+  const duplicateSelection =
+    state.step.id === "D2_select_main" ||
+    state.step.id === "D3_select_duplicates";
+  const duplicateContext = duplicateSelection
+    ? duplicateGroupContext(state.step)
+    : null;
   for (const box of boxes) {
     if (!fullRegion && box.type === "ad") continue;
     const pixelBox = pageBoxToViewPixels(box.bbox, region, width, height);
     if (!pixelBox) continue;
     const [x1, y1, x2, y2] = pixelBox;
-    const gazeTargetPersonId = state.step.id === "I5_target_person"
-      ? personById(state.step.personId)?.gaze_target_person_id
-      : null;
+    const gazeTargetPersonId =
+      state.step.id === "I5_target_person"
+        ? personById(state.step.personId)?.gaze_target_person_id
+        : null;
     const isDuplicateMain = duplicateContext?.group.main_person_id === box.id;
-    const isDuplicateMember = duplicateContext?.group.duplicate_person_ids?.includes(box.id);
+    const isDuplicateMember =
+      duplicateContext?.group.duplicate_person_ids?.includes(box.id);
     const isPreviouslyAssigned = duplicateContext?.assignedBefore.has(box.id);
-    const isDuplicateCandidate = duplicateSelection && box.type === "person" && !isPreviouslyAssigned;
+    const isDuplicateCandidate =
+      duplicateSelection && box.type === "person" && !isPreviouslyAssigned;
     const isCurrentPerson = box.id === state.step.personId;
     const isCurrentGroup = box.id === state.step.groupId;
     const rect = svgEl("rect", {
@@ -3182,20 +3777,28 @@ function renderOverlay() {
       y: y1,
       width: x2 - x1,
       height: y2 - y1,
-      class: `bbox ${box.type} ${box.id === state.selectedBoxId ? "selected" : ""} ${isCurrentPerson ? "current-person" : ""} ${isCurrentGroup ? "current-group" : ""} ${box.id === gazeTargetPersonId ? "gaze-target" : ""} ${isDuplicateMain ? "identity-main" : ""} ${isDuplicateMember ? "identity-duplicate" : ""} ${isPreviouslyAssigned ? "identity-assigned" : ""} ${isDuplicateCandidate ? "identity-candidate" : ""} ${box.pending ? "pending" : ""}`.trim(),
-      "data-box-id": box.id
+      class:
+        `bbox ${box.type} ${box.id === state.selectedBoxId ? "selected" : ""} ${isCurrentPerson ? "current-person" : ""} ${isCurrentGroup ? "current-group" : ""} ${box.id === gazeTargetPersonId ? "gaze-target" : ""} ${isDuplicateMain ? "identity-main" : ""} ${isDuplicateMember ? "identity-duplicate" : ""} ${isPreviouslyAssigned ? "identity-assigned" : ""} ${isDuplicateCandidate ? "identity-candidate" : ""} ${box.pending ? "pending" : ""}`.trim(),
+      "data-box-id": box.id,
     });
     overlay.appendChild(rect);
     if (box.label) {
-      overlay.appendChild(svgEl("text", {
-        x: x1 + 6,
-        y: Math.max(14, y1 - 6),
-        class: "bbox-label"
-      })).textContent = box.label;
+      overlay.appendChild(
+        svgEl("text", {
+          x: x1 + 6,
+          y: Math.max(14, y1 - 6),
+          class: "bbox-label",
+        }),
+      ).textContent = box.label;
     }
     if (box.id === state.selectedBoxId && !box.pending) {
       const size = 12;
-      for (const [hx, hy, cursor] of [[x1, y1, "nw"], [x2, y1, "ne"], [x1, y2, "sw"], [x2, y2, "se"]]) {
+      for (const [hx, hy, cursor] of [
+        [x1, y1, "nw"],
+        [x2, y1, "ne"],
+        [x1, y2, "sw"],
+        [x2, y2, "se"],
+      ]) {
         const handle = svgEl("rect", {
           x: hx - size / 2,
           y: hy - size / 2,
@@ -3203,7 +3806,7 @@ function renderOverlay() {
           height: size,
           class: "handle",
           "data-box-id": box.id,
-          "data-handle": cursor
+          "data-handle": cursor,
         });
         overlay.appendChild(handle);
       }
@@ -3212,7 +3815,10 @@ function renderOverlay() {
   const bboxSpec = currentBboxSpec();
   const editableBoxes = bboxSpec ? bboxSpec.getBoxes() : [];
   const canUndoBox = editableBoxes.length > 0;
-  const canDeleteBox = Boolean(state.selectedBoxId && editableBoxes.some((box) => box.id === state.selectedBoxId));
+  const canDeleteBox = Boolean(
+    state.selectedBoxId &&
+    editableBoxes.some((box) => box.id === state.selectedBoxId),
+  );
   $("#undoBoxButton").disabled = !canUndoBox;
   $("#deleteBoxButton").disabled = !canDeleteBox;
   $(".edit-toolbar").classList.toggle("hidden", !(canUndoBox || canDeleteBox));
@@ -3223,13 +3829,18 @@ function positionBboxDoneButton() {
   const button = $("#bboxDoneButton");
   if (!button) return;
   const spec = currentBboxSpec();
-  const gazeTarget = state.step.id === "I5_target_person"
-    ? personById(state.step.personId)?.gaze_target_person_id
+  const gazeTarget =
+    state.step.id === "I5_target_person"
+      ? personById(state.step.personId)?.gaze_target_person_id
+      : null;
+  const duplicateSelection =
+    state.step.id === "D2_select_main" ||
+    state.step.id === "D3_select_duplicates";
+  const duplicateGroup = duplicateSelection
+    ? duplicateGroupContext(state.step).group
     : null;
-  const duplicateSelection = state.step.id === "D2_select_main" || state.step.id === "D3_select_duplicates";
-  const duplicateGroup = duplicateSelection ? duplicateGroupContext(state.step).group : null;
   const duplicateAnchor = duplicateSelection
-    ? (state.selectedBoxId || duplicateGroup.main_person_id)
+    ? state.selectedBoxId || duplicateGroup.main_person_id
     : null;
   button.textContent = duplicateSelection || gazeTarget ? t("next") : t("done");
   if ((!spec && !gazeTarget && !duplicateAnchor) || !canAdvance()) {
@@ -3241,7 +3852,8 @@ function positionBboxDoneButton() {
     ? boxes.find((box) => box.id === gazeTarget)
     : duplicateAnchor
       ? boxes.find((box) => box.id === duplicateAnchor)
-    : boxes.find((box) => box.id === state.selectedBoxId) || boxes[boxes.length - 1];
+      : boxes.find((box) => box.id === state.selectedBoxId) ||
+        boxes[boxes.length - 1];
   if (!selected) {
     button.classList.add("hidden");
     return;
@@ -3262,8 +3874,12 @@ function render() {
   if (imageTitle) imageTitle.textContent = image.filename;
   $("#bottomPageLabel").textContent = `${image.index + 1} / ${image.total}`;
   $("#bottomFilename").textContent = image.filename;
-  $("#prevImageButton").disabled = !canNavigateToImageIndex(state.currentIndex - 1);
-  $("#nextImageButton").disabled = !canNavigateToImageIndex(state.currentIndex + 1);
+  $("#prevImageButton").disabled = !canNavigateToImageIndex(
+    state.currentIndex - 1,
+  );
+  $("#nextImageButton").disabled = !canNavigateToImageIndex(
+    state.currentIndex + 1,
+  );
   setStageSize();
   renderImageList();
   renderStepPanel();
@@ -3278,12 +3894,25 @@ function overlayPoint(event) {
   const viewWidth = Number(overlay.viewBox.baseVal.width) || rect.width || 1;
   const viewHeight = Number(overlay.viewBox.baseVal.height) || rect.height || 1;
   return {
-    x: clamp((event.clientX - rect.left) * (viewWidth / rect.width), 0, viewWidth),
-    y: clamp((event.clientY - rect.top) * (viewHeight / rect.height), 0, viewHeight)
+    x: clamp(
+      (event.clientX - rect.left) * (viewWidth / rect.width),
+      0,
+      viewWidth,
+    ),
+    y: clamp(
+      (event.clientY - rect.top) * (viewHeight / rect.height),
+      0,
+      viewHeight,
+    ),
   };
 }
 
-function pageBoxToViewPixels(bbox, region = currentVisibleRegion(), width = null, height = null) {
+function pageBoxToViewPixels(
+  bbox,
+  region = currentVisibleRegion(),
+  width = null,
+  height = null,
+) {
   const overlay = $("#overlay");
   const viewWidth = width || Number(overlay.viewBox.baseVal.width) || 1;
   const viewHeight = height || Number(overlay.viewBox.baseVal.height) || 1;
@@ -3298,7 +3927,7 @@ function pageBoxToViewPixels(bbox, region = currentVisibleRegion(), width = null
     ((ix1 - region[0]) / regionWidth) * viewWidth,
     ((iy1 - region[1]) / regionHeight) * viewHeight,
     ((ix2 - region[0]) / regionWidth) * viewWidth,
-    ((iy2 - region[1]) / regionHeight) * viewHeight
+    ((iy2 - region[1]) / regionHeight) * viewHeight,
   ];
 }
 
@@ -3311,7 +3940,7 @@ function viewPointToPage(point) {
   const regionHeight = Math.max(0.001, region[3] - region[1]);
   return {
     x: roundRel(region[0] + (point.x / width) * regionWidth),
-    y: roundRel(region[1] + (point.y / height) * regionHeight)
+    y: roundRel(region[1] + (point.y / height) * regionHeight),
   };
 }
 
@@ -3328,11 +3957,14 @@ function isInteractiveBox(id) {
 function setBoxById(id, bbox) {
   const spec = currentBboxSpec();
   if (spec) {
-    if (spec.mode === "single" && spec.getBoxes().some((box) => box.id === id)) spec.setBox(bbox);
+    if (spec.mode === "single" && spec.getBoxes().some((box) => box.id === id))
+      spec.setBox(bbox);
     if (spec.mode === "collection") spec.update(id, bbox);
   }
   if (id.endsWith(":bbox")) {
-    const ad = state.annotation.advertisements.find((candidate) => `${candidate.ad_id}:bbox` === id);
+    const ad = state.annotation.advertisements.find(
+      (candidate) => `${candidate.ad_id}:bbox` === id,
+    );
     if (ad) ad.bbox = bbox;
   } else {
     const person = personById(id);
@@ -3345,9 +3977,15 @@ function setBoxById(id, bbox) {
 function deleteSelectedBox() {
   if (!state.selectedBoxId) return;
   const spec = currentBboxSpec();
-  if (spec?.mode === "single" && spec.getBoxes().some((box) => box.id === state.selectedBoxId)) {
+  if (
+    spec?.mode === "single" &&
+    spec.getBoxes().some((box) => box.id === state.selectedBoxId)
+  ) {
     spec.deleteBox();
-  } else if (spec?.mode === "collection" && spec.getBoxes().some((box) => box.id === state.selectedBoxId)) {
+  } else if (
+    spec?.mode === "collection" &&
+    spec.getBoxes().some((box) => box.id === state.selectedBoxId)
+  ) {
     spec.remove(state.selectedBoxId);
   }
   state.selectedBoxId = null;
@@ -3397,7 +4035,11 @@ function normalizedBoxToPixels(bbox) {
   const overlay = $("#overlay");
   const width = Number(overlay.viewBox.baseVal.width) || 1;
   const height = Number(overlay.viewBox.baseVal.height) || 1;
-  return pageBoxToViewPixels(bbox, currentVisibleRegion(), width, height) || [0, 0, 0, 0];
+  return (
+    pageBoxToViewPixels(bbox, currentVisibleRegion(), width, height) || [
+      0, 0, 0, 0,
+    ]
+  );
 }
 
 function pixelBoxToNormalized(bbox) {
@@ -3412,7 +4054,10 @@ function bindOverlay() {
     if (!state.annotation || event.button !== 0) return;
     const target = event.target;
     const point = overlayPoint(event);
-    if (state.step.id === "D2_select_main" || state.step.id === "D3_select_duplicates") {
+    if (
+      state.step.id === "D2_select_main" ||
+      state.step.id === "D3_select_duplicates"
+    ) {
       const id = target.dataset?.boxId;
       if (id) handleDuplicateFaceSelection(id);
       return;
@@ -3422,7 +4067,11 @@ function bindOverlay() {
       const currentAd = adByIndex(state.step.adIndex);
       const clickedPerson = id ? personById(id) : null;
       const targetPersonId = clickedPerson?.duplicate_of_person_id || id;
-      if (id && currentAd?.people.some((candidate) => candidate.person_id === id) && targetPersonId !== state.step.personId) {
+      if (
+        id &&
+        currentAd?.people.some((candidate) => candidate.person_id === id) &&
+        targetPersonId !== state.step.personId
+      ) {
         const person = personById(state.step.personId);
         person.gaze_target_person_id = targetPersonId;
         person.gaze_target_person_unboxed = false;
@@ -3443,7 +4092,7 @@ function bindOverlay() {
           id: boxId,
           handle: handle || "move",
           start: point,
-          original: normalizedBoxToPixels(box.bbox)
+          original: normalizedBoxToPixels(box.bbox),
         };
         overlay.setPointerCapture(event.pointerId);
       }
@@ -3456,7 +4105,7 @@ function bindOverlay() {
       pointerId: event.pointerId,
       start: point,
       current: point,
-      bbox: [point.x, point.y, point.x, point.y]
+      bbox: [point.x, point.y, point.x, point.y],
     };
     overlay.setPointerCapture(event.pointerId);
     renderOverlay();
@@ -3507,14 +4156,18 @@ function bindOverlay() {
       const bbox = state.drawing.bbox;
       state.drawing = null;
       const pixelBox = normalizedBoxToPixels(bbox);
-      if (Math.abs(pixelBox[2] - pixelBox[0]) > 6 && Math.abs(pixelBox[3] - pixelBox[1]) > 6) {
+      if (
+        Math.abs(pixelBox[2] - pixelBox[0]) > 6 &&
+        Math.abs(pixelBox[3] - pixelBox[1]) > 6
+      ) {
         commitBox(bbox);
       } else {
         renderOverlay();
       }
     }
     if (state.dragging) {
-      if (overlay.hasPointerCapture(event.pointerId)) overlay.releasePointerCapture(event.pointerId);
+      if (overlay.hasPointerCapture(event.pointerId))
+        overlay.releasePointerCapture(event.pointerId);
       state.dragging = null;
       render();
       void saveAnnotationDebounced();
@@ -3553,11 +4206,15 @@ async function loadImage(index, options = {}) {
   finishStepTimer("image_change");
   await saveAnnotationNow();
   if (loadToken !== state.imageLoadToken) {
-    void prefetchedSourcePromise?.then((source) => source && URL.revokeObjectURL(source));
+    void prefetchedSourcePromise?.then(
+      (source) => source && URL.revokeObjectURL(source),
+    );
     return;
   }
   if (state.dirty) {
-    void prefetchedSourcePromise?.then((source) => source && URL.revokeObjectURL(source));
+    void prefetchedSourcePromise?.then(
+      (source) => source && URL.revokeObjectURL(source),
+    );
     $("#imageLoading").classList.add("hidden");
     return;
   }
@@ -3568,7 +4225,9 @@ async function loadImage(index, options = {}) {
   state.visibleRegionKey = "0,0,1,1";
   const image = currentImage();
   const pageImage = $("#pageImage");
-  const annotationPromise = fetchJson(`/api/annotation?session_id=${encodeURIComponent(state.session.session_id)}&image_id=${encodeURIComponent(image.image_id)}`);
+  const annotationPromise = fetchJson(
+    `/api/annotation?session_id=${encodeURIComponent(state.session.session_id)}&image_id=${encodeURIComponent(image.image_id)}`,
+  );
   const prefetchedSource = await prefetchedSourcePromise;
   if (loadToken !== state.imageLoadToken) {
     if (prefetchedSource) URL.revokeObjectURL(prefetchedSource);
@@ -3580,7 +4239,7 @@ async function loadImage(index, options = {}) {
     if (!annotationReady || !imageReady) return;
     state.naturalSize = {
       width: pageImage.naturalWidth || 1,
-      height: pageImage.naturalHeight || 1
+      height: pageImage.naturalHeight || 1,
     };
     state.zoom = 1;
     state.fitBaseWidth = 1;
@@ -3607,9 +4266,15 @@ async function loadImage(index, options = {}) {
   state.annotationPersisted = Boolean(data.annotation);
   state.dirty = false;
   state.changeVersion = 0;
-  state.annotation = migrateLoadedAnnotation(data.annotation || defaultAnnotation(image));
-  state.step = normalizeLoadedStep(state.annotation.current_step || { id: "P1_qualifying_ad_count" });
-  const normalizedLegacyStatus = !state.step.id.startsWith("END_PAGE_") && state.annotation.status !== "draft";
+  state.annotation = migrateLoadedAnnotation(
+    data.annotation || defaultAnnotation(image),
+  );
+  state.step = normalizeLoadedStep(
+    state.annotation.current_step || { id: "P1_qualifying_ad_count" },
+  );
+  const normalizedLegacyStatus =
+    !state.step.id.startsWith("END_PAGE_") &&
+    state.annotation.status !== "draft";
   if (normalizedLegacyStatus) {
     state.annotation.status = "draft";
     state.annotation.finished_at = null;
@@ -3633,7 +4298,7 @@ function formatSessionTimestamp(value) {
     month: "short",
     day: "2-digit",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   }).format(date);
 }
 
@@ -3653,13 +4318,16 @@ function renderResumeSessions(sessions, preferredSessionId = null) {
   for (const session of sessions) {
     const option = document.createElement("option");
     option.value = session.session_id;
-    option.textContent = state.language === "de"
-      ? `${t("session")} ${sessionDisplayId(session)} | ${session.task_id} | ${session.done}/${session.total} fertig | ${session.started} begonnen | ${formatSessionTimestamp(session.updated_at || session.created_at)}`
-      : `${t("session")} ${sessionDisplayId(session)} | ${session.task_id} | ${session.done}/${session.total} done | ${session.started} started | ${formatSessionTimestamp(session.updated_at || session.created_at)}`;
+    option.textContent =
+      state.language === "de"
+        ? `${t("session")} ${sessionDisplayId(session)} | ${session.task_id} | ${session.done}/${session.total} fertig | ${session.started} begonnen | ${formatSessionTimestamp(session.updated_at || session.created_at)}`
+        : `${t("session")} ${sessionDisplayId(session)} | ${session.task_id} | ${session.done}/${session.total} done | ${session.started} started | ${formatSessionTimestamp(session.updated_at || session.created_at)}`;
     select.appendChild(option);
   }
   select.disabled = sessions.length === 0;
-  const preferred = sessions.find((session) => session.session_id === preferredSessionId);
+  const preferred = sessions.find(
+    (session) => session.session_id === preferredSessionId,
+  );
   if (preferred) select.value = preferred.session_id;
 }
 
@@ -3677,7 +4345,9 @@ async function refreshResumeSessions(preferredSessionId = null) {
     status.textContent = state.resumeSessions.length
       ? state.resumeSessions.length === 1
         ? t("saved_annotations_found_one")
-        : t("saved_annotations_found_many", { count: state.resumeSessions.length })
+        : t("saved_annotations_found_many", {
+            count: state.resumeSessions.length,
+          })
       : t("no_saved_annotations");
   } catch (error) {
     if (token !== state.sessionLookupToken) return;
@@ -3687,7 +4357,10 @@ async function refreshResumeSessions(preferredSessionId = null) {
   }
 }
 
-function setStartMode(mode, { refresh = true, preferredSessionId = null } = {}) {
+function setStartMode(
+  mode,
+  { refresh = true, preferredSessionId = null } = {},
+) {
   state.startMode = mode === "resume" ? "resume" : "new";
   $$("[data-session-mode]").forEach((button) => {
     const selected = button.dataset.sessionMode === state.startMode;
@@ -3697,7 +4370,10 @@ function setStartMode(mode, { refresh = true, preferredSessionId = null } = {}) 
   const resuming = state.startMode === "resume";
   $("#manifestPathField").classList.toggle("hidden", resuming);
   $("#resumeFields").classList.toggle("hidden", state.startMode !== "resume");
-  $("#startButton").textContent = state.startMode === "resume" ? t("open_saved_annotation") : t("start_new_annotation");
+  $("#startButton").textContent =
+    state.startMode === "resume"
+      ? t("open_saved_annotation")
+      : t("start_new_annotation");
   $("#loginStatus").textContent = "";
   if (state.startMode === "resume" && refresh) {
     void refreshResumeSessions(preferredSessionId);
@@ -3733,12 +4409,13 @@ async function copySessionCode() {
   status.textContent = t("copying");
   status.className = "status-line";
   try {
-    if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+    if (!navigator.clipboard?.writeText)
+      throw new Error("Clipboard unavailable");
     await Promise.race([
       navigator.clipboard.writeText(code),
       new Promise((_, reject) => {
         window.setTimeout(() => reject(new Error("Clipboard timed out")), 1500);
-      })
+      }),
     ]);
     status.textContent = t("session_number_copied");
     status.className = "status-line saved";
@@ -3774,12 +4451,15 @@ async function startApp() {
     if (state.startMode === "resume" && !$("#resumeSessionSelect").value) {
       await refreshResumeSessions(loadLocalBootState()?.session_id || null);
     }
-    const selectedSessionId = state.startMode === "resume" ? $("#resumeSessionSelect").value : null;
+    const selectedSessionId =
+      state.startMode === "resume" ? $("#resumeSessionSelect").value : null;
     if (state.startMode === "resume" && !selectedSessionId) {
       throw new Error(t("choose_saved_annotation"));
     }
     if (state.startMode === "resume") {
-      const selected = state.resumeSessions.find((session) => session.session_id === selectedSessionId);
+      const selected = state.resumeSessions.find(
+        (session) => session.session_id === selectedSessionId,
+      );
       if (!selected) throw new Error(t("selected_saved_unavailable"));
       manifestPath = selected.manifest_path;
     } else {
@@ -3787,12 +4467,12 @@ async function startApp() {
     }
     const [configData, manifestData] = await Promise.all([
       fetchJson("/api/config"),
-      fetchJson(`/api/manifest?path=${encodeURIComponent(manifestPath)}`)
+      fetchJson(`/api/manifest?path=${encodeURIComponent(manifestPath)}`),
     ]);
     const sessionData = await postJson("/api/session", {
       session_id: selectedSessionId,
       manifest_path: manifestData.manifest.manifest_path,
-      task_id: manifestData.manifest.task_id
+      task_id: manifestData.manifest.task_id,
     });
     state.expertMode = Boolean(configData.config?.expert_mode);
     state.session = sessionData.session;
@@ -3808,7 +4488,8 @@ async function startApp() {
       : t("open_page_overview");
     $("#sessionCodeTop").textContent = sessionDisplayId();
     $("#sessionCodeTop").title = `${t("session")} ${sessionDisplayId()}`;
-    const initialIndex = state.startMode === "resume" ? resumeIndexFromStatuses() : 0;
+    const initialIndex =
+      state.startMode === "resume" ? resumeIndexFromStatuses() : 0;
     state.currentIndex = initialIndex;
     state.maxVisitedIndex = initialIndex;
     await loadImage(initialIndex);
@@ -3835,7 +4516,7 @@ async function enterHostedAssignment(code) {
   const sessionData = await postJson("/api/assignment/open", { code });
   const [configData, manifestData] = await Promise.all([
     fetchJson("/api/config"),
-    fetchJson("/api/manifest")
+    fetchJson("/api/manifest"),
   ]);
   state.expertMode = Boolean(configData.config?.expert_mode);
   state.session = sessionData.session;
@@ -3906,15 +4587,18 @@ function saveUrgentComment() {
     created_at: nowIso(),
     image_id: currentImage().image_id,
     page_id: currentImage().image_id,
-    advertisement_id: step.adIndex !== undefined ? adByIndex(step.adIndex)?.ad_id || null : null,
+    advertisement_id:
+      step.adIndex !== undefined
+        ? adByIndex(step.adIndex)?.ad_id || null
+        : null,
     group_id_if_active: step.groupId || null,
     person_id_if_active: step.personId || null,
-    interrupted_step_id: step.id
+    interrupted_step_id: step.id,
   });
   state.annotation.review_flags.push({
     step_id: step.id,
     reason: "urgent_comment",
-    created_at: nowIso()
+    created_at: nowIso(),
   });
   markDirty();
   $("#commentDialog").close();
@@ -3935,9 +4619,12 @@ function persistBeforeUnload() {
     session_id: state.session.session_id,
     image_id: currentImage().image_id,
     revision: state.annotationRevision,
-    annotation: state.annotation
+    annotation: state.annotation,
   });
-  navigator.sendBeacon("/api/annotation", new Blob([payload], { type: "application/json" }));
+  navigator.sendBeacon(
+    "/api/annotation",
+    new Blob([payload], { type: "application/json" }),
+  );
 }
 
 function updateImageArrowHover(event) {
@@ -3948,7 +4635,10 @@ function updateImageArrowHover(event) {
   const x = event.clientX - rect.left;
   const zoneWidth = rect.width * 0.1;
   pane.classList.toggle("nav-hover-left", x >= 0 && x <= zoneWidth);
-  pane.classList.toggle("nav-hover-right", x <= rect.width && x >= rect.width - zoneWidth);
+  pane.classList.toggle(
+    "nav-hover-right",
+    x <= rect.width && x >= rect.width - zoneWidth,
+  );
 }
 
 function clearImageArrowHover() {
@@ -3959,19 +4649,25 @@ function clearImageArrowHover() {
 
 function bindEvents() {
   $$("[data-lang-option]").forEach((button) => {
-    button.addEventListener("click", () => setLanguage(button.dataset.langOption));
+    button.addEventListener("click", () =>
+      setLanguage(button.dataset.langOption),
+    );
   });
   $("#startButton").addEventListener("click", () => void startApp());
   $$("[data-session-mode]").forEach((button) => {
     button.addEventListener("click", () => {
       const stored = loadLocalBootState();
       setStartMode(button.dataset.sessionMode, {
-        preferredSessionId: stored?.session_id || null
+        preferredSessionId: stored?.session_id || null,
       });
     });
   });
   $("#refreshSessionsButton").addEventListener("click", () => {
-    void refreshResumeSessions($("#resumeSessionSelect").value || loadLocalBootState()?.session_id || null);
+    void refreshResumeSessions(
+      $("#resumeSessionSelect").value ||
+        loadLocalBootState()?.session_id ||
+        null,
+    );
   });
   $("#manifestPath").addEventListener("change", () => {
     if (state.startMode === "resume") {
@@ -3985,7 +4681,10 @@ function bindEvents() {
   $("#hostedPassword").addEventListener("keydown", (event) => {
     if (event.key === "Enter") void hostedLogin();
   });
-  $("#hostedOpenButton").addEventListener("click", () => void hostedOpenAssignment());
+  $("#hostedOpenButton").addEventListener(
+    "click",
+    () => void hostedOpenAssignment(),
+  );
   $("#hostedAssignmentCode").addEventListener("input", (event) => {
     event.target.value = event.target.value.replace(/\D/g, "").slice(0, 8);
   });
@@ -3993,26 +4692,51 @@ function bindEvents() {
     if (event.key === "Enter") void hostedOpenAssignment();
   });
   $("#hostedExitButton").addEventListener("click", () => void hostedExit());
-  $("#reviewCompletedTaskButton").addEventListener("click", reviewCompletedTask);
-  $("#leaveCompletedTaskButton").addEventListener("click", () => void leaveCompletedTask());
-  $("#reloadAfterConflictButton").addEventListener("click", () => window.location.reload());
-  $("#saveConflictDialog").addEventListener("cancel", (event) => event.preventDefault());
-  $("#copySessionCodeButton").addEventListener("click", () => void copySessionCode());
-  $("#sessionCodeDialog").addEventListener("cancel", (event) => event.preventDefault());
+  $("#reviewCompletedTaskButton").addEventListener(
+    "click",
+    reviewCompletedTask,
+  );
+  $("#leaveCompletedTaskButton").addEventListener(
+    "click",
+    () => void leaveCompletedTask(),
+  );
+  $("#reloadAfterConflictButton").addEventListener("click", () =>
+    window.location.reload(),
+  );
+  $("#saveConflictDialog").addEventListener("cancel", (event) =>
+    event.preventDefault(),
+  );
+  $("#copySessionCodeButton").addEventListener(
+    "click",
+    () => void copySessionCode(),
+  );
+  $("#sessionCodeDialog").addEventListener("cancel", (event) =>
+    event.preventDefault(),
+  );
   $("#nextButton").addEventListener("click", advance);
   $("#bboxDoneButton").addEventListener("click", advance);
   $("#backButton").addEventListener("click", restorePreviousStep);
-  $("#prevImageButton").addEventListener("click", () => void loadImage(state.currentIndex - 1));
-  $("#nextImageButton").addEventListener("click", () => void loadImage(state.currentIndex + 1));
+  $("#prevImageButton").addEventListener(
+    "click",
+    () => void loadImage(state.currentIndex - 1),
+  );
+  $("#nextImageButton").addEventListener(
+    "click",
+    () => void loadImage(state.currentIndex + 1),
+  );
   $("#urgentCommentButton").addEventListener("click", showCommentDialog);
   $("#pageListToggle").addEventListener("click", () => {
     $("#workspace").classList.toggle("sidebar-open");
     setStageSize();
     renderOverlay();
   });
-  $("#cancelCommentButton").addEventListener("click", () => $("#commentDialog").close());
+  $("#cancelCommentButton").addEventListener("click", () =>
+    $("#commentDialog").close(),
+  );
   $("#saveCommentButton").addEventListener("click", saveUrgentComment);
-  $("#helpButton").addEventListener("click", () => $("#helpText").classList.toggle("hidden"));
+  $("#helpButton").addEventListener("click", () =>
+    $("#helpText").classList.toggle("hidden"),
+  );
   $("#undoBoxButton").addEventListener("click", undoLastBox);
   $("#deleteBoxButton").addEventListener("click", deleteSelectedBox);
   $(".image-pane").addEventListener("mousemove", updateImageArrowHover);
@@ -4020,7 +4744,7 @@ function bindEvents() {
   $$("[data-zoom]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = button.dataset.zoom;
-    if (action === "fit") state.zoom = 1;
+      if (action === "fit") state.zoom = 1;
       if (action === "in") state.zoom = Math.min(3, state.zoom + 0.15);
       if (action === "out") state.zoom = Math.max(0.35, state.zoom - 0.15);
       setStageSize();
@@ -4028,15 +4752,19 @@ function bindEvents() {
       positionBboxDoneButton();
     });
   });
-  $("#imageScroll").addEventListener("wheel", (event) => {
-    if (!event.ctrlKey) return;
-    event.preventDefault();
-    const direction = event.deltaY < 0 ? 1 : -1;
-    state.zoom = clamp(state.zoom + direction * 0.12, 0.35, 3);
-    setStageSize();
-    renderOverlay();
-    positionBboxDoneButton();
-  }, { passive: false });
+  $("#imageScroll").addEventListener(
+    "wheel",
+    (event) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      const direction = event.deltaY < 0 ? 1 : -1;
+      state.zoom = clamp(state.zoom + direction * 0.12, 0.35, 3);
+      setStageSize();
+      renderOverlay();
+      positionBboxDoneButton();
+    },
+    { passive: false },
+  );
   window.addEventListener("resize", () => {
     setStageSize();
     renderOverlay();
@@ -4078,7 +4806,7 @@ async function boot() {
   if (stored) {
     $("#manifestPath").value = stored.manifest_path || "";
     setStartMode("resume", {
-      preferredSessionId: stored.session_id || null
+      preferredSessionId: stored.session_id || null,
     });
   } else {
     setStartMode("new", { refresh: false });
