@@ -550,6 +550,12 @@ progress {
   font-size: 12px;
 }
 
+.toolbar-buttons button.selected {
+  background: #e5f0ef;
+  border-color: var(--accent);
+  color: var(--accent-strong);
+}
+
 .image-scroll {
   position: absolute;
   inset: 0;

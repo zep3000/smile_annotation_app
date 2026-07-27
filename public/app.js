@@ -36,6 +36,7 @@ const ENUMS = {
     "frontal",
     "tilted_down",
     "tilted_up",
+    "other",
     "not_assessable",
   ],
   face_expression_legibility: [
@@ -63,6 +64,7 @@ const ENUMS = {
     "object",
     "object_in_mouth",
     "text_or_graphic_overlay",
+    "cropped_by_page_edge",
     "other",
     "not_assessable",
   ],
@@ -124,9 +126,6 @@ const ENUMS = {
   group_smile_intensity: ["slight", "clear", "broad_or_laughter_like", "mixed"],
 };
 
-const PERSON_DEPICTION_TYPES = ENUMS.depiction_type.filter(
-  (value) => value !== "multiple_types_present",
-);
 const CROWD_FACE_BAND_VALUES = ["10_20", "20_plus"];
 const CROWD_FACE_BANDS = new Set(CROWD_FACE_BAND_VALUES);
 const NO_QUALIFYING_AD_REASON_VALUES = [
@@ -172,22 +171,22 @@ const STEP_META_EN = {
     unit: "Advertisement",
     prompt: "Draw a box around every eligible face depiction.",
     instruction:
-      "Keep Only individuals selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd.",
-    help: "For one to nine faces, leave Only individuals selected, draw every face, and choose Done only after all boxes are drawn. The exact count is recorded automatically. Include mirrors and repetitions. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a crowd band after drawing, provisional individual boxes are removed. You can switch back to Only individuals before continuing.",
+      "Keep Individuals or small group selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd.",
+    help: "For one to nine faces, leave Individuals or small group selected, draw every face, and choose Done only after all boxes are drawn. The exact count is recorded automatically. Include mirrors and repetitions. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a crowd band after drawing, existing individual boxes are kept as outstanding individuals. You can switch back to Individuals or small group before continuing.",
   },
   C1_outstanding_present: {
     unit: "Crowd",
     prompt:
       "Are there outstanding individuals that should be annotated separately?",
     instruction:
-      "Choose yes only for visually prominent individuals inside a larger crowd.",
-    help: "Outstanding individuals are central, large, singled out, or otherwise analytically important. They will receive full individual coding before group coding.",
+      "Choose yes only when one or more individuals are much more visible than the rest of the group or crowd.",
+    help: "Outstanding individuals should stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. They will receive full individual coding before group coding.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "People",
     prompt: "Draw outstanding individual face boxes.",
     instruction: "Draw every outstanding face box before choosing Done.",
-    help: "Use this only for individuals who should be coded separately from the remaining crowd or group. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses.",
+    help: "Use this only for individuals who are much more visible than the remaining crowd or group and should be coded separately. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses.",
   },
   DRAW_GROUP_BOXES: {
     unit: "Groups",
@@ -216,8 +215,9 @@ const STEP_META_EN = {
   G4_group_expression_legibility: {
     unit: "Group",
     prompt: "How legible are facial expressions in this group?",
-    instruction: "Choose the closest distribution across the grouped faces.",
-    help: "Score the overall expression-coding legibility across the group. Low, moderate, or high legibility can result from any combination of limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Choose mixed when no single level or mostly-level describes the group well. If no grouped faces are legible, gaze and smile questions are skipped.",
+    instruction:
+      "Judge how well facial expressions can be assessed, then choose the closest distribution.",
+    help: "Expression legibility means how well the visible faces support expression coding, not which emotion is shown. Low, moderate, or high legibility can result from limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Choose mixed when no single level or mostly-level describes the group well. If no grouped faces are legible, gaze and smile questions are skipped.",
   },
   G5_group_gaze: {
     unit: "Group",
@@ -266,8 +266,9 @@ const STEP_META_EN = {
   I0_person_depiction_type: {
     unit: "Person",
     prompt: "How is this person depicted?",
-    instruction: "Choose the best-fitting depiction type.",
-    help: "This question appears per person only because Multiple types present was selected for this advertisement.",
+    instruction:
+      "Choose the best-fitting depiction type, or Multiple types present for this person.",
+    help: "This question appears per person only because Multiple types present was selected for this advertisement. If a single person combines depiction types, choose Multiple types present and continue; no further subtype split is required.",
   },
   I1_age: {
     unit: "Person",
@@ -290,8 +291,9 @@ const STEP_META_EN = {
   I4_expression_legibility: {
     unit: "Person",
     prompt: "How legible is this person's facial expression?",
-    instruction: "Choose the closest level on the four-point scale.",
-    help: "Score the overall result, not the cause. Low, moderate, or high legibility can result from any combination of limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Judge their combined effect on expression coding. Level 0 skips gaze and smile coding; orientation and mouth covering are still recorded.",
+    instruction:
+      "Judge how well this facial expression can be assessed, then choose the closest level.",
+    help: "Expression legibility means how well the visible face supports expression coding, not which emotion is shown. Low, moderate, or high legibility can result from limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Judge their combined effect on expression coding. Level 0 skips gaze and smile coding; orientation and mouth covering are still recorded.",
   },
   I5_gaze_target: {
     unit: "Person",
@@ -394,23 +396,23 @@ const STEP_META_DE = {
     unit: "Anzeige",
     prompt: "Zeichne eine Box um jede geeignete Gesichtsdarstellung.",
     instruction:
-      "Lass Nur Einzelpersonen ausgewählt und zeichne 1-9 Boxen, oder wähle 10-20 bzw. 20+ für eine Menge.",
-    help: "Bei ein bis neun Gesichtern lass Nur Einzelpersonen ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, werden vorläufige Einzelpersonen-Boxen entfernt. Du kannst vor dem Fortfahren wieder zu Nur Einzelpersonen wechseln.",
+      "Lass Einzelpersonen oder kleine Gruppe ausgewählt und zeichne 1-9 Boxen, oder wähle 10-20 bzw. 20+ für eine Menge.",
+    help: "Bei ein bis neun Gesichtern lass Einzelpersonen oder kleine Gruppe ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, bleiben vorhandene Einzelpersonen-Boxen als herausstechende Einzelpersonen erhalten. Du kannst vor dem Fortfahren wieder zu Einzelpersonen oder kleine Gruppe wechseln.",
   },
   C1_outstanding_present: {
     unit: "Menge",
     prompt:
       "Gibt es herausstechende Einzelpersonen, die separat annotiert werden sollten?",
     instruction:
-      "Wähle ja nur für visuell hervorgehobene Personen innerhalb einer größeren Menge.",
-    help: "Herausstechende Einzelpersonen sind zentral, groß, hervorgehoben oder anderweitig analytisch wichtig. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung.",
+      "Wähle ja nur, wenn einzelne Personen deutlich sichtbarer sind als der Rest der Gruppe oder Menge.",
+    help: "Herausstechende Einzelpersonen sollen sich visuell klar von der Gruppe abheben, vor allem weil sie viel größer, klarer, zentraler oder anderweitig deutlich sichtbarer sind als der Rest. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "Personen",
     prompt: "Zeichne Boxen für herausstechende Einzelpersonen.",
     instruction:
       "Zeichne jede herausstechende Gesichts-Box, bevor du Fertig wählst.",
-    help: "Nutze dies nur für Personen, die separat von der restlichen Menge oder Gruppe codiert werden sollen. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen.",
+    help: "Nutze dies nur für Personen, die deutlich sichtbarer sind als die restliche Menge oder Gruppe und deshalb separat codiert werden sollen. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen.",
   },
   DRAW_GROUP_BOXES: {
     unit: "Gruppen",
@@ -442,8 +444,8 @@ const STEP_META_DE = {
     unit: "Gruppe",
     prompt: "Wie gut sind Gesichtsausdrücke in dieser Gruppe lesbar?",
     instruction:
-      "Wähle die passendste Verteilung über die gruppierten Gesichter.",
-    help: "Bewerte die allgemeine Lesbarkeit für Ausdruckscodierung in der Gruppe. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Gesichtsdetails, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Wähle gemischt, wenn kein einzelnes Niveau oder mehrheitliches Niveau gut passt. Wenn keine gruppierten Gesichter lesbar sind, werden Blick- und Lächelfragen übersprungen.",
+      "Beurteile, wie gut Gesichtsausdrücke einschätzbar sind, und wähle dann die passendste Verteilung.",
+    help: "Ausdruckslesbarkeit meint, wie gut die sichtbaren Gesichter eine Ausdruckscodierung erlauben, nicht welche Emotion gezeigt wird. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Gesichtsdetails, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Wähle gemischt, wenn kein einzelnes Niveau oder mehrheitliches Niveau gut passt. Wenn keine gruppierten Gesichter lesbar sind, werden Blick- und Lächelfragen übersprungen.",
   },
   G5_group_gaze: {
     unit: "Gruppe",
@@ -496,8 +498,9 @@ const STEP_META_DE = {
   I0_person_depiction_type: {
     unit: "Person",
     prompt: "Wie ist diese Person dargestellt?",
-    instruction: "Wähle den passendsten Darstellungstyp.",
-    help: "Diese Frage erscheint pro Person nur, weil für diese Anzeige mehrere Typen vorhanden ausgewählt wurde.",
+    instruction:
+      "Wähle den passendsten Darstellungstyp oder mehrere Typen vorhanden für diese Person.",
+    help: "Diese Frage erscheint pro Person nur, weil für diese Anzeige mehrere Typen vorhanden ausgewählt wurde. Wenn eine einzelne Person mehrere Darstellungstypen kombiniert, wähle mehrere Typen vorhanden und fahre fort; keine weitere Aufteilung ist nötig.",
   },
   I1_age: {
     unit: "Person",
@@ -520,8 +523,9 @@ const STEP_META_DE = {
   I4_expression_legibility: {
     unit: "Person",
     prompt: "Wie gut ist der Gesichtsausdruck dieser Person lesbar?",
-    instruction: "Wähle die passendste Stufe auf der Vier-Punkte-Skala.",
-    help: "Bewerte das Ergebnis, nicht die Ursache. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Details, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Beurteile die kombinierte Wirkung auf die Ausdruckscodierung. Stufe 0 überspringt Blick- und Lächelcodierung; Ausrichtung und Mundverdeckung werden weiterhin erfasst.",
+    instruction:
+      "Beurteile, wie gut dieser Gesichtsausdruck einschätzbar ist, und wähle die passendste Stufe.",
+    help: "Ausdruckslesbarkeit meint, wie gut das sichtbare Gesicht eine Ausdruckscodierung erlaubt, nicht welche Emotion gezeigt wird. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Details, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Beurteile die kombinierte Wirkung auf die Ausdruckscodierung. Stufe 0 überspringt Blick- und Lächelcodierung; Ausrichtung und Mundverdeckung werden weiterhin erfasst.",
   },
   I5_gaze_target: {
     unit: "Person",
@@ -616,6 +620,7 @@ const state = {
   selectedBoxId: null,
   drawing: null,
   dragging: null,
+  showBoxLabels: true,
   zoom: 1,
   fitBaseWidth: 1,
   visibleRegionKey: "0,0,1,1",
@@ -660,7 +665,7 @@ const DISPLAY_LABELS_EN = {
   mask_mannequin_doll_or_puppet: "mask, mannequin, doll, or puppet",
   schematic_icon_or_logo_face: "schematic icon/logo face",
   multiple_types_present: "multiple types present",
-  only_individuals: "only individuals",
+  only_individuals: "individuals or small group",
   "10_20": "10-20",
   "20_plus": "20+",
   beyond_profile: "less than profile",
@@ -706,6 +711,7 @@ const DISPLAY_LABELS_EN = {
   other_body_part: "other body part",
   part_of_another_person: "(part of) another person",
   object_in_mouth: "object in mouth",
+  cropped_by_page_edge: "cropped by page edge",
   tilted_down: "tilted down",
   tilted_up: "tilted up",
 };
@@ -733,7 +739,7 @@ const DISPLAY_LABELS_DE = {
   nonhuman_creature_with_face: "nichtmenschliches Wesen mit Gesicht",
   schematic_icon_or_logo_face: "schematisches Icon/Logo-Gesicht",
   multiple_types_present: "mehrere Typen vorhanden",
-  only_individuals: "nur Einzelpersonen",
+  only_individuals: "Einzelpersonen oder kleine Gruppe",
   "10_20": "10-20",
   "20_plus": "20+",
   infant: "Säugling",
@@ -767,6 +773,7 @@ const DISPLAY_LABELS_DE = {
   object: "Objekt",
   object_in_mouth: "Objekt im Mund",
   text_or_graphic_overlay: "Text/grafische Überlagerung",
+  cropped_by_page_edge: "durch Seitenrand abgeschnitten",
   other: "anderes",
   "1_slight": "1 leicht",
   "2_clear": "2 deutlich",
@@ -889,6 +896,9 @@ const UI_TEXT = {
     previous_page: "Previous page",
     next_page: "Next page",
     zoom_controls: "Zoom controls",
+    hide_box_labels: "Hide box labels",
+    show_box_labels: "Show box labels",
+    labels: "Labels",
     fit_image: "Fit image",
     fit: "Fit",
     zoom_out: "Zoom out",
@@ -1018,6 +1028,9 @@ const UI_TEXT = {
     previous_page: "Vorherige Seite",
     next_page: "Nächste Seite",
     zoom_controls: "Zoom-Steuerung",
+    hide_box_labels: "Box-Beschriftungen ausblenden",
+    show_box_labels: "Box-Beschriftungen einblenden",
+    labels: "Beschriftungen",
     fit_image: "Bild einpassen",
     fit: "Einpassen",
     zoom_out: "Verkleinern",
@@ -1118,6 +1131,17 @@ function t(key, values = {}) {
     /\{(\w+)\}/g,
     (_, name) => values[name] ?? "",
   );
+}
+
+function updateBoxLabelToggle() {
+  const button = $("#toggleBoxLabelsButton");
+  if (!button) return;
+  const labelKey = state.showBoxLabels ? "hide_box_labels" : "show_box_labels";
+  button.textContent = t("labels");
+  button.title = t(labelKey);
+  button.setAttribute("aria-label", t(labelKey));
+  button.setAttribute("aria-pressed", String(state.showBoxLabels));
+  button.classList.toggle("selected", state.showBoxLabels);
 }
 
 function setText(selector, key) {
@@ -1234,6 +1258,7 @@ function applyLanguage({ rerender = true } = {}) {
   setTitle("#prevImageButton", "previous_page");
   setTitle("#nextImageButton", "next_page");
   setAriaLabel(".zoom-toolbar", "zoom_controls");
+  updateBoxLabelToggle();
   setTitle('[data-zoom="fit"]', "fit_image");
   $('[data-zoom="fit"]').textContent = t("fit");
   setTitle('[data-zoom="out"]', "zoom_out");
@@ -1401,6 +1426,20 @@ function groupById(id) {
   return null;
 }
 
+function adIndexForPersonId(id) {
+  if (!state.annotation) return -1;
+  return state.annotation.advertisements.findIndex((ad) =>
+    ad.people.some((person) => person.person_id === id),
+  );
+}
+
+function adIndexForGroupId(id) {
+  if (!state.annotation) return -1;
+  return state.annotation.advertisements.findIndex((ad) =>
+    ad.groups.some((group) => group.group_id === id),
+  );
+}
+
 function nextNumericId(items, field, prefix) {
   let max = 0;
   for (const item of items) {
@@ -1479,9 +1518,16 @@ function setInitialFaceRoute(ad, route) {
   state.dragging = null;
 
   if (route === "only_individuals") {
-    ad.people = ad.people.filter(
-      (person) => person.annotation_role === "individual",
+    ad.people = ad.people.filter((person) =>
+      ["individual", "outstanding_individual"].includes(
+        person.annotation_role,
+      ),
     );
+    for (const person of ad.people) {
+      if (person.annotation_role === "outstanding_individual") {
+        person.annotation_role = "individual";
+      }
+    }
     ad.groups = [];
     ad.has_outstanding_individuals = null;
     const count = ad.people.filter((person) => person.face_bbox).length;
@@ -1494,9 +1540,18 @@ function setInitialFaceRoute(ad, route) {
   const wasCrowd = CROWD_FACE_BANDS.has(previous);
   ad.face_depiction_count_band = route;
   if (!wasCrowd) {
-    ad.people = [];
-    ad.groups = [];
-    ad.has_outstanding_individuals = null;
+    for (const person of ad.people) {
+      if (person.annotation_role === "individual") {
+        person.annotation_role = "outstanding_individual";
+      }
+    }
+    ad.has_outstanding_individuals = ad.people.some(
+      (person) =>
+        person.annotation_role === "outstanding_individual" &&
+        person.face_bbox,
+    )
+      ? "yes"
+      : null;
   } else {
     ad.people = ad.people.filter(
       (person) => person.annotation_role !== "individual",
@@ -2379,7 +2434,7 @@ function choiceValuesForStep(step) {
     G5_group_gaze: ENUMS.group_gaze,
     G6_group_smile: ENUMS.group_smile_prevalence,
     G7_group_smile_intensity: ENUMS.group_smile_intensity,
-    I0_person_depiction_type: PERSON_DEPICTION_TYPES,
+    I0_person_depiction_type: ENUMS.depiction_type,
     I1_age: ENUMS.individual_age,
     I2_gender: ENUMS.gender_presentation,
     I3_orientation: ENUMS.face_orientation,
@@ -3287,7 +3342,10 @@ function renderInput() {
   if (step.id === "A3_unique_person_count") {
     const ad = adByIndex(step.adIndex);
     const count = ad.people.filter(
-      (person) => person.annotation_role === "individual" && person.face_bbox,
+      (person) =>
+        ["individual", "outstanding_individual"].includes(
+          person.annotation_role,
+        ) && person.face_bbox,
     ).length;
     const countText = document.createElement("p");
     countText.className = "face-box-count";
@@ -3782,7 +3840,7 @@ function renderOverlay() {
       "data-box-id": box.id,
     });
     overlay.appendChild(rect);
-    if (box.label) {
+    if (box.label && state.showBoxLabels) {
       overlay.appendChild(
         svgEl("text", {
           x: x1 + 6,
@@ -3954,6 +4012,34 @@ function isInteractiveBox(id) {
   return spec.getBoxes().some((box) => box.id === id);
 }
 
+function jumpToBoxAnnotation(id) {
+  if (!id || id === "pending" || id.endsWith(":bbox")) return false;
+  const clickedPerson = personById(id);
+  if (clickedPerson) {
+    const targetPerson = clickedPerson.duplicate_of_person_id
+      ? personById(clickedPerson.duplicate_of_person_id) || clickedPerson
+      : clickedPerson;
+    const adIndex = adIndexForPersonId(targetPerson.person_id);
+    if (adIndex < 0) return false;
+    transitionTo(personStartStep(adIndex, targetPerson));
+    return true;
+  }
+  const group = groupById(id);
+  if (group) {
+    const adIndex = adIndexForGroupId(id);
+    if (adIndex < 0) return false;
+    const ad = adByIndex(adIndex);
+    transitionTo({
+      id: "G1_group_type",
+      adIndex,
+      groupId: group.group_id,
+      groupIndex: Math.max(0, ad.groups.indexOf(group)),
+    });
+    return true;
+  }
+  return false;
+}
+
 function setBoxById(id, bbox) {
   const spec = currentBboxSpec();
   if (spec) {
@@ -4083,6 +4169,9 @@ function bindOverlay() {
     }
     const boxId = target.dataset?.boxId;
     const handle = target.dataset?.handle;
+    if (boxId && !currentBboxSpec() && jumpToBoxAnnotation(boxId)) {
+      return;
+    }
     if (boxId && isInteractiveBox(boxId)) {
       state.selectedBoxId = boxId;
       const box = findBox(boxId);
@@ -4739,6 +4828,11 @@ function bindEvents() {
   );
   $("#undoBoxButton").addEventListener("click", undoLastBox);
   $("#deleteBoxButton").addEventListener("click", deleteSelectedBox);
+  $("#toggleBoxLabelsButton").addEventListener("click", () => {
+    state.showBoxLabels = !state.showBoxLabels;
+    updateBoxLabelToggle();
+    renderOverlay();
+  });
   $(".image-pane").addEventListener("mousemove", updateImageArrowHover);
   $(".image-pane").addEventListener("mouseleave", clearImageArrowHover);
   $$("[data-zoom]").forEach((button) => {

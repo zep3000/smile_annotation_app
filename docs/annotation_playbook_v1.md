@@ -89,17 +89,17 @@ Classify the form of the depicted face, not the printing process. For example, a
 
 Count every eligible face depiction, including mirrors, repeated portraits, collage repetitions, and repeated product shots of the same person.
 
-For one through nine faces, keep **only individuals** selected and begin drawing immediately. Draw every eligible face box and choose **Done** only when every eligible face depiction in the current advertisement has a box. The app derives and stores the exact count from the number of boxes; no separate count selection is made.
+For one through nine faces, keep **individuals or small group** selected and begin drawing immediately. Draw every eligible face box and choose **Done** only when every eligible face depiction in the current advertisement has a box. The app derives and stores the exact count from the number of boxes; no separate count selection is made. This visible UI label still stores the route key `only_individuals`.
 
-For ten or more faces, do not draw all individual boxes. Choose `10_20` or `20_plus` to enter the crowd route. This route can be changed back to **only individuals** before continuing. If a crowd band is selected after provisional boxes have been drawn on this screen, those provisional individual boxes are removed.
+For ten or more faces, do not draw all individual boxes. Choose `10_20` or `20_plus` to enter the crowd route. This route can be changed back to **individuals or small group** before continuing. If a crowd band is selected after individual boxes have been drawn on this screen, those boxes are retained as `outstanding_individual` records rather than discarded.
 
 Draw the smallest box that covers all visible face and head features needed for coding. Include visible hair, ears, forehead, cheeks, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, labels, or empty background unless they visibly cover or cut across the face. The count concerns depictions, not unique identities, so repeated depictions receive separate boxes. Boxes are stored relative to the full page even while the interface displays only the current advertisement crop. Duplicate identities are resolved later within the current advertisement.
 
 ### C1. Outstanding individuals in a crowd
 
-For an advertisement with `10_20` or `20_plus` faces, choose `yes` when one or more faces are visually prominent enough for detailed individual coding. Otherwise choose `no`.
+For an advertisement with `10_20` or `20_plus` faces, choose `yes` when one or more faces are much more visible than the rest of the group or crowd and therefore prominent enough for detailed individual coding. Otherwise choose `no`.
 
-Outstanding individuals are central, large, singled out, or otherwise analytically important. When present, draw their individual face boxes. Then draw group boxes for the remaining crowd.
+Outstanding individuals should stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. When present, draw their individual face boxes. Then draw group boxes for the remaining crowd.
 
 ### C2. Group boxes
 
@@ -138,7 +138,7 @@ The app iterates over canonical main faces only. The active face is visually hig
 
 ### I0. Person depiction type
 
-Ask this only when A2 is `multiple_types_present` for the current advertisement. Use the A2 definitions and choose the type of the selected main depiction. `multiple_types_present` is not available at person level.
+Ask this only when A2 is `multiple_types_present` for the current advertisement. Use the A2 definitions and choose the type of the selected main depiction. If a single person combines depiction types, choose `multiple_types_present` at person level and continue; no further subtype split is required.
 
 ### I1. Perceived age band
 
@@ -169,7 +169,7 @@ When the value is `0_not_legible`, skip gaze and smile-presence/intensity coding
 
 ### I3. Face orientation
 
-Values: `beyond_profile`, `profile`, `three_quarter`, `frontal`, `tilted_down`, `tilted_up`, `not_assessable`.
+Values: `beyond_profile`, `profile`, `three_quarter`, `frontal`, `tilted_down`, `tilted_up`, `other`, `not_assessable`.
 
 The interface displays `beyond_profile` as **less than profile**. Use `tilted_down` or `tilted_up` when vertical head angle is the most distinctive orientation feature. Select the closest orientation when between categories.
 
@@ -189,9 +189,9 @@ Choose whether something visibly covers the mouth. Crop, face orientation, and p
 
 Asked only for `yes` or `partly`.
 
-Values: `hand`, `beard`, `other_body_part`, `part_of_another_person`, `object`, `object_in_mouth`, `text_or_graphic_overlay`, `other`, `not_assessable`.
+Values: `hand`, `beard`, `other_body_part`, `part_of_another_person`, `object`, `object_in_mouth`, `text_or_graphic_overlay`, `cropped_by_page_edge`, `other`, `not_assessable`.
 
-Record what visibly covers the mouth, not whether the covering is intentional. `other` requires a short concrete description.
+Record what visibly covers the mouth, not whether the covering is intentional. Use `cropped_by_page_edge` when the page/image boundary cuts off the mouth region. `other` requires a short concrete description.
 
 ### I8. Smile presence
 

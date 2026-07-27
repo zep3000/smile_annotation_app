@@ -80,6 +80,7 @@ enums:
     - personified_object
     - nonhuman_creature_with_face
     - schematic_icon_or_logo_face
+    - multiple_types_present
   individual_age:
     - infant
     - child
@@ -100,6 +101,7 @@ enums:
     - frontal
     - tilted_down
     - tilted_up
+    - other
     - not_assessable
   face_expression_legibility:
     - 0_not_legible
@@ -124,6 +126,7 @@ enums:
     - object
     - object_in_mouth
     - text_or_graphic_overlay
+    - cropped_by_page_edge
     - other
     - not_assessable
   smile_presence: ["yes", "no", not_assessable]
@@ -256,12 +259,12 @@ flow:
       field: advertisement.face_depiction_count_band
       ui: draw_bbox_collection_or_crowd_choice
       prompt: "Draw a box around every eligible face depiction."
-      instruction: "Keep Only individuals selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd."
+      instruction: "Keep Individuals or small group selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd."
       route_choices:
         - only_individuals
         - 10_20
         - 20_plus
-      route_storage_note: "only_individuals is a UI route only; the stored field is derived from drawn face-box count."
+      route_storage_note: "only_individuals is a UI route only; the stored field is derived from drawn face-box count. If the user switches from only_individuals to a crowd band after drawing boxes, those individual boxes are retained as outstanding_individual records."
       direct_drawing:
         create_unit: person_candidate
         field: face_bbox
@@ -279,6 +282,7 @@ flow:
       field: advertisement.has_outstanding_individuals
       ui: single_choice
       values_from: yes_no
+      instruction: "Choose yes only when one or more individuals are much more visible than the rest of the group or crowd."
       transitions:
         "yes": DRAW_OUTSTANDING_INDIVIDUAL_BOXES
         "no": DRAW_GROUP_BOXES
@@ -395,10 +399,11 @@ flow:
       ui: ordinal_single_choice
       values_from: face_expression_legibility
       coding_rule: >-
-        Score the overall result for expression coding, not the cause of reduced
-        legibility. Low, moderate, or high legibility can arise from one or more
-        different limitations. Judge their combined effect; do not count causes
-        or apply a fixed penalty for the presence of any single cause.
+        Score how well the visible face supports expression coding, not which
+        emotion is shown and not the cause of reduced legibility. Low, moderate,
+        or high legibility can arise from one or more different limitations.
+        Judge their combined effect; do not count causes or apply a fixed
+        penalty for the presence of any single cause.
       possible_limiting_factors:
         - limited_or_missing_facial_detail
         - covering_or_occlusion
@@ -519,7 +524,8 @@ flow:
         group. Use all_* when all or nearly all faces share the same level,
         mostly_* when one level clearly predominates with visible exceptions,
         and mixed_legibility when no single level clearly predominates. Score
-        the overall result, not the cause of reduced legibility.
+        how well the visible faces support expression coding, not which emotion
+        is shown and not the cause of reduced legibility.
       possible_limiting_factors:
         - limited_or_missing_facial_detail
         - covering_or_occlusion
