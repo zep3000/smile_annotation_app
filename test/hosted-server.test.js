@@ -116,6 +116,7 @@ class FakeRepository {
   async createSet() { return { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task" }; }
   async getSet() { return null; }
   async imageForUpload() { return { id: "30000000-0000-4000-8000-000000000001", image_id: "page-1", object_key: "sets/test/page-1.jpg" }; }
+  async reusableUploadedImageForUpload() { return null; }
   async markImageUploaded() { this.uploaded = true; return { image_id: "page-1", uploaded: true }; }
 }
 

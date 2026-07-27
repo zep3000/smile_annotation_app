@@ -21,6 +21,10 @@ function effectiveStoredStatus(payload, fallback = "draft") {
   return DONE_STATUSES.has(status) || status === "draft" ? status : "draft";
 }
 
+function normalizeFilenameKey(filename) {
+  return String(filename || "").trim().toLowerCase();
+}
+
 class HostedRepository {
   constructor(pool) {
     this.pool = pool;
@@ -90,12 +94,32 @@ class HostedRepository {
       for (let index = 0; index < normalized.images.length; index += 1) {
         const image = normalized.images[index];
         const imageUuid = crypto.randomUUID();
-        const objectKey = `sets/${setId}/images/${String(index + 1).padStart(5, "0")}_${safeObjectFilename(image.filename)}`;
+        const reusable = await this.reusableUploadedImageForDescriptor(
+          client,
+          image.image_id,
+          image.filename
+        );
+        const objectKey = reusable?.object_key ||
+          `sets/${setId}/images/${String(index + 1).padStart(5, "0")}_${safeObjectFilename(image.filename)}`;
         await client.query(
           `INSERT INTO images(
-             id, annotation_set_id, image_id, filename, object_key, sort_order, page_type, metadata
-           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
-          [imageUuid, setId, image.image_id, image.filename, objectKey, index, image.page_type, jsonValue(image.metadata)]
+             id, annotation_set_id, image_id, filename, object_key, sort_order, page_type, metadata,
+             uploaded, byte_size, sha256, uploaded_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12)`,
+          [
+            imageUuid,
+            setId,
+            image.image_id,
+            image.filename,
+            objectKey,
+            index,
+            image.page_type,
+            jsonValue(image.metadata),
+            Boolean(reusable),
+            reusable?.byte_size || null,
+            reusable?.sha256 || null,
+            reusable?.uploaded_at || null
+          ]
         );
       }
       await client.query("COMMIT");
@@ -106,6 +130,19 @@ class HostedRepository {
     } finally {
       client.release();
     }
+  }
+
+  async reusableUploadedImageForDescriptor(clientOrPool, imageId, filename) {
+    const result = await clientOrPool.query(
+      `SELECT id, image_id, filename, object_key, byte_size, sha256, uploaded_at
+       FROM images
+       WHERE uploaded
+         AND (image_id = $1 OR lower(filename) = $2)
+       ORDER BY CASE WHEN image_id = $1 THEN 0 ELSE 1 END, uploaded_at, created_at
+       LIMIT 1`,
+      [imageId, normalizeFilenameKey(filename)]
+    );
+    return result.rows[0] || null;
   }
 
   async getSet(setId) {
@@ -190,13 +227,69 @@ class HostedRepository {
     return result.rows[0] || null;
   }
 
-  async markImageUploaded(imageUuid, { byteSize, sha256 }) {
+  async reusableUploadedImageForUpload(imageUuid) {
+    const current = await this.pool.query(
+      `SELECT id, image_id, filename
+       FROM images WHERE id = $1`,
+      [imageUuid]
+    );
+    const image = current.rows[0];
+    if (!image) return null;
     const result = await this.pool.query(
-      `UPDATE images SET uploaded = true, byte_size = $2, sha256 = $3, uploaded_at = now()
-       WHERE id = $1 RETURNING *`,
-      [imageUuid, byteSize, sha256]
+      `SELECT id, image_id, filename, object_key, byte_size, sha256, uploaded_at
+       FROM images
+       WHERE uploaded
+         AND id <> $1
+         AND (image_id = $2 OR lower(filename) = $3)
+       ORDER BY CASE WHEN image_id = $2 THEN 0 ELSE 1 END, uploaded_at, created_at
+       LIMIT 1`,
+      [imageUuid, image.image_id, normalizeFilenameKey(image.filename)]
     );
     return result.rows[0] || null;
+  }
+
+  async markImageUploaded(imageUuid, { byteSize, sha256, objectKey = null }) {
+    const current = await this.pool.query(
+      `SELECT id, image_id, filename, object_key
+       FROM images WHERE id = $1`,
+      [imageUuid]
+    );
+    const image = current.rows[0];
+    if (!image) return null;
+    const storedObjectKey = objectKey || image.object_key;
+    const result = await this.pool.query(
+      `UPDATE images
+       SET uploaded = true,
+           byte_size = $2,
+           sha256 = $3,
+           uploaded_at = now(),
+           object_key = $4
+       WHERE id = $1
+       RETURNING *`,
+      [imageUuid, byteSize, sha256, storedObjectKey]
+    );
+    const updated = result.rows[0] || null;
+    if (!updated) return null;
+    await this.pool.query(
+      `UPDATE images
+       SET uploaded = true,
+           byte_size = $4,
+           sha256 = $5,
+           uploaded_at = COALESCE(uploaded_at, now()),
+           object_key = $6
+       WHERE NOT uploaded
+         AND id <> $1
+         AND (image_id = $2 OR lower(filename) = $3)`,
+      [
+        imageUuid,
+        image.image_id,
+        normalizeFilenameKey(image.filename),
+        byteSize,
+        sha256,
+        storedObjectKey
+      ]
+    );
+    return updated;
   }
 
   async setStatus(setId, status) {

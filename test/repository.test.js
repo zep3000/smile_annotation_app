@@ -151,6 +151,70 @@ test("legacy zero-count pages without a reason remain started", async (t) => {
   assert.equal(progress["page-1"].status, "draft");
 });
 
+test("repository reuses uploaded page images across annotation sets", async (t) => {
+  const { pool, repository } = await testRepository();
+  t.after(() => pool.end());
+
+  const sourceSet = await repository.createSet({
+    name: "Uploaded image source",
+    flowVersion: "1.15",
+    manifest: {
+      task_id: "source-upload",
+      images: [{ image_id: "source-page", filename: "shared-page.jpg", page_type: "single" }]
+    }
+  });
+  let [sourceImage] = await repository.setImages(sourceSet.id);
+  assert.equal(sourceImage.uploaded, false);
+  await repository.markImageUploaded(sourceImage.id, { byteSize: 123, sha256: "e".repeat(64) });
+  [sourceImage] = await repository.setImages(sourceSet.id);
+
+  const targetSet = await repository.createSet({
+    name: "Uploaded image target",
+    flowVersion: "1.15",
+    manifest: {
+      task_id: "target-upload",
+      images: [{ image_id: "target-page", filename: "shared-page.jpg", page_type: "single" }]
+    }
+  });
+  const [targetImage] = await repository.setImages(targetSet.id);
+  assert.equal(targetImage.uploaded, true);
+  assert.equal(targetImage.object_key, sourceImage.object_key);
+  assert.equal(targetImage.byte_size, 123);
+  assert.equal(targetImage.sha256, "e".repeat(64));
+});
+
+test("repository marks pending matching images uploaded when one copy is uploaded", async (t) => {
+  const { pool, repository } = await testRepository();
+  t.after(() => pool.end());
+
+  const firstSet = await repository.createSet({
+    name: "Pending first",
+    flowVersion: "1.15",
+    manifest: {
+      task_id: "pending-first",
+      images: [{ image_id: "same-page", filename: "same-page.jpg", page_type: "single" }]
+    }
+  });
+  const secondSet = await repository.createSet({
+    name: "Pending second",
+    flowVersion: "1.15",
+    manifest: {
+      task_id: "pending-second",
+      images: [{ image_id: "different-id", filename: "Same-Page.JPG", page_type: "single" }]
+    }
+  });
+  const [firstImage] = await repository.setImages(firstSet.id);
+  let [secondImage] = await repository.setImages(secondSet.id);
+  assert.equal(secondImage.uploaded, false);
+
+  await repository.markImageUploaded(firstImage.id, { byteSize: 456, sha256: "f".repeat(64) });
+  [secondImage] = await repository.setImages(secondSet.id);
+  assert.equal(secondImage.uploaded, true);
+  assert.equal(secondImage.object_key, firstImage.object_key);
+  assert.equal(secondImage.byte_size, 456);
+  assert.equal(secondImage.sha256, "f".repeat(64));
+});
+
 test("repository copies missing annotations between assignments without overwrite", async (t) => {
   const { pool, repository } = await testRepository();
   t.after(() => pool.end());

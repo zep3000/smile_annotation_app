@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS images (
   annotation_set_id uuid NOT NULL REFERENCES annotation_sets(id) ON DELETE CASCADE,
   image_id text NOT NULL,
   filename text NOT NULL,
-  object_key text NOT NULL UNIQUE,
+  object_key text NOT NULL,
   sort_order integer NOT NULL CHECK (sort_order >= 0),
   page_type text NOT NULL DEFAULT 'unknown',
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -89,6 +89,9 @@ CREATE TABLE IF NOT EXISTS audit_events (
 
 CREATE INDEX IF NOT EXISTS idx_images_set_order
   ON images(annotation_set_id, sort_order);
+ALTER TABLE images DROP CONSTRAINT IF EXISTS images_object_key_key;
+CREATE INDEX IF NOT EXISTS idx_images_object_key
+  ON images(object_key);
 CREATE INDEX IF NOT EXISTS idx_assignments_set_status
   ON assignments(annotation_set_id, status);
 CREATE INDEX IF NOT EXISTS idx_annotations_assignment_status

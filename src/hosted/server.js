@@ -350,9 +350,32 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
       const body = await readBuffer(req, activeConfig.maxJpegBytes);
       if (!isJpeg(body)) return sendJson(res, 415, { error: "The uploaded file is not a valid JPEG." });
       const sha256 = crypto.createHash("sha256").update(body).digest("hex");
-      await objectStorage.putJpeg(image.object_key, body, { sha256 });
-      const stored = await repo.markImageUploaded(image.id, { byteSize: body.length, sha256 });
-      await repo.audit({ role: "admin", setId, eventType: "image_uploaded", details: { image_id: image.image_id, byte_size: body.length, sha256 }, ipAddress: ip });
+      const reusable = await repo.reusableUploadedImageForUpload(image.id);
+      let stored;
+      let reused = false;
+      if (reusable) {
+        if (reusable.sha256 && reusable.sha256 !== sha256) {
+          return sendJson(res, 409, {
+            error: "A page with the same image ID or filename is already stored with different JPEG bytes."
+          });
+        }
+        stored = await repo.markImageUploaded(image.id, {
+          byteSize: reusable.byte_size || body.length,
+          sha256,
+          objectKey: reusable.object_key
+        });
+        reused = true;
+      } else {
+        await objectStorage.putJpeg(image.object_key, body, { sha256 });
+        stored = await repo.markImageUploaded(image.id, { byteSize: body.length, sha256 });
+      }
+      await repo.audit({
+        role: "admin",
+        setId,
+        eventType: reused ? "image_reused" : "image_uploaded",
+        details: { image_id: image.image_id, byte_size: stored.byte_size, sha256, object_key: stored.object_key },
+        ipAddress: ip
+      });
       return sendJson(res, 200, { ok: true, image: stored });
     }
     const statusMatch = pathname.match(/^\/api\/admin\/sets\/([0-9a-f-]+)\/status$/i);
