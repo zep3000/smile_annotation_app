@@ -210,12 +210,88 @@ label {
   margin: 0;
 }
 
+.login-panel.hosted-entry .welcome-copy {
+  display: none;
+}
+
 .session-mode-field,
 .resume-fields,
 .start-fields,
 .hosted-entry-step {
   display: grid;
   gap: 8px;
+}
+
+.intro-step {
+  gap: 12px;
+}
+
+.intro-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.intro-section {
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.intro-heading h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.intro-body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.intro-demo {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #eef1ed;
+}
+
+.intro-demo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 190px;
+  cursor: default;
+}
+
+.intro-demo.is-drawing svg {
+  cursor: crosshair;
+}
+
+.intro-task {
+  display: grid;
+  gap: 7px;
+}
+
+.intro-task p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.intro-task .choice-button {
+  min-height: 38px;
+}
+
+.intro-actions {
+  display: grid;
+  grid-template-columns: auto auto minmax(120px, 1fr);
+  gap: 8px;
+  align-items: center;
 }
 
 .field-label {
@@ -282,6 +358,19 @@ label {
 .nav-row button:last-child:hover,
 #startButton:hover {
   background: var(--accent-strong);
+}
+
+.login-panel .secondary-button,
+.login-panel .secondary-button:hover {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.login-panel .secondary-button:hover {
+  background: var(--panel-soft);
+  border-color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .language-toggle {

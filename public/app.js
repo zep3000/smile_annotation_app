@@ -608,6 +608,10 @@ const state = {
   expertMode: false,
   language: initialLanguage(),
   startMode: "new",
+  hostedIntroIndex: 0,
+  hostedIntroBox: null,
+  hostedIntroAnswer: null,
+  hostedIntroDrawing: null,
   resumeSessions: [],
   sessionLookupToken: 0,
   statuses: {},
@@ -877,6 +881,33 @@ const UI_TEXT = {
     open_saved_annotation: "Open saved annotation",
     study_password: "Study password",
     continue: "Continue",
+    skip_intro: "Skip intro",
+    intro_section: "Section {current} of {total}",
+    intro_training_image: "Training image",
+    intro_1_title: "Find eligible faces",
+    intro_1_body:
+      "You will first decide whether a page has advertisements with eligible face depictions. A face is eligible when more than only an ear or the back of a head is visible and the face location can be boxed.",
+    intro_1_task:
+      "Try it once: draw the smallest box around the visible face and head. Include visible hair, ears, chin, beard, moustache, and glasses; exclude neck, shoulders, captions, and empty background.",
+    intro_1_feedback: "Good. In the real task, draw all required boxes before choosing Done.",
+    intro_2_title: "Answer one visual question at a time",
+    intro_2_body:
+      "The app shows one decision at a time. Choose the best-fitting answer from visible evidence. Use the question-mark button when the short wording is not enough.",
+    intro_2_task: "Tiny check: what should you count at the first page question?",
+    intro_2_answer_ads: "advertisements with eligible faces",
+    intro_2_answer_faces: "all faces on the page",
+    intro_2_answer_brand: "brand names",
+    intro_2_feedback: "Exactly: count qualifying advertisements first, not faces.",
+    intro_2_feedback_retry: "For the first question, count advertisements that contain eligible faces.",
+    intro_3_title: "Use urgent comments sparingly",
+    intro_3_body:
+      "The exclamation-mark button adds an urgent comment for exceptional cases that were unusually hard or should be reviewed. It does not replace the required answer.",
+    intro_3_task: "Final check: which button opens urgent comments?",
+    intro_3_answer_bang: "the ! button",
+    intro_3_answer_question: "the ? button",
+    intro_3_answer_next: "the Next button",
+    intro_3_feedback: "Right. The question mark is for rules; the exclamation mark is for urgent comments.",
+    intro_3_feedback_retry: "Use the exclamation-mark button for urgent comments.",
     assignment_code: "Eight-digit assignment code",
     open_annotation: "Open annotation",
     annotation_set_complete: "Annotation set complete",
@@ -1009,6 +1040,33 @@ const UI_TEXT = {
     open_saved_annotation: "Gespeicherte Annotation öffnen",
     study_password: "Studienpasswort",
     continue: "Weiter",
+    skip_intro: "Intro überspringen",
+    intro_section: "Abschnitt {current} von {total}",
+    intro_training_image: "Übungsbild",
+    intro_1_title: "Geeignete Gesichter finden",
+    intro_1_body:
+      "Zuerst entscheidest du, ob eine Seite Anzeigen mit geeigneten Gesichtsdarstellungen enthält. Ein Gesicht ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und die Position des Gesichts mit einer Box markiert werden kann.",
+    intro_1_task:
+      "Probier es einmal aus: Zeichne die kleinste Box um das sichtbare Gesicht und den Kopf. Schließe sichtbare Haare, Ohren, Kinn, Bart, Schnurrbart und Brillen ein; schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus.",
+    intro_1_feedback: "Gut. In der eigentlichen Aufgabe zeichnest du alle nötigen Boxen, bevor du Fertig wählst.",
+    intro_2_title: "Immer eine visuelle Frage auf einmal",
+    intro_2_body:
+      "Die App zeigt jeweils eine Entscheidung. Wähle die bestpassende Antwort anhand sichtbarer Hinweise. Nutze das Fragezeichen, wenn die kurze Formulierung nicht reicht.",
+    intro_2_task: "Mini-Check: Was sollst du bei der ersten Seitenfrage zählen?",
+    intro_2_answer_ads: "Anzeigen mit geeigneten Gesichtern",
+    intro_2_answer_faces: "alle Gesichter auf der Seite",
+    intro_2_answer_brand: "Markennamen",
+    intro_2_feedback: "Genau: zuerst werden qualifizierende Anzeigen gezählt, nicht Gesichter.",
+    intro_2_feedback_retry: "Bei der ersten Frage zählst du Anzeigen, die geeignete Gesichter enthalten.",
+    intro_3_title: "Dringende Kommentare selten nutzen",
+    intro_3_body:
+      "Die Ausrufezeichen-Schaltfläche fügt einen dringenden Kommentar für Ausnahmefälle hinzu, die ungewöhnlich schwierig waren oder geprüft werden sollten. Der Kommentar ersetzt keine erforderliche Antwort.",
+    intro_3_task: "Letzter Check: Welche Schaltfläche öffnet dringende Kommentare?",
+    intro_3_answer_bang: "die !-Schaltfläche",
+    intro_3_answer_question: "die ?-Schaltfläche",
+    intro_3_answer_next: "die Weiter-Schaltfläche",
+    intro_3_feedback: "Richtig. Das Fragezeichen ist für Regeln; das Ausrufezeichen für dringende Kommentare.",
+    intro_3_feedback_retry: "Nutze die Ausrufezeichen-Schaltfläche für dringende Kommentare.",
     assignment_code: "Achtstelliger Zuweisungscode",
     open_annotation: "Annotation öffnen",
     annotation_set_complete: "Annotationsset abgeschlossen",
@@ -1135,6 +1193,157 @@ function t(key, values = {}) {
   );
 }
 
+const HOSTED_INTRO_TOTAL = 3;
+
+function hostedIntroComplete() {
+  if (state.hostedIntroIndex === 0) return Boolean(state.hostedIntroBox);
+  if (state.hostedIntroIndex === 1)
+    return state.hostedIntroAnswer === "ads";
+  if (state.hostedIntroIndex === 2)
+    return state.hostedIntroAnswer === "bang";
+  return false;
+}
+
+function introBoxRect(box = state.hostedIntroBox || state.hostedIntroDrawing) {
+  if (!box) return "";
+  const x = Math.min(box.x1, box.x2);
+  const y = Math.min(box.y1, box.y2);
+  const width = Math.abs(box.x2 - box.x1);
+  const height = Math.abs(box.y2 - box.y1);
+  if (width < 1 || height < 1) return "";
+  return `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="rgba(40, 102, 110, 0.12)" stroke="#28666e" stroke-width="3"/>`;
+}
+
+function renderIntroDemo() {
+  const svg = $("#introDemoSvg");
+  if (!svg) return;
+  svg.setAttribute("aria-label", t("intro_training_image"));
+  const drawingEnabled = state.hostedIntroIndex === 0;
+  $(".intro-demo")?.classList.toggle("is-drawing", drawingEnabled);
+  if (state.hostedIntroIndex === 0) {
+    svg.innerHTML = `
+      <rect width="360" height="210" fill="#f7f7f1"/>
+      <rect x="34" y="26" width="292" height="158" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+      <rect x="50" y="44" width="126" height="116" fill="#ece7dd"/>
+      <circle cx="113" cy="81" r="25" fill="#d8c2a4" stroke="#8e7355" stroke-width="2"/>
+      <path d="M89 82c7-29 44-29 50 0" fill="#5f4a3a"/>
+      <circle cx="104" cy="80" r="2.5" fill="#1c2522"/>
+      <circle cx="122" cy="80" r="2.5" fill="#1c2522"/>
+      <path d="M104 99c8 6 17 6 25 0" fill="none" stroke="#7a493a" stroke-width="2"/>
+      <rect x="88" y="109" width="50" height="51" fill="#3e4b57"/>
+      <text x="195" y="69" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Fresh Ideas</text>
+      <text x="195" y="98" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="14">A small practice ad</text>
+      <text x="195" y="132" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">Draw around the face and head.</text>
+      ${introBoxRect()}
+    `;
+    return;
+  }
+  if (state.hostedIntroIndex === 1) {
+    svg.innerHTML = `
+      <rect width="360" height="210" fill="#f7f7f1"/>
+      <rect x="24" y="24" width="140" height="162" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+      <circle cx="70" cy="72" r="24" fill="#d8c2a4"/>
+      <rect x="46" y="104" width="48" height="50" fill="#3e4b57"/>
+      <text x="106" y="72" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">Ad A</text>
+      <text x="106" y="95" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">eligible face</text>
+      <rect x="196" y="24" width="140" height="162" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+      <rect x="222" y="58" width="88" height="70" fill="#dfe5df"/>
+      <text x="221" y="148" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">Ad B</text>
+      <text x="221" y="169" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">no face</text>
+    `;
+    return;
+  }
+  svg.innerHTML = `
+    <rect width="360" height="210" fill="#f7f7f1"/>
+    <rect x="34" y="30" width="292" height="150" rx="5" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+    <circle cx="108" cy="105" r="34" fill="#e5f0ef" stroke="#28666e" stroke-width="2"/>
+    <text x="108" y="116" text-anchor="middle" fill="#28666e" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">?</text>
+    <circle cx="252" cy="105" r="34" fill="#fff8e7" stroke="#a45c26" stroke-width="2"/>
+    <text x="252" y="116" text-anchor="middle" fill="#a45c26" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">!</text>
+    <text x="180" y="166" text-anchor="middle" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="13">Rules on the left, rare problems on the right.</text>
+  `;
+}
+
+function renderIntroTask() {
+  const task = $("#introTask");
+  if (!task) return;
+  if (state.hostedIntroIndex === 0) {
+    task.innerHTML = `<p>${escapeHtml(t("intro_1_task"))}</p>`;
+    return;
+  }
+  const answers =
+    state.hostedIntroIndex === 1
+      ? [
+          ["ads", "intro_2_answer_ads"],
+          ["faces", "intro_2_answer_faces"],
+          ["brand", "intro_2_answer_brand"],
+        ]
+      : [
+          ["bang", "intro_3_answer_bang"],
+          ["question", "intro_3_answer_question"],
+          ["next", "intro_3_answer_next"],
+        ];
+  task.innerHTML = `
+    <p>${escapeHtml(t(`intro_${state.hostedIntroIndex + 1}_task`))}</p>
+    <div class="choice-grid">
+      ${answers
+        .map(([value, key]) => {
+          const selected = value === state.hostedIntroAnswer;
+          return `<button type="button" class="choice-button${selected ? " selected" : ""}" data-intro-answer="${value}" aria-pressed="${selected}">${escapeHtml(t(key))}</button>`;
+        })
+        .join("")}
+    </div>
+  `;
+  $$("[data-intro-answer]", task).forEach((button) => {
+    button.addEventListener("click", () => {
+      state.hostedIntroAnswer = button.dataset.introAnswer;
+      renderHostedIntro();
+    });
+  });
+}
+
+function renderHostedIntro() {
+  if (!$("#hostedIntroStep")) return;
+  const stepNumber = state.hostedIntroIndex + 1;
+  $("#introSection").textContent = t("intro_section", {
+    current: stepNumber,
+    total: HOSTED_INTRO_TOTAL,
+  });
+  $("#introTitle").textContent = t(`intro_${stepNumber}_title`);
+  $("#introBody").textContent = t(`intro_${stepNumber}_body`);
+  renderIntroDemo();
+  renderIntroTask();
+  const complete = hostedIntroComplete();
+  const feedback = $("#introFeedback");
+  feedback.className = "status-line";
+  if (state.hostedIntroIndex === 0) {
+    feedback.textContent = complete ? t("intro_1_feedback") : "";
+  } else if (state.hostedIntroAnswer) {
+    feedback.textContent = complete
+      ? t(`intro_${stepNumber}_feedback`)
+      : t(`intro_${stepNumber}_feedback_retry`);
+    feedback.classList.toggle("error", !complete);
+    feedback.classList.toggle("saved", complete);
+  } else {
+    feedback.textContent = "";
+  }
+  $("#skipIntroButton").textContent = t("skip_intro");
+  $("#introBackButton").textContent = t("back");
+  $("#introBackButton").disabled = state.hostedIntroIndex === 0;
+  $("#introNextButton").textContent =
+    state.hostedIntroIndex === HOSTED_INTRO_TOTAL - 1
+      ? t("continue")
+      : t("next");
+  $("#introNextButton").disabled = !complete;
+}
+
+function setHostedIntroIndex(index) {
+  state.hostedIntroIndex = clamp(index, 0, HOSTED_INTRO_TOTAL - 1);
+  state.hostedIntroAnswer = null;
+  state.hostedIntroDrawing = null;
+  renderHostedIntro();
+}
+
 function updateBoxLabelToggle() {
   const button = $("#toggleBoxLabelsButton");
   if (!button) return;
@@ -1218,6 +1427,7 @@ function applyLanguage({ rerender = true } = {}) {
     }
   }
   $("#hostedLoginButton").textContent = t("continue");
+  renderHostedIntro();
   const assignmentLabel = $("#hostedAssignmentStep label");
   if (assignmentLabel) {
     for (const node of assignmentLabel.childNodes) {
@@ -4611,12 +4821,33 @@ async function startApp() {
 }
 
 function setHostedEntryStep(step) {
-  const passwordStep = step === "password";
+  const activeStep = ["password", "intro", "assignment"].includes(step)
+    ? step
+    : "password";
+  const passwordStep = activeStep === "password";
+  const introStep = activeStep === "intro";
   $("#hostedPasswordStep").classList.toggle("hidden", !passwordStep);
-  $("#hostedAssignmentStep").classList.toggle("hidden", passwordStep);
+  $("#hostedIntroStep").classList.toggle("hidden", !introStep);
+  $("#hostedAssignmentStep").classList.toggle(
+    "hidden",
+    activeStep !== "assignment",
+  );
   $("#loginStatus").textContent = "";
+  if (introStep) {
+    state.hostedIntroIndex = 0;
+    state.hostedIntroBox = null;
+    state.hostedIntroAnswer = null;
+    state.hostedIntroDrawing = null;
+    renderHostedIntro();
+  }
   window.setTimeout(() => {
-    (passwordStep ? $("#hostedPassword") : $("#hostedAssignmentCode"))?.focus();
+    const focusTarget =
+      activeStep === "password"
+        ? $("#hostedPassword")
+        : activeStep === "intro"
+          ? $("#skipIntroButton")
+          : $("#hostedAssignmentCode");
+    focusTarget?.focus();
   }, 0);
 }
 
@@ -4655,7 +4886,7 @@ async function hostedLogin() {
   try {
     await postJson("/api/auth/login", { role: "annotator", password });
     $("#hostedPassword").value = "";
-    setHostedEntryStep("assignment");
+    setHostedEntryStep("intro");
   } catch (error) {
     $("#loginStatus").textContent = error.message;
     $("#loginStatus").className = "status-line error";
@@ -4757,6 +4988,70 @@ function clearImageArrowHover() {
   pane.classList.remove("nav-hover-left", "nav-hover-right");
 }
 
+function introSvgPoint(event) {
+  const svg = $("#introDemoSvg");
+  const rect = svg.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 360;
+  const y = ((event.clientY - rect.top) / rect.height) * 210;
+  return { x: clamp(x, 0, 360), y: clamp(y, 0, 210) };
+}
+
+function startIntroBox(event) {
+  if (state.hostedIntroIndex !== 0) return;
+  event.preventDefault();
+  const point = introSvgPoint(event);
+  state.hostedIntroBox = null;
+  state.hostedIntroDrawing = {
+    x1: point.x,
+    y1: point.y,
+    x2: point.x,
+    y2: point.y,
+  };
+  $("#introDemoSvg").setPointerCapture?.(event.pointerId);
+  renderHostedIntro();
+}
+
+function moveIntroBox(event) {
+  if (!state.hostedIntroDrawing || state.hostedIntroIndex !== 0) return;
+  event.preventDefault();
+  const point = introSvgPoint(event);
+  state.hostedIntroDrawing.x2 = point.x;
+  state.hostedIntroDrawing.y2 = point.y;
+  renderHostedIntro();
+}
+
+function finishIntroBox(event) {
+  if (!state.hostedIntroDrawing || state.hostedIntroIndex !== 0) return;
+  event.preventDefault();
+  const point = introSvgPoint(event);
+  state.hostedIntroDrawing.x2 = point.x;
+  state.hostedIntroDrawing.y2 = point.y;
+  const width = Math.abs(
+    state.hostedIntroDrawing.x2 - state.hostedIntroDrawing.x1,
+  );
+  const height = Math.abs(
+    state.hostedIntroDrawing.y2 - state.hostedIntroDrawing.y1,
+  );
+  state.hostedIntroBox =
+    width >= 14 && height >= 14 ? { ...state.hostedIntroDrawing } : null;
+  state.hostedIntroDrawing = null;
+  $("#introDemoSvg").releasePointerCapture?.(event.pointerId);
+  renderHostedIntro();
+}
+
+function advanceHostedIntro() {
+  if (!hostedIntroComplete()) return;
+  if (state.hostedIntroIndex >= HOSTED_INTRO_TOTAL - 1) {
+    setHostedEntryStep("assignment");
+    return;
+  }
+  setHostedIntroIndex(state.hostedIntroIndex + 1);
+}
+
+function skipHostedIntro() {
+  setHostedEntryStep("assignment");
+}
+
 function bindEvents() {
   $$("[data-lang-option]").forEach((button) => {
     button.addEventListener("click", () =>
@@ -4791,6 +5086,15 @@ function bindEvents() {
   $("#hostedPassword").addEventListener("keydown", (event) => {
     if (event.key === "Enter") void hostedLogin();
   });
+  $("#skipIntroButton").addEventListener("click", skipHostedIntro);
+  $("#introBackButton").addEventListener("click", () =>
+    setHostedIntroIndex(state.hostedIntroIndex - 1),
+  );
+  $("#introNextButton").addEventListener("click", advanceHostedIntro);
+  $("#introDemoSvg").addEventListener("pointerdown", startIntroBox);
+  $("#introDemoSvg").addEventListener("pointermove", moveIntroBox);
+  $("#introDemoSvg").addEventListener("pointerup", finishIntroBox);
+  $("#introDemoSvg").addEventListener("pointercancel", finishIntroBox);
   $("#hostedOpenButton").addEventListener(
     "click",
     () => void hostedOpenAssignment(),
@@ -4899,6 +5203,7 @@ async function boot() {
   } catch {
     state.hostedMode = false;
   }
+  $(".login-panel")?.classList.toggle("hosted-entry", state.hostedMode);
   if (state.hostedMode) {
     $("#localStartFields").classList.add("hidden");
     $("#hostedStartFields").classList.remove("hidden");
@@ -4909,7 +5214,7 @@ async function boot() {
       } else if (auth.assignment?.code) {
         await enterHostedAssignment(auth.assignment.code);
       } else {
-        setHostedEntryStep("assignment");
+        setHostedEntryStep("intro");
       }
     } catch (error) {
       $("#loginStatus").textContent = error.message;

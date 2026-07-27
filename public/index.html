@@ -55,6 +55,23 @@
             </label>
             <button id="hostedLoginButton" type="button">Continue</button>
           </div>
+          <div id="hostedIntroStep" class="hosted-entry-step intro-step hidden">
+            <div class="intro-heading">
+              <p id="introSection" class="intro-section">Section 1 of 3</p>
+              <h2 id="introTitle">Find eligible faces</h2>
+            </div>
+            <p id="introBody" class="intro-body"></p>
+            <div class="intro-demo" aria-live="polite">
+              <svg id="introDemoSvg" viewBox="0 0 360 210" role="img" aria-label="Training image"></svg>
+            </div>
+            <div id="introTask" class="intro-task"></div>
+            <p id="introFeedback" class="status-line"></p>
+            <div class="intro-actions">
+              <button id="skipIntroButton" type="button" class="secondary-button">Skip intro</button>
+              <button id="introBackButton" type="button" class="secondary-button">Back</button>
+              <button id="introNextButton" type="button">Next</button>
+            </div>
+          </div>
           <div id="hostedAssignmentStep" class="hosted-entry-step hidden">
             <label>
               Eight-digit assignment code
