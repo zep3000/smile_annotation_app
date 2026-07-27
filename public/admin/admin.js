@@ -4,6 +4,7 @@ const state = {
   detail: null,
   files: [],
   copySourceDetail: null,
+  copyTargetDetail: null,
 };
 const $ = (selector) => document.querySelector(selector);
 
@@ -146,6 +147,7 @@ function fillSelect(select, options, placeholder) {
 
 function renderCopyControls() {
   if (!state.detail) return;
+  if (!state.copyTargetDetail) state.copyTargetDetail = state.detail;
   fillSelect(
     $("#copySourceSet"),
     state.sets.map((set) => ({
@@ -157,12 +159,21 @@ function renderCopyControls() {
   if (state.copySourceDetail?.set?.id) {
     $("#copySourceSet").value = state.copySourceDetail.set.id;
   }
+  fillSelect(
+    $("#copyTargetSet"),
+    state.sets.map((set) => ({
+      value: set.id,
+      label: `${set.name} | ${set.task_id}`
+    })),
+    "Choose target set"
+  );
+  $("#copyTargetSet").value = state.copyTargetDetail?.set?.id || state.detail.set.id;
   renderCopyAssignmentControls();
 }
 
 function renderCopyAssignmentControls() {
   const sourceAssignments = state.copySourceDetail?.assignments || [];
-  const targetAssignments = state.detail?.assignments || [];
+  const targetAssignments = state.copyTargetDetail?.assignments || [];
   fillSelect(
     $("#copySourceAssignment"),
     sourceAssignments
@@ -185,8 +196,17 @@ function renderCopyAssignmentControls() {
 }
 
 function updateCopyButton() {
+  const sourceSetId = $("#copySourceSet").value;
+  const targetSetId = $("#copyTargetSet").value;
+  const sourceAssignmentId = $("#copySourceAssignment").value;
+  const targetAssignmentId = $("#copyTargetAssignment").value;
   const canCopy = Boolean(
-    $("#copySourceAssignment").value && $("#copyTargetAssignment").value
+    sourceSetId &&
+      targetSetId &&
+      sourceSetId !== targetSetId &&
+      sourceAssignmentId &&
+      targetAssignmentId &&
+      sourceAssignmentId !== targetAssignmentId
   );
   $("#copyAnnotationsButton").disabled = !canCopy;
 }
@@ -370,14 +390,30 @@ async function loadCopySourceSet(setId) {
   }
 }
 
+async function loadCopyTargetSet(setId) {
+  state.copyTargetDetail = null;
+  renderCopyAssignmentControls();
+  if (!setId) return;
+  setStatus("#copyAnnotationsStatus", "Loading target assignments...");
+  try {
+    const data = await jsonRequest(`/api/admin/sets/${setId}`);
+    state.copyTargetDetail = data;
+    renderCopyAssignmentControls();
+    setStatus("#copyAnnotationsStatus", "");
+  } catch (error) {
+    setStatus("#copyAnnotationsStatus", error.message, "error");
+  }
+}
+
 async function copyAnnotations() {
   const sourceAssignmentId = $("#copySourceAssignment").value;
   const targetAssignmentId = $("#copyTargetAssignment").value;
+  const targetSetId = $("#copyTargetSet").value;
   if (!sourceAssignmentId || !targetAssignmentId) return;
   $("#copyAnnotationsButton").disabled = true;
   setStatus("#copyAnnotationsStatus", "Copying missing page annotations...");
   try {
-    const data = await jsonRequest(`/api/admin/sets/${state.selectedSetId}/copy-annotations`, {
+    const data = await jsonRequest(`/api/admin/sets/${targetSetId}/copy-annotations`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -387,6 +423,7 @@ async function copyAnnotations() {
     });
     const result = data.result;
     await loadSets(state.selectedSetId);
+    if (targetSetId !== state.selectedSetId) await loadCopyTargetSet(targetSetId);
     setStatus(
       "#copyAnnotationsStatus",
       `Copied ${result.copied} page(s). Skipped ${result.skipped_existing} already started page(s) and ${result.skipped_no_match} page(s) without source match.`,
@@ -413,6 +450,7 @@ function bindEvents() {
   $("#createAssignmentsButton").addEventListener("click", () => void createAssignments());
   $("#copySourceSet").addEventListener("change", (event) => void loadCopySourceSet(event.target.value));
   $("#copySourceAssignment").addEventListener("change", updateCopyButton);
+  $("#copyTargetSet").addEventListener("change", (event) => void loadCopyTargetSet(event.target.value));
   $("#copyTargetAssignment").addEventListener("change", updateCopyButton);
   $("#copyAnnotationsButton").addEventListener("click", () => void copyAnnotations());
   $("#copyCodesButton").addEventListener("click", async () => { await navigator.clipboard.writeText($("#generatedCodes").value); $("#copyCodesButton").textContent = "Copied"; });

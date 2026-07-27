@@ -214,7 +214,7 @@ Choose the closest level. The scale describes visible configuration and does not
 
 For every group box, code:
 
-- Group type: `interacting_group`, `posed_group`, `audience`, `general_crowd`, `background_population`, `separate_portraits_or_composite`
+- Group type: `interacting_group`, `posed_group`, `audience`, `background_population`, `separate_portraits_or_composite`, `other_group`
 - Age composition: `young_only`, `middle_only`, `older_only`, `mostly_young`, `mostly_middle`, `mostly_older`, `mixed`, `not_assessable`
 - Gender-presentation composition: `feminine_only`, `masculine_only`, `mostly_feminine`, `mostly_masculine`, `mixed`, `ambiguous_or_androgynous_present`, `not_assessable`
 - Expression legibility distribution: `all_0_not_legible`, `mostly_0_not_legible`, `all_1_low_legibility`, `mostly_1_low_legibility`, `all_2_moderate_legibility`, `mostly_2_moderate_legibility`, `all_3_high_legibility`, `mostly_3_high_legibility`, `mixed_legibility`

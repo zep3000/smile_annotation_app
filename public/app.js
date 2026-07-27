@@ -74,9 +74,9 @@ const ENUMS = {
     "interacting_group",
     "posed_group",
     "audience",
-    "general_crowd",
     "background_population",
     "separate_portraits_or_composite",
+    "other_group",
   ],
   group_age_composition: [
     "young_only",
@@ -703,7 +703,7 @@ const DISPLAY_LABELS_EN = {
   ambiguous_or_androgynous: "ambiguous/androgynous",
   ambiguous_or_androgynous_present: "ambiguous/androgynous present",
   audience: "audience",
-  general_crowd: "general crowd",
+  other_group: "other group",
   three_quarter: "three-quarter",
   off_frame: "off-frame",
   crop_or_frame: "crop/frame",
@@ -787,7 +787,7 @@ const DISPLAY_LABELS_DE = {
   interacting_group: "interagierende Gruppe",
   posed_group: "gestellte Gruppe",
   audience: "Publikum",
-  general_crowd: "allgemeine Menge",
+  other_group: "andere Gruppe",
   background_population: "Hintergrundpersonen",
   separate_portraits_or_composite: "getrennte Porträts/Komposit",
   young_only: "nur jung",
@@ -1716,6 +1716,9 @@ function migrateLoadedAnnotation(annotation) {
             groupIndex: Math.max(0, (ad.groups || []).indexOf(group)),
           };
         }
+      }
+      if (group.group_type === "general_crowd") {
+        group.group_type = "other_group";
       }
       group.expression_legibility_distribution ??= null;
       if (

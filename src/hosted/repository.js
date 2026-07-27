@@ -536,6 +536,11 @@ class HostedRepository {
         error.statusCode = 400;
         throw error;
       }
+      if (sourceAssignment.annotation_set_id === targetSetId) {
+        const error = new Error("Source and target sets must be different.");
+        error.statusCode = 400;
+        throw error;
+      }
 
       const sourceAnnotations = await client.query(
         `SELECT i.image_id, i.filename, n.status, n.payload

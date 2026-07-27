@@ -135,9 +135,9 @@ enums:
     - interacting_group
     - posed_group
     - audience
-    - general_crowd
     - background_population
     - separate_portraits_or_composite
+    - other_group
   group_age_composition:
     - young_only
     - middle_only

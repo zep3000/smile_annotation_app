@@ -236,4 +236,16 @@ test("repository copies missing annotations between assignments without overwrit
   assert.equal(first.payload.image.image_id, "target-page-1");
   assert.equal(first.payload.session.session_code, targetAssignment.code);
   assert.equal(second.payload.page.qualifying_ad_count, "2");
+
+  const [sameSetTarget] = await repository.issueAssignments(sourceSet.id, 1, false);
+  await assert.rejects(
+    repository.copyAnnotations({
+      sourceAssignmentId: sourceAssignment.id,
+      targetAssignmentId: sameSetTarget.id,
+      targetSetId: sourceSet.id
+    }),
+    (error) =>
+      error.statusCode === 400 &&
+      /different/.test(error.message)
+  );
 });
