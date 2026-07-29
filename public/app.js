@@ -142,7 +142,7 @@ const STEP_META_EN = {
       "How many advertisements on this page contain at least one eligible face depiction?",
     instruction:
       "Choose a zero-case reason, choose 1-5 directly, or enter a higher exact count.",
-    help: "Count advertisements, not faces. A depiction is eligible when more than an ear or back of a head is visible and a face can be located. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.",
+    help: "Count advertisements, not faces. A depiction is eligible when more than an ear or back of a head is visible and a face can be located. Include it even if the facial expression is not readable; expression readability is judged later. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.",
   },
   P2_single_ad_full_page: {
     unit: "Advertisement",
@@ -173,7 +173,7 @@ const STEP_META_EN = {
     prompt: "Draw a box around every eligible face depiction.",
     instruction:
       "Keep Individuals or small group selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd.",
-    help: "For one to nine faces, leave Individuals or small group selected, draw every face, and choose Done only after all boxes are drawn. The exact count is recorded automatically. Include mirrors and repetitions. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a crowd band after drawing, existing individual boxes are kept as outstanding individuals. You can switch back to Individuals or small group before continuing.",
+    help: "For one to nine faces, leave Individuals or small group selected, draw every face, and choose Done only after all boxes are drawn. Include eligible faces even when the expression is not readable. The exact count is recorded automatically. Include mirrors and repetitions. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a crowd band after drawing, existing individual boxes are kept as outstanding individuals. You can switch back to Individuals or small group before continuing.",
   },
   C1_outstanding_present: {
     unit: "Crowd",
@@ -275,13 +275,13 @@ const STEP_META_EN = {
     unit: "Person",
     prompt: "Choose this person's perceived age band.",
     instruction: "",
-    help: "Use broad apparent age from visible evidence. Choose not assessable when the face/body evidence is insufficient.",
+    help: "Use broad apparent age from visible evidence. If you are unsure between neighboring categories, choose the best-fitting one. Choose not assessable only when there is not enough information to decide in general.",
   },
   I2_gender: {
     unit: "Person",
     prompt: "Choose this person's perceived gender presentation.",
     instruction: "",
-    help: "Code presentation, not identity. Use ambiguous/androgynous only when that is the visible presentation.",
+    help: "Code presentation, not identity. If you are unsure between categories, choose the best-fitting one. Use ambiguous/androgynous only when that is the visible presentation. Choose not assessable only when there is not enough information to decide in general.",
   },
   I3_orientation: {
     unit: "Person",
@@ -365,7 +365,7 @@ const STEP_META_DE = {
       "Wie viele Anzeigen auf dieser Seite enthalten mindestens eine geeignete Gesichtsdarstellung?",
     instruction:
       "Wähle einen Null-Fall, wähle 1-5 direkt aus oder gib eine höhere genaue Anzahl ein.",
-    help: "Zahle Anzeigen, nicht Gesichter. Eine Darstellung ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und das Gesicht mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter.",
+    help: "Zahle Anzeigen, nicht Gesichter. Eine Darstellung ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und das Gesicht mit einer Box markiert werden kann. Schließe sie auch ein, wenn der Gesichtsausdruck nicht lesbar ist; die Lesbarkeit des Ausdrucks wird später beurteilt. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter.",
   },
   P2_single_ad_full_page: {
     unit: "Anzeige",
@@ -398,7 +398,7 @@ const STEP_META_DE = {
     prompt: "Zeichne eine Box um jede geeignete Gesichtsdarstellung.",
     instruction:
       "Lass Einzelpersonen oder kleine Gruppe ausgewählt und zeichne 1-9 Boxen, oder wähle 10-20 bzw. 20+ für eine Menge.",
-    help: "Bei ein bis neun Gesichtern lass Einzelpersonen oder kleine Gruppe ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, bleiben vorhandene Einzelpersonen-Boxen als herausstechende Einzelpersonen erhalten. Du kannst vor dem Fortfahren wieder zu Einzelpersonen oder kleine Gruppe wechseln.",
+    help: "Bei ein bis neun Gesichtern lass Einzelpersonen oder kleine Gruppe ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Schließe geeignete Gesichter auch ein, wenn der Ausdruck nicht lesbar ist. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, bleiben vorhandene Einzelpersonen-Boxen als herausstechende Einzelpersonen erhalten. Du kannst vor dem Fortfahren wieder zu Einzelpersonen oder kleine Gruppe wechseln.",
   },
   C1_outstanding_present: {
     unit: "Menge",
@@ -506,13 +506,13 @@ const STEP_META_DE = {
     unit: "Person",
     prompt: "Wähle die wahrgenommene Altersgruppe dieser Person.",
     instruction: "",
-    help: "Nutze das grobe sichtbare Alter. Wähle nicht beurteilbar, wenn Gesicht/Körper nicht genug Hinweise liefern.",
+    help: "Nutze das grobe sichtbare Alter. Wenn du zwischen benachbarten Kategorien unsicher bist, wähle die bestpassende. Wähle nicht beurteilbar nur, wenn die Information grundsätzlich nicht ausreicht, um zu entscheiden.",
   },
   I2_gender: {
     unit: "Person",
     prompt: "Wähle die wahrgenommene Geschlechterpräsentation dieser Person.",
     instruction: "",
-    help: "Codiere Präsentation, nicht Identität. Nutze ambig/androgyn nur, wenn das die sichtbare Präsentation ist.",
+    help: "Codiere Präsentation, nicht Identität. Wenn du zwischen Kategorien unsicher bist, wähle die bestpassende. Nutze ambig/androgyn nur, wenn das die sichtbare Präsentation ist. Wähle nicht beurteilbar nur, wenn die Information grundsätzlich nicht ausreicht, um zu entscheiden.",
   },
   I3_orientation: {
     unit: "Person",
@@ -865,11 +865,11 @@ const UI_TEXT = {
     welcome_2:
       "We are looking for advertisements containing eligible face depictions. A face is eligible when more than an ear or the back of a head is visible and its location can be boxed. Human, illustrated, sculpted, personified, nonhuman, and schematic faces are included.",
     welcome_3:
-      "For each qualifying ad, you will draw boxes where needed and then answer short visual questions. Always choose the single best-fitting answer when visual evidence is available; use not assessable only when the required evidence cannot be seen well enough.",
+      "For each qualifying ad, you will draw boxes where needed and then answer short visual questions. If you are unsure between categories, still choose the best-fitting one. Use not assessable only when there is not enough information to decide in general.",
     welcome_4:
       "Use the question-mark button for detailed coding rules. Your progress is saved during annotation so a session can be resumed later.",
     welcome_5:
-      "Use the urgent comment button during annotation only for exceptional cases that were unusually difficult or may need review; it adds a note but does not replace the required answer.",
+      "Use the urgent comment button for cases where the available labels seem to miss something, or for strange and extremely difficult cases that should be reviewed in depth. It adds a note but does not replace the required answer.",
     manifest_path: "Manifest JSON path",
     annotation_session: "Annotation session",
     new_annotation: "New annotation",
@@ -886,28 +886,34 @@ const UI_TEXT = {
     intro_training_image: "Training image",
     intro_1_title: "Find eligible faces",
     intro_1_body:
-      "You will first decide whether a page has advertisements with eligible face depictions. A face is eligible when more than only an ear or the back of a head is visible and the face location can be boxed.",
+      "You will first decide whether a page has advertisements with eligible face depictions. A face is eligible when more than only an ear or the back of a head is visible and the face location can be boxed. Include eligible faces even when the expression is not readable.",
     intro_1_task:
       "Try it once: draw the smallest box around the visible face and head. Include visible hair, ears, chin, beard, moustache, and glasses; exclude neck, shoulders, captions, and empty background.",
     intro_1_feedback: "Good. In the real task, draw all required boxes before choosing Done.",
     intro_2_title: "Answer one visual question at a time",
     intro_2_body:
-      "The app shows one decision at a time. Choose the best-fitting answer from visible evidence. Use the question-mark button when the short wording is not enough.",
+      "The app shows one decision at a time. If you are unsure between categories, still choose the best-fitting one. Choose not assessable only when there is not enough information to decide in general. Use the question-mark button when the short wording is not enough.",
     intro_2_task: "Tiny check: what should you count at the first page question?",
     intro_2_answer_ads: "advertisements with eligible faces",
     intro_2_answer_faces: "all faces on the page",
     intro_2_answer_brand: "brand names",
     intro_2_feedback: "Exactly: count qualifying advertisements first, not faces.",
     intro_2_feedback_retry: "For the first question, count advertisements that contain eligible faces.",
+    intro_demo_ad_a: "Ad A",
+    intro_demo_eligible_face: "eligible face",
+    intro_demo_person: "PERSON",
+    intro_demo_choose_one: "Choose one.",
+    intro_demo_best_fit: "best fit",
     intro_3_title: "Use urgent comments sparingly",
     intro_3_body:
-      "The exclamation-mark button adds an urgent comment for exceptional cases that were unusually hard or should be reviewed. It does not replace the required answer.",
+      "The exclamation-mark button adds an urgent comment for cases where the available labels seem to miss something, or for strange and extremely difficult cases. Use it for cases that should be reviewed in depth. It does not replace the required answer.",
     intro_3_task: "Final check: which button opens urgent comments?",
     intro_3_answer_bang: "the ! button",
     intro_3_answer_question: "the ? button",
     intro_3_answer_next: "the Next button",
     intro_3_feedback: "Right. The question mark is for rules; the exclamation mark is for urgent comments.",
     intro_3_feedback_retry: "Use the exclamation-mark button for urgent comments.",
+    intro_demo_help_comment: "Rules on the left, rare problems on the right.",
     assignment_code: "Eight-digit assignment code",
     open_annotation: "Open annotation",
     annotation_set_complete: "Annotation set complete",
@@ -954,6 +960,8 @@ const UI_TEXT = {
     exit: "Exit",
     urgent_comment: "Urgent comment",
     urgent_comment_placeholder: "What was difficult or important here?",
+    urgent_comment_guidance:
+      "Use this for missing label options, strange or extremely difficult cases, or anything that should be reviewed in depth.",
     cancel: "Cancel",
     save: "Save",
     save_session_number: "Save your session number",
@@ -1024,11 +1032,11 @@ const UI_TEXT = {
     welcome_2:
       "Gesucht werden Anzeigen mit geeigneten Gesichtsdarstellungen. Ein Gesicht ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und seine Position mit einer Box markiert werden kann. Eingeschlossen sind menschliche, illustrierte, skulpturale, personifizierte, nichtmenschliche und schematische Gesichter.",
     welcome_3:
-      "Für jede qualifizierende Anzeige zeichnest du bei Bedarf Boxen und beantwortest danach kurze visuelle Fragen. Wähle immer die eine bestpassende Antwort, wenn visuelle Hinweise vorhanden sind; nutze nicht beurteilbar nur, wenn die nötige Evidenz nicht gut genug sichtbar ist.",
+      "Für jede qualifizierende Anzeige zeichnest du bei Bedarf Boxen und beantwortest danach kurze visuelle Fragen. Wenn du zwischen Kategorien unsicher bist, wähle trotzdem die bestpassende. Nutze nicht beurteilbar nur, wenn die Information grundsätzlich nicht ausreicht, um zu entscheiden.",
     welcome_4:
       "Über die Fragezeichen-Schaltfläche findest du genauere Codierregeln. Dein Fortschritt wird während der Annotation gespeichert, sodass du eine Sitzung später fortsetzen kannst.",
     welcome_5:
-      "Nutze die dringende Kommentar-Schaltfläche nur für Ausnahmefälle, die ungewöhnlich schwierig waren oder geprüft werden sollten; der Kommentar ersetzt keine erforderliche Antwort.",
+      "Nutze die dringende Kommentar-Schaltfläche für Fälle, in denen bei der Labelauswahl etwas zu fehlen scheint, oder für seltsame und extrem schwierige Fälle, die genauer geprüft werden sollten. Der Kommentar ersetzt keine erforderliche Antwort.",
     manifest_path: "Pfad zur Manifest-JSON",
     annotation_session: "Annotationssitzung",
     new_annotation: "Neue Annotation",
@@ -1045,28 +1053,34 @@ const UI_TEXT = {
     intro_training_image: "Übungsbild",
     intro_1_title: "Geeignete Gesichter finden",
     intro_1_body:
-      "Zuerst entscheidest du, ob eine Seite Anzeigen mit geeigneten Gesichtsdarstellungen enthält. Ein Gesicht ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und die Position des Gesichts mit einer Box markiert werden kann.",
+      "Zuerst entscheidest du, ob eine Seite Anzeigen mit geeigneten Gesichtsdarstellungen enthält. Ein Gesicht ist geeignet, wenn mehr als nur ein Ohr oder der Hinterkopf sichtbar ist und die Position des Gesichts mit einer Box markiert werden kann. Schließe geeignete Gesichter auch ein, wenn der Ausdruck nicht lesbar ist.",
     intro_1_task:
       "Probier es einmal aus: Zeichne die kleinste Box um das sichtbare Gesicht und den Kopf. Schließe sichtbare Haare, Ohren, Kinn, Bart, Schnurrbart und Brillen ein; schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus.",
     intro_1_feedback: "Gut. In der eigentlichen Aufgabe zeichnest du alle nötigen Boxen, bevor du Fertig wählst.",
     intro_2_title: "Immer eine visuelle Frage auf einmal",
     intro_2_body:
-      "Die App zeigt jeweils eine Entscheidung. Wähle die bestpassende Antwort anhand sichtbarer Hinweise. Nutze das Fragezeichen, wenn die kurze Formulierung nicht reicht.",
+      "Die App zeigt jeweils eine Entscheidung. Wenn du zwischen Kategorien unsicher bist, wähle trotzdem die bestpassende. Nutze nicht beurteilbar nur, wenn die Information grundsätzlich nicht ausreicht, um zu entscheiden. Nutze das Fragezeichen, wenn die kurze Formulierung nicht reicht.",
     intro_2_task: "Mini-Check: Was sollst du bei der ersten Seitenfrage zählen?",
     intro_2_answer_ads: "Anzeigen mit geeigneten Gesichtern",
     intro_2_answer_faces: "alle Gesichter auf der Seite",
     intro_2_answer_brand: "Markennamen",
     intro_2_feedback: "Genau: zuerst werden qualifizierende Anzeigen gezählt, nicht Gesichter.",
     intro_2_feedback_retry: "Bei der ersten Frage zählst du Anzeigen, die geeignete Gesichter enthalten.",
+    intro_demo_ad_a: "Anzeige A",
+    intro_demo_eligible_face: "geeignetes Gesicht",
+    intro_demo_person: "PERSON",
+    intro_demo_choose_one: "Wähle eine Option.",
+    intro_demo_best_fit: "beste Wahl",
     intro_3_title: "Dringende Kommentare selten nutzen",
     intro_3_body:
-      "Die Ausrufezeichen-Schaltfläche fügt einen dringenden Kommentar für Ausnahmefälle hinzu, die ungewöhnlich schwierig waren oder geprüft werden sollten. Der Kommentar ersetzt keine erforderliche Antwort.",
+      "Die Ausrufezeichen-Schaltfläche fügt einen dringenden Kommentar für Fälle hinzu, in denen bei der Labelauswahl etwas zu fehlen scheint, oder für seltsame und extrem schwierige Fälle. Nutze sie für Fälle, die genauer geprüft werden sollten. Der Kommentar ersetzt keine erforderliche Antwort.",
     intro_3_task: "Letzter Check: Welche Schaltfläche öffnet dringende Kommentare?",
     intro_3_answer_bang: "die !-Schaltfläche",
     intro_3_answer_question: "die ?-Schaltfläche",
     intro_3_answer_next: "die Weiter-Schaltfläche",
     intro_3_feedback: "Richtig. Das Fragezeichen ist für Regeln; das Ausrufezeichen für dringende Kommentare.",
     intro_3_feedback_retry: "Nutze die Ausrufezeichen-Schaltfläche für dringende Kommentare.",
+    intro_demo_help_comment: "Regeln links, seltene Problemfälle rechts.",
     assignment_code: "Achtstelliger Zuweisungscode",
     open_annotation: "Annotation öffnen",
     annotation_set_complete: "Annotationsset abgeschlossen",
@@ -1113,6 +1127,8 @@ const UI_TEXT = {
     exit: "Beenden",
     urgent_comment: "Dringender Kommentar",
     urgent_comment_placeholder: "Was war hier schwierig oder wichtig?",
+    urgent_comment_guidance:
+      "Nutze dies für fehlende Labeloptionen, seltsame oder extrem schwierige Fälle oder alles, was genauer geprüft werden sollte.",
     cancel: "Abbrechen",
     save: "Speichern",
     save_session_number: "Sitzungsnummer sichern",
@@ -1223,17 +1239,8 @@ function renderIntroDemo() {
   if (state.hostedIntroIndex === 0) {
     svg.innerHTML = `
       <rect width="360" height="210" fill="#f7f7f1"/>
-      <rect x="34" y="26" width="292" height="158" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
-      <rect x="50" y="44" width="126" height="116" fill="#ece7dd"/>
-      <circle cx="113" cy="81" r="25" fill="#d8c2a4" stroke="#8e7355" stroke-width="2"/>
-      <path d="M89 82c7-29 44-29 50 0" fill="#5f4a3a"/>
-      <circle cx="104" cy="80" r="2.5" fill="#1c2522"/>
-      <circle cx="122" cy="80" r="2.5" fill="#1c2522"/>
-      <path d="M104 99c8 6 17 6 25 0" fill="none" stroke="#7a493a" stroke-width="2"/>
-      <rect x="88" y="109" width="50" height="51" fill="#3e4b57"/>
-      <text x="195" y="69" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">Fresh Ideas</text>
-      <text x="195" y="98" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="14">A small practice ad</text>
-      <text x="195" y="132" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">Draw around the face and head.</text>
+      <image href="/assets/intro-economist-face.jpg" x="0" y="0" width="360" height="210" preserveAspectRatio="xMidYMid slice"/>
+      <rect x="0" y="0" width="360" height="210" fill="none" stroke="#cfd5cc" stroke-width="2"/>
       ${introBoxRect()}
     `;
     return;
@@ -1241,15 +1248,18 @@ function renderIntroDemo() {
   if (state.hostedIntroIndex === 1) {
     svg.innerHTML = `
       <rect width="360" height="210" fill="#f7f7f1"/>
-      <rect x="24" y="24" width="140" height="162" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
-      <circle cx="70" cy="72" r="24" fill="#d8c2a4"/>
-      <rect x="46" y="104" width="48" height="50" fill="#3e4b57"/>
-      <text x="106" y="72" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">Ad A</text>
-      <text x="106" y="95" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">eligible face</text>
-      <rect x="196" y="24" width="140" height="162" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
-      <rect x="222" y="58" width="88" height="70" fill="#dfe5df"/>
-      <text x="221" y="148" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">Ad B</text>
-      <text x="221" y="169" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">no face</text>
+      <rect x="18" y="24" width="170" height="152" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+      <circle cx="68" cy="69" r="22" fill="#d8c2a4"/>
+      <rect x="47" y="98" width="44" height="47" fill="#3e4b57"/>
+      <text x="105" y="64" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">${escapeHtml(t("intro_demo_ad_a"))}</text>
+      <text x="105" y="86" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">${escapeHtml(t("intro_demo_eligible_face"))}</text>
+      <rect x="208" y="24" width="134" height="152" rx="5" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+      <text x="224" y="58" fill="#28666e" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="800">${escapeHtml(t("intro_demo_person"))}</text>
+      <text x="224" y="86" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">${escapeHtml(t("intro_demo_choose_one"))}</text>
+      <circle cx="314" cy="56" r="17" fill="#ffffff" stroke="#d9ded6" stroke-width="2"/>
+      <text x="314" y="62" text-anchor="middle" fill="#28666e" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800">?</text>
+      <rect x="224" y="109" width="94" height="28" rx="4" fill="#e5f0ef" stroke="#28666e" stroke-width="2"/>
+      <text x="271" y="128" text-anchor="middle" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="12">${escapeHtml(t("intro_demo_best_fit"))}</text>
     `;
     return;
   }
@@ -1260,7 +1270,7 @@ function renderIntroDemo() {
     <text x="108" y="116" text-anchor="middle" fill="#28666e" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">?</text>
     <circle cx="252" cy="105" r="34" fill="#fff8e7" stroke="#a45c26" stroke-width="2"/>
     <text x="252" y="116" text-anchor="middle" fill="#a45c26" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">!</text>
-    <text x="180" y="166" text-anchor="middle" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="13">Rules on the left, rare problems on the right.</text>
+    <text x="180" y="166" text-anchor="middle" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="13">${escapeHtml(t("intro_demo_help_comment"))}</text>
   `;
 }
 
@@ -1498,6 +1508,7 @@ function applyLanguage({ rerender = true } = {}) {
     : t("return_to_start");
 
   setText("#commentDialog h2", "urgent_comment");
+  setText("#urgentCommentGuidance", "urgent_comment_guidance");
   setPlaceholder("#urgentCommentText", "urgent_comment_placeholder");
   $("#cancelCommentButton").textContent = t("cancel");
   $("#saveCommentButton").textContent = t("save");

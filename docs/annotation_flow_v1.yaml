@@ -4,7 +4,7 @@ companion_playbook: "annotation_playbook_v1.md"
 
 scope:
   intended_for: "Detailed annotation of advertisements containing eligible face depictions."
-  eligible_face: "More than an ear or back of head is visible and the face can be located with a bounding box."
+  eligible_face: "More than an ear or back of head is visible and the face can be located with a bounding box. Include eligible faces even when expression is not readable; expression legibility is coded later."
   included_depictions:
     - human
     - illustrated_or_cartoon
@@ -28,7 +28,7 @@ units:
 
 answer_semantics:
   forced_best_fit: "When relevant visual evidence is available, select exactly one best-fitting substantive category, including near category boundaries."
-  not_assessable: "Use only when required visual evidence is missing, occluded, too small, cropped, or degraded enough to prevent a meaningful best estimate."
+  not_assessable: "Use only when there is not enough information to decide in general because required visual evidence is missing, occluded, too small, cropped, or degraded enough to prevent a meaningful best estimate."
   other: "Use only when the visible observation is clear but absent from the supplied taxonomy; never use as an uncertainty response."
   uncertainty_labels_available: false
 
@@ -36,8 +36,9 @@ llm_instruction: >-
   Select exactly one best-fitting substantive category whenever the relevant visual
   evidence is available. When a case lies near a category boundary, choose the
   category with slightly stronger visual support. Do not return an uncertainty
-  label. Use not_assessable only when missing, occluded, too-small, cropped, or
-  degraded evidence prevents a meaningful best estimate. Use other only when the
+  label. Use not_assessable only when there is not enough information to decide
+  in general because missing, occluded, too-small, cropped, or degraded evidence
+  prevents a meaningful best estimate. Use other only when the
   visible observation is clear but absent from the provided taxonomy. When
   individual face_expression_legibility is 0_not_legible, leave gaze and smile
   fields null. When group expression_legibility_distribution is
@@ -51,6 +52,7 @@ global_actions:
     available_during: all_nonterminal_steps
     ui: persistent_action
     label: "Urgent comment"
+    use_for: "Missing label options, strange or extremely difficult cases, or anything that should be reviewed in depth."
     opens: URGENT_COMMENT
 
 enums:
@@ -260,7 +262,7 @@ flow:
       field: advertisement.face_depiction_count_band
       ui: draw_bbox_collection_or_crowd_choice
       prompt: "Draw a box around every eligible face depiction."
-      instruction: "Keep Individuals or small group selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd."
+      instruction: "Keep Individuals or small group selected and draw 1-9 boxes, including eligible faces whose expression is not readable, or choose 10-20 or 20+ for a crowd."
       route_choices:
         - only_individuals
         - 10_20

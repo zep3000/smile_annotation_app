@@ -8,7 +8,7 @@ This playbook defines the human annotation procedure and the behavior expected f
 
 The unit screened at the beginning is the page. A qualifying advertisement contains at least one eligible face depiction.
 
-A face depiction is eligible when more than an ear or the back of a head is visible and the face can be located with a bounding box. Include photographs, illustrations, artwork or statues, masks or mannequins, personified objects, nonhuman creatures, and schematic or logo faces. Exclude ear-only cases, backs of heads without facial surface, and marks too small or degraded to confirm that a face is present.
+A face depiction is eligible when more than an ear or the back of a head is visible and the face can be located with a bounding box. Include eligible faces even when the facial expression is not readable; expression legibility is coded later. Include photographs, illustrations, artwork or statues, masks or mannequins, personified objects, nonhuman creatures, and schematic or logo faces. Exclude ear-only cases, backs of heads without facial surface, and marks too small or degraded to confirm that a face is present.
 
 This pass does not annotate brands or product categories. It also does not provide a denominator for estimating face prevalence among all advertisements unless the input manifest itself represents all relevant pages or advertisements.
 
@@ -18,11 +18,11 @@ There is no `unclear` or `ambiguous` answer.
 
 When visual evidence is available, choose the single best-fitting substantive category. If two categories appear plausible, choose the one that is slightly better supported. A difficult boundary is not a reason to avoid the decision.
 
-Use `not_assessable` only when the visual evidence required for that field is unavailable or unusable because of factors such as crop, size, occlusion, orientation, blur, or poor reproduction. Do not use it merely because the choice is difficult.
+Use `not_assessable` only when there is not enough information to decide in general because the visual evidence required for that field is unavailable or unusable, for example due to crop, size, occlusion, orientation, blur, or poor reproduction. Do not use it merely because the choice is difficult.
 
 Use `other` only where it is explicitly offered and the observation is visible and interpretable but falls outside the supplied taxonomy. It is not an uncertainty response.
 
-Use an urgent comment for an exceptional problem that may matter during review. The comment does not replace a required answer.
+Use an urgent comment when the available labels seem to miss something, or for strange, extremely difficult cases that should be reviewed in depth. The comment does not replace a required answer.
 
 ### LLM annotation instruction
 
@@ -87,7 +87,7 @@ Classify the form of the depicted face, not the printing process. For example, a
 
 ### A3. Draw faces or choose a crowd band
 
-Count every eligible face depiction, including mirrors, repeated portraits, collage repetitions, and repeated product shots of the same person.
+Count every eligible face depiction, including faces whose expression is not readable, mirrors, repeated portraits, collage repetitions, and repeated product shots of the same person.
 
 For one through nine faces, keep **individuals or small group** selected and begin drawing immediately. Draw every eligible face box and choose **Done** only when every eligible face depiction in the current advertisement has a box. The app derives and stores the exact count from the number of boxes; no separate count selection is made. This visible UI label still stores the route key `only_individuals`.
 
@@ -230,7 +230,7 @@ Do not ask for group gaze, smile prevalence, or smile intensity when expression 
 
 ## 8. Urgent comments and completion
 
-The urgent-comment action is available throughout annotation. Use it only for a genuinely difficult or important issue. The app stores the current page, advertisement, group or person, interrupted step, and timestamp with the comment.
+The urgent-comment action is available throughout annotation. Use it when the available labels seem to miss something, or for strange, extremely difficult cases that should be reviewed in depth. The app stores the current page, advertisement, group or person, interrupted step, and timestamp with the comment.
 
 A page is complete only after all required boxes, duplicate assignments, canonical-person fields, and group fields have been entered. Creation, update, completion, and per-screen timing information are retained in the structured JSON output.
 
