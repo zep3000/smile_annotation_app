@@ -180,8 +180,8 @@ const STEP_META_EN = {
     prompt:
       "Are there outstanding individuals that should be annotated separately?",
     instruction:
-      "Choose yes only when one or more individuals are much more visible than the rest of the group or crowd.",
-    help: "Outstanding individuals should stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. They will receive full individual coding before group coding.",
+      "Choose yes for people who are much more visible than the rest, or eligible individuals outside the group.",
+    help: "Outstanding individuals include faces that stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. Also include eligible single individuals in the advertisement who are not part of the group or crowd. They will receive full individual coding before group coding.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "People",
@@ -287,7 +287,7 @@ const STEP_META_EN = {
     unit: "Person",
     prompt: "Choose the face orientation.",
     instruction: "",
-    help: "Less than profile means less of the face is visible than in a conventional profile. Choose tilted down or tilted up when vertical head angle is the clearest orientation feature.",
+    help: "First choose the best left-right orientation if one fits: less than profile, profile, three-quarter, or frontal. Use tilted down/up only when these ordinary orientation labels do not describe the face well because the head is mainly pitched vertically. Tilted down/up describe head position, not gaze. Choose tilted down when the chin is lowered or the top of the head is more visible. Choose tilted up when the chin is raised or the underside of the chin, jaw, or nostrils is more visible.",
   },
   I4_expression_legibility: {
     unit: "Person",
@@ -405,8 +405,8 @@ const STEP_META_DE = {
     prompt:
       "Gibt es herausstechende Einzelpersonen, die separat annotiert werden sollten?",
     instruction:
-      "Wähle ja nur, wenn einzelne Personen deutlich sichtbarer sind als der Rest der Gruppe oder Menge.",
-    help: "Herausstechende Einzelpersonen sollen sich visuell klar von der Gruppe abheben, vor allem weil sie viel größer, klarer, zentraler oder anderweitig deutlich sichtbarer sind als der Rest. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung.",
+      "Wähle ja für Personen, die deutlich sichtbarer sind als der Rest, oder für geeignete Einzelpersonen außerhalb der Gruppe.",
+    help: "Herausstechende Einzelpersonen sind Gesichter, die sich visuell klar von der Gruppe abheben, vor allem weil sie viel größer, klarer, zentraler oder anderweitig deutlich sichtbarer sind als der Rest. Schließe auch geeignete Einzelpersonen in der Anzeige ein, die nicht Teil der Gruppe oder Menge sind. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "Personen",
@@ -518,7 +518,7 @@ const STEP_META_DE = {
     unit: "Person",
     prompt: "Wähle die Gesichtsausrichtung.",
     instruction: "",
-    help: "Weniger als Profil bedeutet, dass weniger vom Gesicht sichtbar ist als bei einem konventionellen Profil. Wähle nach unten geneigt oder nach oben geneigt, wenn der vertikale Kopfwinkel das klarste Ausrichtungsmerkmal ist.",
+    help: "Wähle zuerst die passende Links-rechts-Ausrichtung, wenn eine passt: weniger als Profil, Profil, Dreiviertel oder frontal. Nutze nach unten/oben geneigt nur, wenn diese normalen Ausrichtungslabels das Gesicht nicht gut beschreiben, weil der Kopf vor allem vertikal geneigt ist. Nach unten/oben geneigt beschreibt die Kopfposition, nicht den Blick. Wähle nach unten geneigt, wenn das Kinn gesenkt ist oder die Oberseite des Kopfes stärker sichtbar ist. Wähle nach oben geneigt, wenn das Kinn angehoben ist oder die Unterseite von Kinn, Kiefer oder Nasenlöchern stärker sichtbar ist.",
   },
   I4_expression_legibility: {
     unit: "Person",
@@ -3845,10 +3845,16 @@ async function leaveCompletedTask() {
   window.location.reload();
 }
 
-function estimateRemainingScreens() {
+function completedScreensForProgress() {
+  if (Array.isArray(state.annotation?.navigation_history)) {
+    return state.annotation.navigation_history.length;
+  }
+  return state.annotation?.timing?.screen_times?.length || 0;
+}
+
+function estimateRemainingScreens(completedScreens = completedScreensForProgress()) {
   const step = state.step;
   if (step.id.startsWith("END_PAGE_")) return 0;
-  const currentDone = state.annotation.timing.screen_times.length;
   let remaining = 4;
   for (const ad of state.annotation.advertisements) {
     remaining += 2;
@@ -3858,7 +3864,7 @@ function estimateRemainingScreens() {
       remaining += 2 + canonicalPeople(ad).length * 11 + ad.groups.length * 7;
     }
   }
-  return Math.max(remaining - currentDone, 1);
+  return Math.max(remaining - completedScreens, 1);
 }
 
 function updateProgress() {
@@ -3870,8 +3876,8 @@ function updateProgress() {
   $("#taskProgress").value = Math.round(
     (completeCount / state.manifest.images.length) * 100,
   );
-  const completedScreens = state.annotation?.timing?.screen_times?.length || 0;
-  const remaining = estimateRemainingScreens();
+  const completedScreens = completedScreensForProgress();
+  const remaining = estimateRemainingScreens(completedScreens);
   $("#imageProgress").value = state.step.id.startsWith("END_PAGE_")
     ? 100
     : Math.round(

@@ -97,9 +97,9 @@ Draw the smallest box that covers all visible face and head features needed for 
 
 ### C1. Outstanding individuals in a crowd
 
-For an advertisement with `10_20` or `20_plus` faces, choose `yes` when one or more faces are much more visible than the rest of the group or crowd and therefore prominent enough for detailed individual coding. Otherwise choose `no`.
+For an advertisement with `10_20` or `20_plus` faces, choose `yes` when one or more faces are much more visible than the rest of the group or crowd and therefore prominent enough for detailed individual coding. Also choose `yes` when the advertisement contains eligible single individuals that are not part of the group or crowd. Otherwise choose `no`.
 
-Outstanding individuals should stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. When present, draw their individual face boxes. Then draw group boxes for the remaining crowd.
+Outstanding individuals include faces that stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. They also include eligible individuals in the same advertisement who are outside the group or crowd. When present, draw their individual face boxes. Then draw group boxes for the remaining crowd.
 
 ### C2. Group boxes
 
@@ -171,7 +171,7 @@ When the value is `0_not_legible`, skip gaze and smile-presence/intensity coding
 
 Values: `beyond_profile`, `profile`, `three_quarter`, `frontal`, `tilted_down`, `tilted_up`, `other`, `not_assessable`.
 
-The interface displays `beyond_profile` as **less than profile**. Use `tilted_down` or `tilted_up` when vertical head angle is the most distinctive orientation feature. Select the closest orientation when between categories.
+The interface displays `beyond_profile` as **less than profile**. First choose the best left-right orientation if one fits: `beyond_profile`, `profile`, `three_quarter`, or `frontal`. Use `tilted_down` or `tilted_up` only when those ordinary orientation labels are insufficient because the head is mainly pitched vertically. These are head-position labels, not gaze labels. Use `tilted_down` when the chin is lowered or the top of the head is more visible. Use `tilted_up` when the chin is raised or the underside of the chin, jaw, or nostrils is more visible. Select the closest orientation when between categories.
 
 ### I5. Gaze
 

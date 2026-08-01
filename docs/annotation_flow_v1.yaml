@@ -285,7 +285,12 @@ flow:
       field: advertisement.has_outstanding_individuals
       ui: single_choice
       values_from: yes_no
-      instruction: "Choose yes only when one or more individuals are much more visible than the rest of the group or crowd."
+      instruction: "Choose yes when one or more individuals are much more visible than the rest of the group or crowd, or when eligible single individuals are outside the group."
+      coding_rule: >-
+        Outstanding individuals include faces that stand out from the group by
+        being much larger, clearer, more central, or otherwise much more visible.
+        They also include eligible single individuals in the same advertisement
+        who are not part of the group or crowd.
       transitions:
         "yes": DRAW_OUTSTANDING_INDIVIDUAL_BOXES
         "no": DRAW_GROUP_BOXES
@@ -430,6 +435,14 @@ flow:
       field: face_orientation
       ui: single_choice
       values_from: face_orientation
+      coding_rule: >-
+        First choose the best left-right orientation if one fits:
+        beyond_profile, profile, three_quarter, or frontal. Use tilted_down or
+        tilted_up only when those ordinary orientation labels are insufficient
+        because the head is mainly pitched vertically. These are head-position
+        labels, not gaze labels. Use tilted_down when the chin is lowered or
+        the top of the head is more visible. Use tilted_up when the chin is
+        raised or the underside of the chin, jaw, or nostrils is more visible.
       transitions:
         "person.face_expression_legibility == '0_not_legible'": I6_mouth_covered
         otherwise: I5_gaze_target
