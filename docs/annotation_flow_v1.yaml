@@ -590,7 +590,8 @@ flow:
     END_PAGE_COMPLETE: {kind: terminal, status: complete}
 
 storage:
-  page_fields: [qualifying_ad_count, no_qualifying_ad_reason, duplicate_faces_present, unique_face_count]
+  page_fields: [qualifying_ad_count, no_qualifying_ad_reason]
+  page_duplicate_summary_fields: [duplicate_faces_present, unique_face_count]
   advertisement_duplicate_fields: [duplicate_faces_present, unique_face_count]
   advertisement_depiction_field: depiction_type
   identity_group_fields: [identity_group_id, scope_ad_id, main_person_id, duplicate_person_ids]

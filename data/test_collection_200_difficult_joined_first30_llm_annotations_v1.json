@@ -1,0 +1,1753 @@
+{
+  "task_id": "test_collection_200_difficult_joined_first30_v1",
+  "schema_version": "1.15",
+  "coordinate_format": "normalized_xyxy_relative_to_full_page",
+  "input_manifest": "C:\\master\\annotation_app_v2\\data\\test_collection_200_difficult_joined_first30_hosted_manifest.json",
+  "guidance_documents": [
+    "C:\\master\\annotation_app_v2\\docs\\annotation_playbook_v1.md",
+    "C:\\master\\annotation_app_v2\\docs\\annotation_flow_v1.yaml",
+    "C:\\master\\annotation_app_v2\\docs\\HOSTED_DEPLOYMENT.md"
+  ],
+  "annotation_provenance": {
+    "annotator_type": "llm",
+    "human_annotations_used": false,
+    "basis": "Specified documentation and direct inspection of the 30 source images only."
+  },
+  "annotations": [
+    {
+      "image_id": "1949-0528-0026",
+      "filename": "1949-0528-0026.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.504, 0.514, 0.945, 0.969],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "10_20",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.521, 0.558, 0.927, 0.825],
+              "group_type": "background_population",
+              "age_composition": "mixed",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "mixed",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1955-0618-0040",
+      "filename": "1955-0618-0040.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "4",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.274, 0.298, 0.317, 0.365],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.346, 0.301, 0.391, 0.367],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.414, 0.301, 0.454, 0.356],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_4",
+              "annotation_role": "individual",
+              "face_bbox": [0.505, 0.294, 0.56, 0.355],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1967-0826-0003",
+      "filename": "1967-0826-0003.jpg",
+      "page": {"qualifying_ad_count": "0", "no_qualifying_ad_reason": "ads_present_no_visible_faces"},
+      "advertisements": [],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1976-0703-0003",
+      "filename": "1976-0703-0003.jpg",
+      "page": {"qualifying_ad_count": "0", "no_qualifying_ad_reason": "ads_present_no_visible_faces"},
+      "advertisements": [],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1983-0219-0150",
+      "filename": "1983-0219-0150.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "20_plus",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.019, 0.052, 0.497, 0.258],
+              "group_type": "interacting_group",
+              "age_composition": "mostly_middle",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "toward_each_other",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            },
+            {
+              "group_id": "ad_1_group_2",
+              "bbox": [0.506, 0.053, 0.981, 0.258],
+              "group_type": "interacting_group",
+              "age_composition": "mixed",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "mixed",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            },
+            {
+              "group_id": "ad_1_group_3",
+              "bbox": [0.02, 0.27, 0.496, 0.49],
+              "group_type": "background_population",
+              "age_composition": "mixed",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_0_not_legible",
+              "dominant_gaze": "mixed",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            },
+            {
+              "group_id": "ad_1_group_4",
+              "bbox": [0.51, 0.269, 0.976, 0.49],
+              "group_type": "posed_group",
+              "age_composition": "mixed",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "toward_viewer_camera",
+              "smile_prevalence": "majority",
+              "dominant_smile_intensity": "slight"
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1994-0716-0115",
+      "filename": "1994-0716-0115.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "20_plus",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.01, 0.143, 0.566, 0.989],
+              "group_type": "background_population",
+              "age_composition": "mostly_middle",
+              "gender_presentation_composition": "mostly_masculine",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "mixed",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "2001-0505-0096",
+      "filename": "2001-0505-0096.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "20_plus",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.015, 0.094, 0.988, 0.84],
+              "group_type": "separate_portraits_or_composite",
+              "age_composition": "mixed",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mixed_legibility",
+              "dominant_gaze": "mixed",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "mixed"
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1947-1011-0019",
+      "filename": "1947-1011-0019.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.511, 0.502, 0.982, 0.966],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "2",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.546, 0.717, 0.608, 0.822],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.827, 0.716, 0.891, 0.819],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1956-0714-0007",
+      "filename": "1956-0714-0007.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "5",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.066, 0.193, 0.113, 0.284],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.802, 0.226, 0.831, 0.276],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.876, 0.23, 0.906, 0.279],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_4",
+              "annotation_role": "individual",
+              "face_bbox": [0.733, 0.571, 0.77, 0.633],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_5",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_5",
+              "annotation_role": "individual",
+              "face_bbox": [0.829, 0.566, 0.865, 0.628],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_4",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1964-0822-0048",
+      "filename": "1964-0822-0048.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "6",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.095, 0.498, 0.177, 0.58],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.208, 0.509, 0.291, 0.582],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.347, 0.493, 0.429, 0.575],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "tilted_down",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_4",
+              "annotation_role": "individual",
+              "face_bbox": [0.467, 0.495, 0.542, 0.575],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "tilted_down",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_5",
+              "annotation_role": "individual",
+              "face_bbox": [0.605, 0.493, 0.68, 0.58],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "tilted_down",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_6",
+              "annotation_role": "individual",
+              "face_bbox": [0.855, 0.501, 0.938, 0.586],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1973-1006-0024",
+      "filename": "1973-1006-0024.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "10_20",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.203, 0.105, 0.817, 0.323],
+              "group_type": "other_group",
+              "age_composition": "middle_only",
+              "gender_presentation_composition": "masculine_only",
+              "expression_legibility_distribution": "mostly_2_moderate_legibility",
+              "dominant_gaze": "off_frame_or_scene_direction",
+              "smile_prevalence": "none",
+              "dominant_smile_intensity": null
+            },
+            {
+              "group_id": "ad_1_group_2",
+              "bbox": [0.02, 0.506, 0.994, 0.733],
+              "group_type": "other_group",
+              "age_composition": "middle_only",
+              "gender_presentation_composition": "masculine_only",
+              "expression_legibility_distribution": "mostly_2_moderate_legibility",
+              "dominant_gaze": "off_frame_or_scene_direction",
+              "smile_prevalence": "none",
+              "dominant_smile_intensity": null
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1988-0423-0030",
+      "filename": "1988-0423-0030.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_artwork_or_statue",
+          "face_depiction_count_band": "20_plus",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.106, 0.064, 0.893, 0.482],
+              "group_type": "interacting_group",
+              "age_composition": "mixed",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "mixed",
+              "smile_prevalence": "none",
+              "dominant_smile_intensity": null
+            },
+            {
+              "group_id": "ad_1_group_2",
+              "bbox": [0.104, 0.503, 0.895, 0.934],
+              "group_type": "interacting_group",
+              "age_composition": "mixed",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "mixed",
+              "smile_prevalence": "none",
+              "dominant_smile_intensity": null
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1995-1104-0074_0075",
+      "filename": "1995-1104-0074_0075.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "10_20",
+          "has_outstanding_individuals": "yes",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "outstanding_individual",
+              "face_bbox": [0.842, 0.069, 0.979, 0.349],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "tilted_down",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.154, 0.536, 0.458, 0.915],
+              "group_type": "separate_portraits_or_composite",
+              "age_composition": "young_only",
+              "gender_presentation_composition": "feminine_only",
+              "expression_legibility_distribution": "mostly_2_moderate_legibility",
+              "dominant_gaze": "off_frame_or_scene_direction",
+              "smile_prevalence": "none",
+              "dominant_smile_intensity": null
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "2001-1103-0006",
+      "filename": "2001-1103-0006.jpg",
+      "page": {"qualifying_ad_count": "0", "no_qualifying_ad_reason": "ads_present_no_visible_faces"},
+      "advertisements": [],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1946-0309-0015",
+      "filename": "1946-0309-0015.jpg",
+      "page": {"qualifying_ad_count": "2", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.03, 0.54, 0.468, 0.963],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "3",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.243, 0.704, 0.295, 0.778],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_3",
+              "mouth_covered": "no",
+              "smile_present": "yes",
+              "smile_intensity": "2_clear"
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.305, 0.722, 0.345, 0.787],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.345, 0.674, 0.409, 0.759],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_1",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        },
+        {
+          "advertisement_id": "ad_2",
+          "extent": "partial_page",
+          "bbox": [0.511, 0.543, 0.941, 0.955],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "drawing_of_statue_monument_or_public_symbol",
+          "face_depiction_count_band": "1",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_2_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.589, 0.761, 0.644, 0.837],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1951-1020-0022",
+      "filename": "1951-1020-0022.jpg",
+      "page": {"qualifying_ad_count": "2", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.058, 0.072, 0.493, 0.952],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "3",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.142, 0.438, 0.178, 0.482],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.202, 0.434, 0.239, 0.481],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "yes",
+              "smile_intensity": "1_slight"
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.269, 0.431, 0.307, 0.48],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        },
+        {
+          "advertisement_id": "ad_2",
+          "extent": "partial_page",
+          "bbox": [0.513, 0.513, 0.935, 0.945],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "2",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_2_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.691, 0.572, 0.72, 0.612],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_2_person_2",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_2_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.729, 0.568, 0.758, 0.61],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_2_person_1",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1967-0722-0003",
+      "filename": "1967-0722-0003.jpg",
+      "page": {"qualifying_ad_count": "0", "no_qualifying_ad_reason": "ads_present_no_visible_faces"},
+      "advertisements": [],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1971-0220-0003",
+      "filename": "1971-0220-0003.jpg",
+      "page": {"qualifying_ad_count": "0", "no_qualifying_ad_reason": "ads_present_no_visible_faces"},
+      "advertisements": [],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1983-1210-0125",
+      "filename": "1983-1210-0125.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "20_plus",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.132, 0.189, 0.842, 0.529],
+              "group_type": "posed_group",
+              "age_composition": "mostly_middle",
+              "gender_presentation_composition": "mostly_masculine",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "toward_viewer_camera",
+              "smile_prevalence": "majority",
+              "dominant_smile_intensity": "slight"
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1995-0701-0004",
+      "filename": "1995-0701-0004.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "6",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.719, 0.0, 0.918, 0.143],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.153, 0.214, 0.287, 0.336],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_3",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.383, 0.218, 0.49, 0.332],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_2",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_4",
+              "annotation_role": "individual",
+              "face_bbox": [0.09, 0.655, 0.264, 0.78],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_5",
+              "annotation_role": "individual",
+              "face_bbox": [0.507, 0.817, 0.632, 0.939],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_6",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_6",
+              "annotation_role": "individual",
+              "face_bbox": [0.822, 0.816, 0.934, 0.937],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "another_person",
+              "gaze_target_person_id": "ad_1_person_5",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "2007-0818-0081",
+      "filename": "2007-0818-0081.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.497, 0.05, 0.942, 0.97],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "7",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.499, 0.173, 0.533, 0.231],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.536, 0.201, 0.577, 0.255],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.575, 0.182, 0.616, 0.252],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_4",
+              "annotation_role": "individual",
+              "face_bbox": [0.625, 0.174, 0.689, 0.252],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "yes",
+              "smile_intensity": "2_clear"
+            },
+            {
+              "person_id": "ad_1_person_5",
+              "annotation_role": "individual",
+              "face_bbox": [0.684, 0.195, 0.729, 0.258],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "child",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_6",
+              "annotation_role": "individual",
+              "face_bbox": [0.74, 0.183, 0.787, 0.252],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "child",
+              "perceived_gender_presentation": "ambiguous_or_androgynous",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_7",
+              "annotation_role": "individual",
+              "face_bbox": [0.805, 0.173, 0.87, 0.254],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1948-0410-0020",
+      "filename": "1948-0410-0020.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.05, 0.58, 0.527, 0.965],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "naturalistic_illustration",
+          "face_depiction_count_band": "1",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.377, 0.752, 0.436, 0.842],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1958-0503-0052",
+      "filename": "1958-0503-0052.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "stylized_illustration",
+          "face_depiction_count_band": "8",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.676, 0.061, 0.758, 0.154],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.165, 0.34, 0.215, 0.405],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_3",
+              "annotation_role": "individual",
+              "face_bbox": [0.287, 0.333, 0.337, 0.404],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_4",
+              "annotation_role": "individual",
+              "face_bbox": [0.132, 0.433, 0.221, 0.534],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_5",
+              "annotation_role": "individual",
+              "face_bbox": [0.239, 0.434, 0.298, 0.507],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_6",
+              "annotation_role": "individual",
+              "face_bbox": [0.306, 0.449, 0.371, 0.527],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "tilted_down",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_7",
+              "annotation_role": "individual",
+              "face_bbox": [0.349, 0.397, 0.409, 0.469],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "advertised_product",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_8",
+              "annotation_role": "individual",
+              "face_bbox": [0.435, 0.414, 0.504, 0.491],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "eyes_covered",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1965-1204-0017",
+      "filename": "1965-1204-0017.jpg",
+      "page": {"qualifying_ad_count": "2", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.0, 0.067, 0.505, 0.992],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "cartoon_or_caricature",
+          "face_depiction_count_band": "2",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": "no",
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.177, 0.145, 0.288, 0.241],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "other_object",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            },
+            {
+              "person_id": "ad_1_person_2",
+              "annotation_role": "individual",
+              "face_bbox": [0.219, 0.352, 0.326, 0.451],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "other_object",
+              "mouth_covered": "partly",
+              "mouth_covering": "hand",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        },
+        {
+          "advertisement_id": "ad_2",
+          "extent": "partial_page",
+          "bbox": [0.507, 0.069, 0.982, 0.995],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "photo_of_artwork_or_statue",
+          "face_depiction_count_band": "1",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_2_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.801, 0.385, 0.868, 0.472],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "older_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1975-0201-0027",
+      "filename": "1975-0201-0027.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "10_20",
+          "has_outstanding_individuals": "no",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.187, 0.654, 0.816, 0.882],
+              "group_type": "posed_group",
+              "age_composition": "young_only",
+              "gender_presentation_composition": "masculine_only",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "toward_viewer_camera",
+              "smile_prevalence": "none",
+              "dominant_smile_intensity": null
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1985-1130-0155",
+      "filename": "1985-1130-0155.jpg",
+      "page": {"qualifying_ad_count": "0", "no_qualifying_ad_reason": "ads_present_no_visible_faces"},
+      "advertisements": [],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1998-0228-0119",
+      "filename": "1998-0228-0119.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "10_20",
+          "has_outstanding_individuals": "yes",
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "outstanding_individual",
+              "face_bbox": [0.584, 0.256, 0.693, 0.364],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "3_high_legibility",
+              "face_orientation": "three_quarter",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": [
+            {
+              "group_id": "ad_1_group_1",
+              "bbox": [0.034, 0.249, 0.267, 0.379],
+              "group_type": "interacting_group",
+              "age_composition": "mostly_middle",
+              "gender_presentation_composition": "mostly_masculine",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "toward_each_other",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            },
+            {
+              "group_id": "ad_1_group_2",
+              "bbox": [0.255, 0.252, 0.569, 0.376],
+              "group_type": "interacting_group",
+              "age_composition": "mostly_middle",
+              "gender_presentation_composition": "mixed",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "toward_each_other",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            },
+            {
+              "group_id": "ad_1_group_3",
+              "bbox": [0.707, 0.251, 0.964, 0.382],
+              "group_type": "interacting_group",
+              "age_composition": "mostly_middle",
+              "gender_presentation_composition": "mostly_masculine",
+              "expression_legibility_distribution": "mostly_1_low_legibility",
+              "dominant_gaze": "toward_each_other",
+              "smile_prevalence": "minority",
+              "dominant_smile_intensity": "slight"
+            }
+          ]
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "2000-0930-0122",
+      "filename": "2000-0930-0122.jpg",
+      "page": {"qualifying_ad_count": "2", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "partial_page",
+          "bbox": [0.024, 0.04, 0.975, 0.495],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "1",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.062, 0.136, 0.132, 0.232],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "young_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        },
+        {
+          "advertisement_id": "ad_2",
+          "extent": "partial_page",
+          "bbox": [0.025, 0.529, 0.981, 0.985],
+          "bbox_source": "manual_estimate",
+          "depiction_type": "photo_of_person",
+          "face_depiction_count_band": "1",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_2_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.785, 0.588, 0.915, 0.706],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "masculine",
+              "face_expression_legibility": "1_low_legibility",
+              "face_orientation": "profile",
+              "gaze_target": "off_frame_or_scene_direction",
+              "mouth_covered": "partly",
+              "mouth_covering": "hand",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1945-0616-0040",
+      "filename": "1945-0616-0040.jpg",
+      "page": {"qualifying_ad_count": "0", "no_qualifying_ad_reason": "ads_present_no_visible_faces"},
+      "advertisements": [],
+      "urgent_comments": []
+    },
+    {
+      "image_id": "1955-0611-0003",
+      "filename": "1955-0611-0003.jpg",
+      "page": {"qualifying_ad_count": "1", "no_qualifying_ad_reason": null},
+      "advertisements": [
+        {
+          "advertisement_id": "ad_1",
+          "extent": "full_page",
+          "bbox": [0.0, 0.0, 1.0, 1.0],
+          "bbox_source": "automatic_full_usable_page",
+          "depiction_type": "drawing_of_statue_monument_or_public_symbol",
+          "face_depiction_count_band": "1",
+          "has_outstanding_individuals": null,
+          "duplicate_faces_present": null,
+          "unique_face_count": null,
+          "people": [
+            {
+              "person_id": "ad_1_person_1",
+              "annotation_role": "individual",
+              "face_bbox": [0.72, 0.201, 0.788, 0.272],
+              "duplicate_of_person_id": null,
+              "duplicate_person_ids": [],
+              "depiction_type": null,
+              "perceived_age": "middle_adult",
+              "perceived_gender_presentation": "feminine",
+              "face_expression_legibility": "2_moderate_legibility",
+              "face_orientation": "frontal",
+              "gaze_target": "viewer_camera",
+              "mouth_covered": "no",
+              "smile_present": "no",
+              "smile_intensity": null
+            }
+          ],
+          "identity_groups": [],
+          "groups": []
+        }
+      ],
+      "urgent_comments": []
+    }
+  ]
+}

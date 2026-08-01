@@ -28,7 +28,7 @@ Use an urgent comment when the available labels seem to miss something, or for s
 
 Use the following rule in one-shot or two-shot LLM prompts:
 
-> Select exactly one best-fitting substantive category whenever the relevant visual evidence is available. When a case lies near a category boundary, choose the category with slightly stronger visual support. Do not return an uncertainty label. Use `not_assessable` only when missing, occluded, too-small, cropped, or degraded evidence prevents a meaningful best estimate. Use `other` only when the visible observation is clear but absent from the provided taxonomy.
+> Select exactly one best-fitting substantive category whenever the relevant visual evidence is available. When a case lies near a category boundary, choose the category with slightly stronger visual support. Do not return an uncertainty label. Use `not_assessable` only when there is not enough information to decide in general because missing, occluded, too-small, cropped, or degraded evidence prevents a meaningful best estimate. Use `other` only when the visible observation is clear but absent from the provided taxonomy.
 
 For `face_expression_legibility`, judge the overall ability to code the visible expression. Equivalent scores may arise from different causes, including limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor reproduction quality.
 
@@ -144,13 +144,13 @@ Ask this only when A2 is `multiple_types_present` for the current advertisement.
 
 Values: `infant`, `child`, `adolescent`, `young_adult`, `middle_adult`, `older_adult`, `not_assessable`.
 
-Code apparent age, not known chronological age. At a boundary, choose the more likely adjacent band. Use `not_assessable` only when a meaningful visual estimate cannot be made.
+Code apparent age, not known chronological age. If unsure between adjacent bands, choose the best-fitting one. Use `not_assessable` only when there is not enough information to make a meaningful visual estimate in general.
 
 ### I2. Perceived gender presentation
 
 Values: `feminine`, `masculine`, `ambiguous_or_androgynous`, `not_assessable`.
 
-Code visible presentation, not identity. `ambiguous_or_androgynous` is a substantive visible presentation, not an uncertainty response.
+Code visible presentation, not identity. If unsure between categories, choose the best-fitting one. `ambiguous_or_androgynous` is a substantive visible presentation, not an uncertainty response. Use `not_assessable` only when there is not enough information to decide in general.
 
 ### I4. Facial-expression legibility
 
@@ -234,7 +234,7 @@ The urgent-comment action is available throughout annotation. Use it when the av
 
 A page is complete only after all required boxes, duplicate assignments, canonical-person fields, and group fields have been entered. Creation, update, completion, and per-screen timing information are retained in the structured JSON output.
 
-## 9. Variables excluded from version 1.5
+## 9. Variables excluded from version 1.15
 
 - Brand and product category
 - Felt emotion
