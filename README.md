@@ -102,6 +102,14 @@ into blocks of that many pages, shows block-relative progress while coding, and
 shows a block summary before the coder continues. When omitted, the task behaves
 as one continuous assignment.
 
+The preferred syntax is documented as JSON Schema in
+`docs/annotation_app_manifest_schema_v1.json`. Validate a manifest before upload or local use:
+
+```powershell
+npm run validate:manifest -- --hosted C:\path\manifest.json
+npm run validate:manifest -- --local C:\path\manifest.json
+```
+
 A generated manifest for the current 100-image sample is available here:
 
 ```text

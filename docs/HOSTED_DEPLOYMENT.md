@@ -165,6 +165,13 @@ The hosted manifest format is:
 assignment code but be shown to coders in smaller work blocks. If omitted, no
 block pause screens are shown.
 
+The preferred manifest syntax is documented in `docs/annotation_app_manifest_schema_v1.json`.
+Before uploading, validate it locally:
+
+```powershell
+npm run validate:manifest -- --hosted C:\path\manifest.json
+```
+
 Only `.jpg` and `.jpeg` files are accepted. Existing absolute `path` properties
 are ignored; the hosted manifest stored in PostgreSQL contains filenames and
 identifiers, not laptop paths. Image IDs and filenames must each be unique

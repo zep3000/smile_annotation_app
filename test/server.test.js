@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const net = require("node:net");
 const { spawn } = require("node:child_process");
 const { once } = require("node:events");
 const path = require("node:path");
@@ -10,8 +11,15 @@ function sleep(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-function randomTestPort() {
-  return 54000 + Math.floor(Math.random() * 8000);
+async function availableTestPort() {
+  const server = net.createServer();
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+  const port = server.address().port;
+  await new Promise((resolve) => server.close(resolve));
+  return port;
 }
 
 async function stopServer(child) {
@@ -22,7 +30,7 @@ async function stopServer(child) {
 }
 
 async function startServer(overrides = {}) {
-  const port = randomTestPort();
+  const port = await availableTestPort();
   const child = spawn(process.execPath, ["server.js"], {
     cwd: ROOT,
     env: {
@@ -114,7 +122,7 @@ test("staging auth fails closed when credentials are missing", async () => {
       ...process.env,
       APP_ENV: "test",
       HOST: "127.0.0.1",
-      PORT: String(randomTestPort()),
+      PORT: String(await availableTestPort()),
       STAGING_AUTH_REQUIRED: "true",
       STAGING_USER: "",
       STAGING_PASSWORD: ""
