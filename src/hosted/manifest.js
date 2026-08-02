@@ -7,6 +7,15 @@ function cleanText(value, label, maxLength = 240) {
   return text;
 }
 
+function normalizeBlockSize(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1) {
+    throw new Error("block_size must be a positive integer.");
+  }
+  return number;
+}
+
 function normalizeHostedManifest(input) {
   const source = input && typeof input === "object" ? input : {};
   if (!Array.isArray(source.images) || source.images.length === 0) {
@@ -42,13 +51,16 @@ function normalizeHostedManifest(input) {
         : {}
     };
   });
-  return {
+  const blockSize = normalizeBlockSize(source.block_size ?? source.blockSize);
+  const manifest = {
     task_id: taskId,
     images,
     metadata: source.metadata && typeof source.metadata === "object" && !Array.isArray(source.metadata)
       ? source.metadata
       : {}
   };
+  if (blockSize) manifest.block_size = blockSize;
+  return manifest;
 }
 
 function safeObjectFilename(filename) {

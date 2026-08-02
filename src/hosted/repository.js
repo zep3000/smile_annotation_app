@@ -416,7 +416,9 @@ class HostedRepository {
   async assignmentManifest(assignmentId) {
     const assignmentResult = await this.pool.query(
       `SELECT a.id, a.code, a.expert_mode, a.status, a.created_at, a.annotation_set_id,
-              s.task_id, s.name AS set_name, s.flow_version, s.manifest->'metadata' AS metadata
+              s.task_id, s.name AS set_name, s.flow_version,
+              s.manifest->'metadata' AS metadata,
+              s.manifest->>'block_size' AS block_size
        FROM assignments a
        JOIN annotation_sets s ON s.id = a.annotation_set_id
        WHERE a.id = $1 AND a.status <> 'revoked' AND s.status = 'active'`,
@@ -425,22 +427,27 @@ class HostedRepository {
     const assignment = assignmentResult.rows[0];
     if (!assignment) return null;
     const images = await this.setImages(assignment.annotation_set_id);
+    const manifest = {
+      task_id: assignment.task_id,
+      manifest_path: null,
+      metadata: assignment.metadata || {},
+      images: images.map((image, index) => ({
+        image_id: image.image_id,
+        filename: image.filename,
+        path: null,
+        page_type: image.page_type,
+        metadata: image.metadata || {},
+        index,
+        total: images.length
+      }))
+    };
+    const blockSize = Number(assignment.block_size);
+    if (Number.isInteger(blockSize) && blockSize > 0) {
+      manifest.block_size = blockSize;
+    }
     return {
       assignment,
-      manifest: {
-        task_id: assignment.task_id,
-        manifest_path: null,
-        metadata: assignment.metadata || {},
-        images: images.map((image, index) => ({
-          image_id: image.image_id,
-          filename: image.filename,
-          path: null,
-          page_type: image.page_type,
-          metadata: image.metadata || {},
-          index,
-          total: images.length
-        }))
-      }
+      manifest
     };
   }
 
@@ -466,14 +473,22 @@ class HostedRepository {
     }));
   }
 
-  async assignmentSummaryRecords(assignmentId) {
+  async assignmentSummaryRecords(assignmentId, range = null) {
+    const conditions = ["a.id = $1"];
+    const values = [assignmentId];
+    if (range && Number.isInteger(range.start) && Number.isInteger(range.end)) {
+      values.push(range.start);
+      conditions.push(`i.sort_order >= $${values.length}`);
+      values.push(range.end);
+      conditions.push(`i.sort_order <= $${values.length}`);
+    }
     const result = await this.pool.query(
       `SELECT i.image_id, n.status, n.payload
        FROM assignments a
        JOIN images i ON i.annotation_set_id = a.annotation_set_id
        LEFT JOIN annotations n ON n.assignment_id = a.id AND n.image_id = i.id
-       WHERE a.id = $1 ORDER BY i.sort_order`,
-      [assignmentId]
+       WHERE ${conditions.join(" AND ")} ORDER BY i.sort_order`,
+      values
     );
     return result.rows;
   }

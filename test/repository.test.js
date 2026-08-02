@@ -29,6 +29,7 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
     flowVersion: "1.12",
     manifest: {
       task_id: "test-task",
+      block_size: 50,
       metadata: { sample: true },
       images: [
         { image_id: "page-1", filename: "page-1.jpg", page_type: "single" },
@@ -64,6 +65,7 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
 
   const assignment = await repository.assignmentManifest(issued.id);
   assert.equal(assignment.manifest.images.length, 2);
+  assert.equal(assignment.manifest.block_size, 50);
   assert.equal(assignment.manifest.images[0].path, null);
   assert.deepEqual(assignment.manifest.metadata, { sample: true });
 
@@ -107,6 +109,9 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
   assert.equal(summaryRecords.length, 2);
   assert.equal(summaryRecords[0].payload.status, "complete");
   assert.equal(summaryRecords[1].payload.status, "ineligible");
+  const secondPageSummaryRecords = await repository.assignmentSummaryRecords(issued.id, { start: 1, end: 1 });
+  assert.equal(secondPageSummaryRecords.length, 1);
+  assert.equal(secondPageSummaryRecords[0].image_id, "page-2");
   const exported = await repository.exportSet(set.id);
   assert.equal(exported.records.filter((record) => record.payload).length, 2);
   const assignments = await repository.setAssignments(set.id);

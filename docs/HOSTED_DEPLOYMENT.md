@@ -148,6 +148,7 @@ The hosted manifest format is:
 ```json
 {
   "task_id": "pilot_set_01",
+  "block_size": 50,
   "images": [
     {
       "image_id": "1964-0704-0078",
@@ -159,6 +160,10 @@ The hosted manifest format is:
   "metadata": {}
 }
 ```
+
+`block_size` is optional. Use it for large assignments that should remain one
+assignment code but be shown to coders in smaller work blocks. If omitted, no
+block pause screens are shown.
 
 Only `.jpg` and `.jpeg` files are accepted. Existing absolute `path` properties
 are ignored; the hosted manifest stored in PostgreSQL contains filenames and

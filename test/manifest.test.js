@@ -5,6 +5,7 @@ const { isJpeg, normalizeHostedManifest } = require("../src/hosted/manifest");
 test("hosted manifests retain identifiers but discard absolute paths", () => {
   const manifest = normalizeHostedManifest({
     task_id: "sample",
+    block_size: 50,
     images: [{
       image_id: "page-1",
       filename: "page-1.jpg",
@@ -15,6 +16,7 @@ test("hosted manifests retain identifiers but discard absolute paths", () => {
   });
   assert.deepEqual(manifest, {
     task_id: "sample",
+    block_size: 50,
     images: [{ image_id: "page-1", filename: "page-1.jpg", page_type: "single", metadata: { year: 1964 } }],
     metadata: {}
   });
@@ -27,6 +29,11 @@ test("hosted manifests reject non-JPEGs and duplicate filenames", () => {
     task_id: "x",
     images: [{ image_id: "a", filename: "page.jpg" }, { image_id: "b", filename: "PAGE.JPG" }]
   }), /Duplicate filename/);
+  assert.throws(() => normalizeHostedManifest({
+    task_id: "x",
+    block_size: 0,
+    images: [{ filename: "page.jpg" }]
+  }), /block_size/);
 });
 
 test("JPEG validation checks start and end markers", () => {

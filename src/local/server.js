@@ -168,6 +168,15 @@ function normalizeManifestImage(item, index) {
   };
 }
 
+function normalizeManifestBlockSize(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1) {
+    throw new Error("Manifest block_size must be a positive integer.");
+  }
+  return number;
+}
+
 async function readManifest(manifestPath) {
   const resolved = String(manifestPath || "").trim();
   if (!resolved) {
@@ -198,12 +207,15 @@ async function readManifest(manifestPath) {
     }
     image.total = images.length;
   }
-  return {
+  const blockSize = normalizeManifestBlockSize(parsed.block_size ?? parsed.blockSize);
+  const manifest = {
     task_id: parsed.task_id || parsed.taskId || path.basename(resolved, path.extname(resolved)),
     manifest_path: resolved,
     images,
     metadata: parsed.metadata && typeof parsed.metadata === "object" ? parsed.metadata : {}
   };
+  if (blockSize) manifest.block_size = blockSize;
+  return manifest;
 }
 
 async function readAnnotation(sessionId, imageId) {
@@ -391,13 +403,30 @@ async function sessionProgress(sessionId, manifestPath) {
   };
 }
 
-async function sessionSummary(sessionId, manifestPath) {
+function requestedImageRange(searchParams, total) {
+  if (!searchParams.has("start") || !searchParams.has("end")) {
+    return { start: 0, end: Math.max(total - 1, 0) };
+  }
+  const start = Number(searchParams.get("start"));
+  const end = Number(searchParams.get("end"));
+  if (!Number.isInteger(start) || !Number.isInteger(end)) {
+    return { start: 0, end: Math.max(total - 1, 0) };
+  }
+  return {
+    start: Math.max(0, Math.min(start, Math.max(total - 1, 0))),
+    end: Math.max(0, Math.min(end, Math.max(total - 1, 0)))
+  };
+}
+
+async function sessionSummary(sessionId, manifestPath, range = null) {
   const manifest = await readManifest(manifestPath);
-  const records = await Promise.all(manifest.images.map(async (image) => {
+  const bounds = range || { start: 0, end: manifest.images.length - 1 };
+  const images = manifest.images.slice(bounds.start, bounds.end + 1);
+  const records = await Promise.all(images.map(async (image) => {
     const annotation = await readAnnotation(sessionId, image.image_id);
     return annotation ? { status: effectiveAnnotationStatus(annotation), annotation } : null;
   }));
-  return summarizeAnnotations(records.filter(Boolean), manifest.images.length);
+  return summarizeAnnotations(records.filter(Boolean), images.length);
 }
 
 function isDoneStatus(status) {
@@ -567,9 +596,11 @@ async function handleApi(req, res, pathname, parsedUrl) {
   }
 
   if (req.method === "GET" && pathname === "/api/summary") {
+    const manifest = await readManifest(parsedUrl.searchParams.get("manifest_path"));
     const summary = await sessionSummary(
       parsedUrl.searchParams.get("session_id"),
-      parsedUrl.searchParams.get("manifest_path")
+      parsedUrl.searchParams.get("manifest_path"),
+      requestedImageRange(parsedUrl.searchParams, manifest.images.length)
     );
     return sendJson(res, 200, { ok: true, summary });
   }

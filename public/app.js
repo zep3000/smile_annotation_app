@@ -638,6 +638,8 @@ const state = {
   lastFocusStart: null,
   completionLoading: false,
   completionSummary: null,
+  completionMode: "final",
+  completionRange: null,
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -917,7 +919,9 @@ const UI_TEXT = {
     assignment_code: "Eight-digit assignment code",
     open_annotation: "Open annotation",
     annotation_set_complete: "Annotation set complete",
-    thank_you: "Thank you.",
+    block_complete: "Block complete",
+    thank_you: "Thank you for your careful work.",
+    block_thank_you: "Thank you. This block is complete.",
     annotations_saved: "Your annotations have been saved.",
     pages: "Pages",
     qualifying_ads: "Qualifying ads",
@@ -926,6 +930,8 @@ const UI_TEXT = {
     focused_time: "Focused time",
     session: "Session",
     review_annotations: "Review annotations",
+    review_block: "Review this block",
+    continue_next_block: "Continue with next block",
     sign_out: "Sign out",
     return_to_start: "Return to start",
     not_started: "Not started",
@@ -953,8 +959,12 @@ const UI_TEXT = {
     next: "Next",
     edit_annotation: "Edit annotation",
     finish_task: "Finish task",
+    finish_block: "Finish block",
     image_progress: "Image progress",
     task_progress: "Task progress",
+    block_progress: "Block progress",
+    total_progress: "Total progress",
+    block_label: "Block {current} / {total}",
     task: "Task",
     expert: "Expert",
     exit: "Exit",
@@ -1010,10 +1020,16 @@ const UI_TEXT = {
     assignment: "Assignment",
     final_terminal_instruction:
       "Choose Finish task to save and view your summary.",
+    block_terminal_instruction:
+      "Choose Finish block to save and view the block summary.",
     completion_page_single:
-      "You completed the page. Your annotations have been saved.",
+      "You completed the page. Your annotations have been saved and are ready for analysis.",
     completion_page_many:
-      "You completed all {count} pages. Your annotations have been saved.",
+      "You completed all {count} pages. Thank you for the time and attention you put into this annotation task.",
+    block_completion_page_single:
+      "You completed 1 page in this block. Your annotations have been saved.",
+    block_completion_page_many:
+      "You completed {count} pages in this block. You can stop here or continue with the next block.",
     page_status_title: "Page {number}: {status}",
     page_locked_title:
       "Page {number}: {status}. Complete pages in order to unlock it.",
@@ -1084,7 +1100,9 @@ const UI_TEXT = {
     assignment_code: "Achtstelliger Zuweisungscode",
     open_annotation: "Annotation öffnen",
     annotation_set_complete: "Annotationsset abgeschlossen",
-    thank_you: "Danke.",
+    block_complete: "Block abgeschlossen",
+    thank_you: "Vielen Dank für deine sorgfältige Arbeit.",
+    block_thank_you: "Danke. Dieser Block ist abgeschlossen.",
     annotations_saved: "Deine Annotationen wurden gespeichert.",
     pages: "Seiten",
     qualifying_ads: "Qualifizierende Anzeigen",
@@ -1093,6 +1111,8 @@ const UI_TEXT = {
     focused_time: "Aktive Zeit",
     session: "Sitzung",
     review_annotations: "Annotationen ansehen",
+    review_block: "Diesen Block ansehen",
+    continue_next_block: "Mit nächstem Block fortfahren",
     sign_out: "Abmelden",
     return_to_start: "Zurück zum Start",
     not_started: "Nicht begonnen",
@@ -1120,8 +1140,12 @@ const UI_TEXT = {
     next: "Weiter",
     edit_annotation: "Annotation bearbeiten",
     finish_task: "Aufgabe abschließen",
+    finish_block: "Block abschließen",
     image_progress: "Bildfortschritt",
     task_progress: "Aufgabenfortschritt",
+    block_progress: "Blockfortschritt",
+    total_progress: "Gesamtfortschritt",
+    block_label: "Block {current} / {total}",
     task: "Aufgabe",
     expert: "Expert",
     exit: "Beenden",
@@ -1182,10 +1206,16 @@ const UI_TEXT = {
     assignment: "Zuweisung",
     final_terminal_instruction:
       "Wähle Aufgabe abschließen, um zu speichern und die Zusammenfassung zu sehen.",
+    block_terminal_instruction:
+      "Wähle Block abschließen, um zu speichern und die Blockzusammenfassung zu sehen.",
     completion_page_single:
-      "Du hast die Seite abgeschlossen. Deine Annotationen wurden gespeichert.",
+      "Du hast die Seite abgeschlossen. Deine Annotationen wurden gespeichert und sind bereit für die Analyse.",
     completion_page_many:
-      "Du hast alle {count} Seiten abgeschlossen. Deine Annotationen wurden gespeichert.",
+      "Du hast alle {count} Seiten abgeschlossen. Vielen Dank für die Zeit und Aufmerksamkeit, die du in diese Aufgabe gesteckt hast.",
+    block_completion_page_single:
+      "Du hast 1 Seite in diesem Block abgeschlossen. Deine Annotationen wurden gespeichert.",
+    block_completion_page_many:
+      "Du hast {count} Seiten in diesem Block abgeschlossen. Du kannst hier aufhören oder mit dem nächsten Block fortfahren.",
     page_status_title: "Seite {number}: {status}",
     page_locked_title:
       "Seite {number}: {status}. Schließe Seiten der Reihe nach ab, um sie freizuschalten.",
@@ -1464,7 +1494,12 @@ function applyLanguage({ rerender = true } = {}) {
   if (completionSession)
     completionSession.firstChild.textContent = `${t("session")} `;
   $("#reviewCompletedTaskButton").textContent = t("review_annotations");
-  if (state.completionSummary) renderCompletionSummary(state.completionSummary);
+  if (state.completionSummary) {
+    renderCompletionSummary(state.completionSummary, {
+      mode: state.completionMode,
+      range: state.completionRange,
+    });
+  }
 
   setAriaLabel("#imageList", "page_overview");
   setText(".page-list-header > strong", "pages");
@@ -3274,10 +3309,12 @@ function nextStepForCurrent() {
 
 function advance() {
   if (state.step.id.startsWith("END_PAGE_")) {
-    if (state.currentIndex < state.manifest.images.length - 1) {
-      void loadImage(state.currentIndex + 1, { allowSequentialNext: true });
-    } else {
+    if (state.currentIndex >= state.manifest.images.length - 1) {
       void showCompletionView();
+    } else if (isBlockEndPage()) {
+      void showBlockCompletionView();
+    } else {
+      void loadImage(state.currentIndex + 1, { allowSequentialNext: true });
     }
     return;
   }
@@ -3716,13 +3753,16 @@ function renderContextSummary() {
 
 function renderStepPanel() {
   const meta = STEP_META[state.step.id] || STEP_META.P1_qualifying_ad_count;
+  const terminal = state.step.id.startsWith("END_PAGE_");
   const finalTerminal =
-    state.step.id.startsWith("END_PAGE_") &&
-    state.currentIndex >= state.manifest.images.length - 1;
+    terminal && state.currentIndex >= state.manifest.images.length - 1;
+  const blockTerminal = terminal && !finalTerminal && isBlockEndPage();
   $("#stepKicker").textContent = stepKickerText();
   $("#questionText").textContent = meta.prompt;
   $("#instructionText").textContent = finalTerminal
     ? t("final_terminal_instruction")
+    : blockTerminal
+      ? t("block_terminal_instruction")
     : meta.instruction || "";
   $("#helpText").textContent = meta.help || "";
   $("#helpButton").disabled = !meta.help;
@@ -3734,6 +3774,7 @@ function renderStepPanel() {
 function updateNavState() {
   const terminal = state.step.id.startsWith("END_PAGE_");
   const finalPage = state.currentIndex >= state.manifest.images.length - 1;
+  const blockEndPage = isBlockEndPage();
   $("#backButton").disabled = !state.annotation?.navigation_history?.length;
   $("#backButton").textContent = terminal ? t("edit_annotation") : t("back");
   $("#nextButton").disabled = terminal
@@ -3744,7 +3785,9 @@ function updateNavState() {
   $("#nextButton").textContent = terminal
     ? finalPage
       ? t("finish_task")
-      : t("next_page")
+      : blockEndPage
+        ? t("finish_block")
+        : t("next_page")
     : currentBboxSpec()
       ? t("done")
       : t("next");
@@ -3759,9 +3802,59 @@ function taskIsComplete() {
   );
 }
 
-function summaryUrl() {
-  if (state.hostedMode) return "/api/summary";
-  return `/api/summary?session_id=${encodeURIComponent(state.session.session_id)}&manifest_path=${encodeURIComponent(state.manifest.manifest_path)}`;
+function manifestBlockSize() {
+  const value = Number(state.manifest?.block_size);
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+function currentBlockRange(index = state.currentIndex) {
+  const blockSize = manifestBlockSize();
+  const total = state.manifest?.images?.length || 0;
+  if (!blockSize || !total) return null;
+  const start = Math.floor(index / blockSize) * blockSize;
+  const end = Math.min(start + blockSize, total) - 1;
+  return {
+    start,
+    end,
+    size: end - start + 1,
+    current: Math.floor(start / blockSize) + 1,
+    total: Math.ceil(total / blockSize),
+  };
+}
+
+function isBlockEndPage(index = state.currentIndex) {
+  const range = currentBlockRange(index);
+  return Boolean(
+    range && index === range.end && index < state.manifest.images.length - 1,
+  );
+}
+
+function completedPageCount(range = null) {
+  const images = state.manifest?.images || [];
+  const start = range ? range.start : 0;
+  const end = range ? range.end : images.length - 1;
+  return images.slice(start, end + 1).filter((image) => {
+    const status = state.statuses[image.image_id]?.status;
+    return DONE_STATUSES.has(status);
+  }).length;
+}
+
+function blockIsComplete(range) {
+  return Boolean(range && completedPageCount(range) === range.size);
+}
+
+function summaryUrl(range = null) {
+  const params = new URLSearchParams();
+  if (!state.hostedMode) {
+    params.set("session_id", state.session.session_id);
+    params.set("manifest_path", state.manifest.manifest_path);
+  }
+  if (range) {
+    params.set("start", String(range.start));
+    params.set("end", String(range.end));
+  }
+  const query = params.toString();
+  return `${state.hostedMode ? "/api/summary" : "/api/summary"}${query ? `?${query}` : ""}`;
 }
 
 function formatFocusedTime(milliseconds) {
@@ -3773,8 +3866,19 @@ function formatFocusedTime(milliseconds) {
   return remainder ? `${hours} h ${remainder} min` : `${hours} h`;
 }
 
-function renderCompletionSummary(summary) {
+function renderCompletionSummary(summary, options = {}) {
+  const mode = options.mode || "final";
+  const range = options.range || null;
   state.completionSummary = summary;
+  state.completionMode = mode;
+  state.completionRange = range;
+  const blockMode = mode === "block";
+  $(".completion-kicker").textContent = blockMode
+    ? t("block_complete")
+    : t("annotation_set_complete");
+  $("#completionTitle").textContent = blockMode
+    ? t("block_thank_you")
+    : t("thank_you");
   $("#completionPages").textContent = Number(
     summary.pages_annotated || 0,
   ).toLocaleString();
@@ -3791,12 +3895,68 @@ function renderCompletionSummary(summary) {
   const pageTotal = Number(summary.pages_total || 0);
   $("#completionMessage").textContent =
     pageTotal === 1
-      ? t("completion_page_single")
-      : t("completion_page_many", { count: pageTotal });
+      ? t(blockMode ? "block_completion_page_single" : "completion_page_single")
+      : t(blockMode ? "block_completion_page_many" : "completion_page_many", {
+          count: pageTotal,
+        });
+  renderCompletionTotalProgress(blockMode);
   $("#completionSessionCode").textContent = sessionDisplayId();
+  $("#reviewCompletedTaskButton").textContent = blockMode
+    ? t("review_block")
+    : t("review_annotations");
   $("#leaveCompletedTaskButton").textContent = state.hostedMode
     ? t("sign_out")
     : t("return_to_start");
+  $("#continueBlockButton").textContent = t("continue_next_block");
+  $("#continueBlockButton").classList.toggle("hidden", !blockMode);
+  $("#continueBlockButton").classList.toggle("primary-command", blockMode);
+  $("#leaveCompletedTaskButton").classList.toggle("primary-command", !blockMode);
+}
+
+function renderCompletionTotalProgress(show) {
+  const panel = $("#completionTotalProgress");
+  if (!panel) return;
+  panel.classList.toggle("hidden", !show);
+  if (!show || !state.manifest?.images?.length) return;
+  const completeCount = completedPageCount();
+  const total = state.manifest.images.length;
+  $("#completionTotalProgressLabel").textContent = t("total_progress");
+  $("#completionTotalProgressCount").textContent = `${completeCount} / ${total}`;
+  $("#completionTotalProgressBar").value = Math.round(
+    (completeCount / total) * 100,
+  );
+}
+
+async function showBlockCompletionView() {
+  if (state.completionLoading) return;
+  state.completionLoading = true;
+  updateNavState();
+  $("#saveStatus").textContent = t("finishing_task");
+  $("#saveStatus").className = "status-line";
+  try {
+    finishStepTimer("block_complete");
+    markDirty();
+    await saveAnnotationNow();
+    if (state.dirty) throw new Error(t("final_page_not_saved"));
+    await refreshProgress();
+    const range = currentBlockRange();
+    if (!range || !blockIsComplete(range)) {
+      await loadImage(state.currentIndex + 1, { allowSequentialNext: true });
+      return;
+    }
+    const data = await fetchJson(summaryUrl(range));
+    renderCompletionSummary(data.summary || {}, { mode: "block", range });
+    $("#appView").classList.add("hidden");
+    $("#completionView").classList.remove("hidden");
+    $("#completionView").focus();
+  } catch (error) {
+    $("#saveStatus").textContent = error.message;
+    $("#saveStatus").className = "status-line error";
+    if (!state.stepTimer) startStepTimer(state.step);
+  } finally {
+    state.completionLoading = false;
+    if (!$("#appView").classList.contains("hidden")) updateNavState();
+  }
 }
 
 async function showCompletionView() {
@@ -3837,6 +3997,13 @@ function reviewCompletedTask() {
   }, 0);
 }
 
+async function continueAfterBlock() {
+  const nextIndex = (state.completionRange?.end ?? state.currentIndex) + 1;
+  $("#completionView").classList.add("hidden");
+  $("#appView").classList.remove("hidden");
+  await loadImage(nextIndex, { allowSequentialNext: true });
+}
+
 async function leaveCompletedTask() {
   if (state.hostedMode) {
     await hostedExit();
@@ -3869,13 +4036,13 @@ function estimateRemainingScreens(completedScreens = completedScreensForProgress
 
 function updateProgress() {
   if (!state.manifest) return;
-  const completeCount = state.manifest.images.filter((image) => {
-    const status = state.statuses[image.image_id]?.status;
-    return DONE_STATUSES.has(status);
-  }).length;
+  const range = currentBlockRange();
+  const completeCount = completedPageCount(range);
+  const progressTotal = range?.size || state.manifest.images.length;
   $("#taskProgress").value = Math.round(
-    (completeCount / state.manifest.images.length) * 100,
+    (completeCount / progressTotal) * 100,
   );
+  $("#taskProgress").title = range ? t("block_progress") : t("task_progress");
   const completedScreens = completedScreensForProgress();
   const remaining = estimateRemainingScreens(completedScreens);
   $("#imageProgress").value = state.step.id.startsWith("END_PAGE_")
@@ -4178,7 +4345,10 @@ function render() {
   const image = currentImage();
   const imageTitle = $("#imageTitle");
   if (imageTitle) imageTitle.textContent = image.filename;
-  $("#bottomPageLabel").textContent = `${image.index + 1} / ${image.total}`;
+  const range = currentBlockRange();
+  $("#bottomPageLabel").textContent = range
+    ? `${t("block_label", { current: range.current, total: range.total })} · ${image.index - range.start + 1} / ${range.size}`
+    : `${image.index + 1} / ${image.total}`;
   $("#bottomFilename").textContent = image.filename;
   $("#prevImageButton").disabled = !canNavigateToImageIndex(
     state.currentIndex - 1,
@@ -5130,6 +5300,10 @@ function bindEvents() {
   $("#leaveCompletedTaskButton").addEventListener(
     "click",
     () => void leaveCompletedTask(),
+  );
+  $("#continueBlockButton").addEventListener(
+    "click",
+    () => void continueAfterBlock(),
   );
   $("#reloadAfterConflictButton").addEventListener("click", () =>
     window.location.reload(),

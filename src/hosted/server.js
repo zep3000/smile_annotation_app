@@ -234,7 +234,13 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
       return;
     }
     if (req.method === "GET" && pathname === "/api/summary") {
-      const records = await repo.assignmentSummaryRecords(session.assignment_id);
+      const hasRange = parsedUrl.searchParams.has("start") && parsedUrl.searchParams.has("end");
+      const start = Number(parsedUrl.searchParams.get("start"));
+      const end = Number(parsedUrl.searchParams.get("end"));
+      const range = hasRange && Number.isInteger(start) && Number.isInteger(end)
+        ? { start: Math.max(0, start), end: Math.max(0, end) }
+        : null;
+      const records = await repo.assignmentSummaryRecords(session.assignment_id, range);
       sendJson(res, 200, { ok: true, summary: summarizeAnnotations(records, records.length) });
       return;
     }

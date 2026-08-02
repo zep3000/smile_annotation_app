@@ -166,6 +166,21 @@ label {
   font-weight: 700;
 }
 
+.completion-total-progress {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0 2px;
+}
+
+.completion-total-progress div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .completion-actions {
   display: flex;
   justify-content: flex-end;

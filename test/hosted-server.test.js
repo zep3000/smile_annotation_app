@@ -36,6 +36,7 @@ class FakeRepository {
     this.audits = [];
     this.revision = 0;
     this.saved = null;
+    this.summaryRecords = null;
     this.uploaded = false;
   }
 
@@ -93,8 +94,12 @@ class FakeRepository {
   }
 
   async assignmentProgress() { return { "page-1": this.saved ? { status: this.saved.status, revision: this.revision } : null }; }
-  async assignmentSummaryRecords() {
-    return [{ image_id: "page-1", status: this.saved?.status || null, payload: this.saved || null }];
+  async assignmentSummaryRecords(_assignmentId, range = null) {
+    const records = this.summaryRecords || [
+      { image_id: "page-1", status: this.saved?.status || null, payload: this.saved || null }
+    ];
+    if (!range) return records;
+    return records.slice(range.start, range.end + 1);
   }
   async annotation() { return this.saved ? { payload: this.saved, revision: this.revision } : null; }
   async imageForAssignment() { return { filename: "page-1.jpg", object_key: "sets/test/page-1.jpg" }; }
@@ -202,6 +207,36 @@ test("hosted annotator login protects assignment and image APIs", async (t) => {
     groups_annotated: 0,
     focused_time_ms: 60_000
   });
+});
+
+test("hosted summary range is optional and only limits records when supplied", async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+  const signedIn = await login(app.baseUrl, "annotator", "annotator-secret");
+  await fetch(`${app.baseUrl}/api/assignment/open`, {
+    method: "POST",
+    headers: { cookie: signedIn.cookie, "content-type": "application/json" },
+    body: JSON.stringify({ code: "12345678" })
+  });
+  app.repository.summaryRecords = [
+    { image_id: "page-1", status: "complete", payload: { status: "complete", timing: { total_focused_ms: 60_000 } } },
+    { image_id: "page-2", status: "ineligible", payload: { status: "ineligible", page: { qualifying_ad_count: 0, no_qualifying_ad_reason: "no_ads_on_page" }, timing: { total_focused_ms: 120_000 } } },
+    { image_id: "page-3", status: null, payload: null }
+  ];
+
+  const totalResponse = await fetch(`${app.baseUrl}/api/summary`, { headers: { cookie: signedIn.cookie } });
+  assert.equal(totalResponse.status, 200);
+  const total = (await totalResponse.json()).summary;
+  assert.equal(total.pages_total, 3);
+  assert.equal(total.pages_annotated, 2);
+  assert.equal(total.focused_time_ms, 180_000);
+
+  const blockResponse = await fetch(`${app.baseUrl}/api/summary?start=0&end=1`, { headers: { cookie: signedIn.cookie } });
+  assert.equal(blockResponse.status, 200);
+  const block = (await blockResponse.json()).summary;
+  assert.equal(block.pages_total, 2);
+  assert.equal(block.pages_annotated, 2);
+  assert.equal(block.focused_time_ms, 180_000);
 });
 
 test("hosted annotation saves reject stale revisions", async (t) => {

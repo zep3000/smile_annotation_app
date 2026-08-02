@@ -100,10 +100,15 @@
           <div><strong id="completionGroups">0</strong><span>Groups</span></div>
           <div><strong id="completionTime">0 min</strong><span>Focused time</span></div>
         </div>
+        <div id="completionTotalProgress" class="completion-total-progress hidden">
+          <div><strong id="completionTotalProgressLabel">Total progress</strong><span id="completionTotalProgressCount">0 / 0</span></div>
+          <progress id="completionTotalProgressBar" value="0" max="100"></progress>
+        </div>
         <p class="completion-session">Session <strong id="completionSessionCode"></strong></p>
         <div class="completion-actions">
           <button type="button" id="reviewCompletedTaskButton">Review annotations</button>
           <button type="button" id="leaveCompletedTaskButton" class="primary-command">Sign out</button>
+          <button type="button" id="continueBlockButton" class="primary-command hidden">Continue with next block</button>
         </div>
       </section>
     </main>
