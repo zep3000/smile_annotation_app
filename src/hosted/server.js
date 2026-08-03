@@ -344,6 +344,17 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
       ]);
       return sendJson(res, 200, { ok: true, set, images, assignments, events });
     }
+    if (req.method === "DELETE" && setDetailMatch) {
+      const set = await repo.deleteSetIfUnassigned(setDetailMatch[1]);
+      if (!set) return sendJson(res, 404, { error: "Annotation set not found." });
+      await repo.audit({
+        role: "admin",
+        eventType: "set_deleted",
+        details: { deleted_set_id: set.id, task_id: set.task_id, name: set.name },
+        ipAddress: ip
+      });
+      return sendJson(res, 200, { ok: true, set });
+    }
     const uploadMatch = pathname.match(/^\/api\/admin\/sets\/([0-9a-f-]+)\/images\/([^/]+)$/i);
     if (req.method === "PUT" && uploadMatch) {
       if (!/^image\/jpeg(?:;|$)/i.test(String(req.headers["content-type"] || ""))) {

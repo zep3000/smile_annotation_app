@@ -135,6 +135,37 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
   );
 });
 
+test("repository deletes only sets with zero assignments", async (t) => {
+  const { pool, repository } = await testRepository();
+  t.after(() => pool.end());
+  const deletable = await repository.createSet({
+    name: "Draft without assignments",
+    flowVersion: "1.15",
+    manifest: {
+      task_id: "delete-ok",
+      images: [{ image_id: "page-1", filename: "page-1.jpg", page_type: "single" }]
+    }
+  });
+  const deleted = await repository.deleteSetIfUnassigned(deletable.id);
+  assert.equal(deleted.id, deletable.id);
+  assert.equal(await repository.getSet(deletable.id), null);
+
+  const blocked = await repository.createSet({
+    name: "Draft with assignment",
+    flowVersion: "1.15",
+    manifest: {
+      task_id: "delete-blocked",
+      images: [{ image_id: "page-1", filename: "page-1.jpg", page_type: "single" }]
+    }
+  });
+  await repository.issueAssignments(blocked.id, 1, false);
+  await assert.rejects(
+    repository.deleteSetIfUnassigned(blocked.id),
+    (error) => error.statusCode === 409 && error.code === "set_has_assignments"
+  );
+  assert.equal((await repository.getSet(blocked.id)).id, blocked.id);
+});
+
 test("legacy zero-count pages without a reason remain started", async (t) => {
   const { pool, repository } = await testRepository();
   t.after(() => pool.end());

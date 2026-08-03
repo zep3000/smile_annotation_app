@@ -162,6 +162,41 @@ class HostedRepository {
     return result.rows[0] || null;
   }
 
+  async deleteSetIfUnassigned(setId) {
+    const result = await this.pool.query(
+      "SELECT * FROM annotation_sets WHERE id = $1",
+      [setId]
+    );
+    const set = result.rows[0];
+    if (!set) return null;
+    const assignmentCount = await this.pool.query(
+      "SELECT count(*)::integer AS count FROM assignments WHERE annotation_set_id = $1",
+      [setId]
+    );
+    if (assignmentCount.rows[0].count > 0) {
+      const error = new Error("Only annotation sets with zero assignments can be deleted.");
+      error.statusCode = 409;
+      error.code = "set_has_assignments";
+      throw error;
+    }
+    const deleted = await this.pool.query(
+      `DELETE FROM annotation_sets
+       WHERE id = $1
+         AND NOT EXISTS (
+           SELECT 1 FROM assignments WHERE annotation_set_id = $1
+         )
+       RETURNING id`,
+      [setId]
+    );
+    if (!deleted.rows[0]) {
+      const error = new Error("Only annotation sets with zero assignments can be deleted.");
+      error.statusCode = 409;
+      error.code = "set_has_assignments";
+      throw error;
+    }
+    return set;
+  }
+
   async listSets() {
     const result = await this.pool.query(
       `SELECT s.id, s.name, s.task_id, s.status, s.flow_version, s.created_at,

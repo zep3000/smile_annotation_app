@@ -120,6 +120,10 @@ class FakeRepository {
   async listSets() { return []; }
   async createSet() { return { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task" }; }
   async getSet() { return null; }
+  async deleteSetIfUnassigned() {
+    this.deletedSet = true;
+    return { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task", name: "Test set" };
+  }
   async imageForUpload() { return { id: "30000000-0000-4000-8000-000000000001", image_id: "page-1", object_key: "sets/test/page-1.jpg" }; }
   async reusableUploadedImageForUpload() { return null; }
   async markImageUploaded() { this.uploaded = true; return { image_id: "page-1", uploaded: true }; }
@@ -328,6 +332,24 @@ test("admin upload accepts JPEG bytes and rejects other files", async (t) => {
   });
   assert.equal(valid.status, 200);
   assert.equal(app.repository.uploaded, true);
+});
+
+test("admin can delete a set when the repository allows it", async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+  const signedIn = await login(app.baseUrl, "admin", "admin-secret");
+
+  const response = await fetch(`${app.baseUrl}/api/admin/sets/20000000-0000-4000-8000-000000000001`, {
+    method: "DELETE",
+    headers: { cookie: signedIn.cookie }
+  });
+  assert.equal(response.status, 200);
+  assert.equal(app.repository.deletedSet, true);
+  assert.ok(app.repository.audits.some((event) =>
+    event.eventType === "set_deleted" &&
+      event.setId === undefined &&
+      event.details.deleted_set_id === "20000000-0000-4000-8000-000000000001"
+  ));
 });
 
 test("admin can export one assignment as JSONL", async (t) => {

@@ -118,6 +118,11 @@ function renderDetail() {
     : `All ${set.image_count} manifest images are stored.`;
   $("#activateSetButton").disabled = set.status === "active" || set.uploaded_count !== set.image_count;
   $("#deactivateSetButton").disabled = set.status !== "active";
+  $("#deleteSetButton").disabled = assignments.length !== 0;
+  $("#deleteSetButton").title = assignments.length
+    ? "Only sets with zero assignments can be deleted."
+    : "Delete this set and its manifest image rows.";
+  setStatus("#setActionStatus", "");
   $("#createAssignmentsButton").disabled = set.status === "inactive";
   $("#jsonlExportLink").href = `/api/admin/sets/${set.id}/export.jsonl`;
   $("#jsonExportLink").href = `/api/admin/sets/${set.id}/export.json`;
@@ -348,6 +353,35 @@ async function changeSetStatus(status) {
   }
 }
 
+async function deleteSelectedSet() {
+  if (!state.detail) return;
+  const { set, assignments } = state.detail;
+  if (assignments.length) {
+    setStatus("#setActionStatus", "Only sets with zero assignments can be deleted.", "error");
+    return;
+  }
+  const confirmed = window.confirm(`Delete annotation set "${set.name}" (${set.task_id})? This removes the set and its manifest image rows.`);
+  if (!confirmed) return;
+  $("#deleteSetButton").disabled = true;
+  setStatus("#setActionStatus", "Deleting set...");
+  try {
+    await jsonRequest(`/api/admin/sets/${set.id}`, { method: "DELETE" });
+    const data = await jsonRequest("/api/admin/sets");
+    state.sets = data.sets;
+    state.selectedSetId = null;
+    state.detail = null;
+    renderSetList();
+    if (state.sets.length) {
+      await selectSet(state.sets[0].id);
+    } else {
+      showView("#emptyState");
+    }
+  } catch (error) {
+    setStatus("#setActionStatus", error.message, "error");
+    renderDetail();
+  }
+}
+
 async function createAssignments() {
   setStatus("#assignmentStatus", "Generating codes...");
   try {
@@ -452,6 +486,7 @@ function bindEvents() {
   $("#uploadImagesButton").addEventListener("click", () => void uploadImages());
   $("#activateSetButton").addEventListener("click", () => void changeSetStatus("active"));
   $("#deactivateSetButton").addEventListener("click", () => void changeSetStatus("inactive"));
+  $("#deleteSetButton").addEventListener("click", () => void deleteSelectedSet());
   $("#createAssignmentsButton").addEventListener("click", () => void createAssignments());
   $("#copySourceSet").addEventListener("change", (event) => void loadCopySourceSet(event.target.value));
   $("#copySourceAssignment").addEventListener("change", updateCopyButton);
