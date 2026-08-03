@@ -1290,18 +1290,16 @@ function renderIntroDemo() {
   if (state.hostedIntroIndex === 1) {
     svg.innerHTML = `
       <rect width="360" height="210" fill="#f7f7f1"/>
-      <rect x="18" y="24" width="170" height="152" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
-      <circle cx="68" cy="69" r="22" fill="#d8c2a4"/>
-      <rect x="47" y="98" width="44" height="47" fill="#3e4b57"/>
-      <text x="105" y="64" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700">${escapeHtml(t("intro_demo_ad_a"))}</text>
-      <text x="105" y="86" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="12">${escapeHtml(t("intro_demo_eligible_face"))}</text>
-      <rect x="208" y="24" width="134" height="152" rx="5" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
-      <text x="224" y="58" fill="#28666e" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="800">${escapeHtml(t("intro_demo_person"))}</text>
-      <text x="224" y="86" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700">${escapeHtml(t("intro_demo_choose_one"))}</text>
-      <circle cx="314" cy="56" r="17" fill="#ffffff" stroke="#d9ded6" stroke-width="2"/>
-      <text x="314" y="62" text-anchor="middle" fill="#28666e" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800">?</text>
-      <rect x="224" y="109" width="94" height="28" rx="4" fill="#e5f0ef" stroke="#28666e" stroke-width="2"/>
-      <text x="271" y="128" text-anchor="middle" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="12">${escapeHtml(t("intro_demo_best_fit"))}</text>
+      <rect x="26" y="30" width="134" height="150" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+      <circle cx="76" cy="73" r="24" fill="#d8c2a4"/>
+      <rect x="51" y="106" width="50" height="45" fill="#3e4b57"/>
+      <path d="M106 61h34M106 82h23M106 124h34M106 143h23" stroke="#cfd5cc" stroke-width="8" stroke-linecap="round"/>
+      <rect x="200" y="30" width="134" height="150" rx="5" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+      <path d="M222 65h46M222 88h86" stroke="#28666e" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="300" cy="65" r="17" fill="#ffffff" stroke="#d9ded6" stroke-width="2"/>
+      <text x="300" y="71" text-anchor="middle" fill="#28666e" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800">?</text>
+      <rect x="222" y="116" width="70" height="28" rx="4" fill="#e5f0ef" stroke="#28666e" stroke-width="2"/>
+      <path d="M238 130h38" stroke="#28666e" stroke-width="7" stroke-linecap="round"/>
     `;
     return;
   }
