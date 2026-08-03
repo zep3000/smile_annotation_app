@@ -916,6 +916,13 @@ const UI_TEXT = {
     intro_3_feedback: "Right. The question mark is for rules; the exclamation mark is for urgent comments.",
     intro_3_feedback_retry: "Use the exclamation-mark button for urgent comments.",
     intro_demo_help_comment: "Rules on the left, rare problems on the right.",
+    intro_4_title: "Quality matters more than speed",
+    intro_4_body:
+      "This task is not about being fast. Careful, consistent choices are more important than completing many pages quickly. These human annotations will be used as reference data to evaluate how well LLMs can perform the same coding task.",
+    intro_4_task:
+      "Continue when you are ready to start the annotation task.",
+    intro_demo_quality_main: "Quality first",
+    intro_demo_quality_sub: "Reference data for LLMs",
     assignment_code: "Eight-digit assignment code",
     open_annotation: "Open annotation",
     annotation_set_complete: "Annotation set complete",
@@ -1097,6 +1104,13 @@ const UI_TEXT = {
     intro_3_feedback: "Richtig. Das Fragezeichen ist für Regeln; das Ausrufezeichen für dringende Kommentare.",
     intro_3_feedback_retry: "Nutze die Ausrufezeichen-Schaltfläche für dringende Kommentare.",
     intro_demo_help_comment: "Regeln links, seltene Problemfälle rechts.",
+    intro_4_title: "Qualität ist wichtiger als Tempo",
+    intro_4_body:
+      "Bei dieser Aufgabe geht es nicht darum, möglichst schnell zu sein. Sorgfältige und konsistente Entscheidungen sind wichtiger, als schnell viele Seiten zu schaffen. Die menschlichen Annotationen werden als Referenzdaten genutzt, um zu bewerten, wie gut LLMs dieselbe Codieraufgabe lösen können.",
+    intro_4_task:
+      "Fahre fort, wenn du bereit bist, mit der Annotation zu beginnen.",
+    intro_demo_quality_main: "Qualität zuerst",
+    intro_demo_quality_sub: "Referenzdaten für LLMs",
     assignment_code: "Achtstelliger Zuweisungscode",
     open_annotation: "Annotation öffnen",
     annotation_set_complete: "Annotationsset abgeschlossen",
@@ -1239,7 +1253,7 @@ function t(key, values = {}) {
   );
 }
 
-const HOSTED_INTRO_TOTAL = 3;
+const HOSTED_INTRO_TOTAL = 4;
 
 function hostedIntroComplete() {
   if (state.hostedIntroIndex === 0) return Boolean(state.hostedIntroBox);
@@ -1247,6 +1261,7 @@ function hostedIntroComplete() {
     return state.hostedIntroAnswer === "ads";
   if (state.hostedIntroIndex === 2)
     return state.hostedIntroAnswer === "bang";
+  if (state.hostedIntroIndex === 3) return true;
   return false;
 }
 
@@ -1293,7 +1308,8 @@ function renderIntroDemo() {
     `;
     return;
   }
-  svg.innerHTML = `
+  if (state.hostedIntroIndex === 2) {
+    svg.innerHTML = `
     <rect width="360" height="210" fill="#f7f7f1"/>
     <rect x="34" y="30" width="292" height="150" rx="5" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
     <circle cx="108" cy="105" r="34" fill="#e5f0ef" stroke="#28666e" stroke-width="2"/>
@@ -1302,6 +1318,18 @@ function renderIntroDemo() {
     <text x="252" y="116" text-anchor="middle" fill="#a45c26" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800">!</text>
     <text x="180" y="166" text-anchor="middle" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="13">${escapeHtml(t("intro_demo_help_comment"))}</text>
   `;
+    return;
+  }
+  svg.innerHTML = `
+    <rect width="360" height="210" fill="#f7f7f1"/>
+    <rect x="34" y="30" width="292" height="150" rx="5" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
+    <circle cx="92" cy="105" r="42" fill="#e5f0ef" stroke="#28666e" stroke-width="3"/>
+    <path d="M72 106l14 14 31-37" fill="none" stroke="#28666e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="158" y="91" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800">${escapeHtml(t("intro_demo_quality_main"))}</text>
+    <text x="158" y="121" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="13">${escapeHtml(t("intro_demo_quality_sub"))}</text>
+    <rect x="158" y="138" width="104" height="10" rx="5" fill="#28666e"/>
+    <rect x="268" y="138" width="28" height="10" rx="5" fill="#d9ded6"/>
+  `;
 }
 
 function renderIntroTask() {
@@ -1309,6 +1337,10 @@ function renderIntroTask() {
   if (!task) return;
   if (state.hostedIntroIndex === 0) {
     task.innerHTML = `<p>${escapeHtml(t("intro_1_task"))}</p>`;
+    return;
+  }
+  if (state.hostedIntroIndex === 3) {
+    task.innerHTML = `<p>${escapeHtml(t("intro_4_task"))}</p>`;
     return;
   }
   const answers =
