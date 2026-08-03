@@ -798,6 +798,30 @@ class HostedRepository {
     return { set, records: result.rows };
   }
 
+  async exportAssignment(assignmentId) {
+    const setResult = await this.pool.query(
+      `SELECT s.*
+       FROM assignments a
+       JOIN annotation_sets s ON s.id = a.annotation_set_id
+       WHERE a.id = $1`,
+      [assignmentId]
+    );
+    const set = setResult.rows[0];
+    if (!set) return null;
+    const result = await this.pool.query(
+      `SELECT a.code AS assignment_code, a.status AS assignment_status,
+              i.image_id, i.filename, i.sort_order, n.status, n.revision,
+              n.created_at, n.updated_at, n.completed_at, n.payload
+       FROM assignments a
+       JOIN images i ON i.annotation_set_id = a.annotation_set_id
+       LEFT JOIN annotations n ON n.assignment_id = a.id AND n.image_id = i.id
+       WHERE a.id = $1
+       ORDER BY i.sort_order`,
+      [assignmentId]
+    );
+    return { set, records: result.rows, assignment: result.rows[0] || null };
+  }
+
   async auditEvents(setId, limit = 500) {
     const result = await this.pool.query(
       `SELECT id, actor_role, assignment_id, annotation_set_id, event_type, details, ip_address, created_at

@@ -437,6 +437,29 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
       await repo.audit({ role: "admin", assignmentId: assignment.id, setId: assignment.annotation_set_id, eventType: "assignment_updated", details: body, ipAddress: ip });
       return sendJson(res, 200, { ok: true, assignment });
     }
+    const assignmentExportMatch = pathname.match(/^\/api\/admin\/assignments\/([0-9a-f-]+)\/export\.(json|jsonl)$/i);
+    if (req.method === "GET" && assignmentExportMatch) {
+      const exported = await repo.exportAssignment(assignmentExportMatch[1]);
+      if (!exported) return sendJson(res, 404, { error: "Assignment not found." });
+      const format = assignmentExportMatch[2].toLowerCase();
+      const generatedAt = new Date().toISOString();
+      const assignmentCode = exported.assignment?.assignment_code || assignmentExportMatch[1];
+      const filename = `${contentDispositionFilename(exported.set.task_id)}_${contentDispositionFilename(assignmentCode)}_${generatedAt.slice(0, 10)}.${format}`;
+      const formatted = formatSetExport(exported, generatedAt);
+      const body = formatted[format];
+      await repo.audit({
+        role: "admin",
+        assignmentId: assignmentExportMatch[1],
+        setId: exported.set.id,
+        eventType: "assignment_exported",
+        details: { format, record_count: formatted.records.length },
+        ipAddress: ip
+      });
+      return sendText(res, 200, body, format === "jsonl" ? "application/x-ndjson; charset=utf-8" : "application/json; charset=utf-8", {
+        "content-disposition": `attachment; filename="${filename}"`,
+        "cache-control": "no-store"
+      });
+    }
     const exportMatch = pathname.match(/^\/api\/admin\/sets\/([0-9a-f-]+)\/export\.(json|jsonl)$/i);
     if (req.method === "GET" && exportMatch) {
       const exported = await repo.exportSet(exportMatch[1]);

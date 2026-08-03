@@ -123,6 +123,40 @@ class FakeRepository {
   async imageForUpload() { return { id: "30000000-0000-4000-8000-000000000001", image_id: "page-1", object_key: "sets/test/page-1.jpg" }; }
   async reusableUploadedImageForUpload() { return null; }
   async markImageUploaded() { this.uploaded = true; return { image_id: "page-1", uploaded: true }; }
+  async exportAssignment() {
+    return {
+      set: { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task", name: "Test set" },
+      assignment: { assignment_code: "12345678", assignment_status: "started" },
+      records: [
+        {
+          assignment_code: "12345678",
+          assignment_status: "started",
+          image_id: "page-1",
+          filename: "page-1.jpg",
+          sort_order: 0,
+          status: "complete",
+          revision: 1,
+          created_at: "2026-07-19T10:00:00.000Z",
+          updated_at: "2026-07-19T10:10:00.000Z",
+          completed_at: "2026-07-19T10:10:00.000Z",
+          payload: { status: "complete" }
+        },
+        {
+          assignment_code: "12345678",
+          assignment_status: "started",
+          image_id: "page-2",
+          filename: "page-2.jpg",
+          sort_order: 1,
+          status: null,
+          revision: null,
+          created_at: null,
+          updated_at: null,
+          completed_at: null,
+          payload: null
+        }
+      ]
+    };
+  }
 }
 
 function fakeStorage() {
@@ -294,4 +328,23 @@ test("admin upload accepts JPEG bytes and rejects other files", async (t) => {
   });
   assert.equal(valid.status, 200);
   assert.equal(app.repository.uploaded, true);
+});
+
+test("admin can export one assignment as JSONL", async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+  const signedIn = await login(app.baseUrl, "admin", "admin-secret");
+
+  const response = await fetch(`${app.baseUrl}/api/admin/assignments/10000000-0000-4000-8000-000000000001/export.jsonl`, {
+    headers: { cookie: signedIn.cookie }
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("content-type"), "application/x-ndjson; charset=utf-8");
+  assert.match(response.headers.get("content-disposition"), /test-task_12345678_\d{4}-\d{2}-\d{2}\.jsonl/);
+  const lines = (await response.text()).trim().split("\n").map((line) => JSON.parse(line));
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].assignment_code, "12345678");
+  assert.equal(lines[0].image_id, "page-1");
+  assert.deepEqual(lines[0].annotation, { status: "complete" });
+  assert.ok(app.repository.audits.some((event) => event.eventType === "assignment_exported"));
 });

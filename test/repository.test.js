@@ -114,6 +114,11 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
   assert.equal(secondPageSummaryRecords[0].image_id, "page-2");
   const exported = await repository.exportSet(set.id);
   assert.equal(exported.records.filter((record) => record.payload).length, 2);
+  const assignmentExport = await repository.exportAssignment(issued.id);
+  assert.equal(assignmentExport.set.id, set.id);
+  assert.equal(assignmentExport.assignment.assignment_code, issued.code);
+  assert.equal(assignmentExport.records.length, 2);
+  assert.equal(assignmentExport.records.filter((record) => record.payload).length, 2);
   const assignments = await repository.setAssignments(set.id);
   assert.equal(assignments[0].status, "done");
 

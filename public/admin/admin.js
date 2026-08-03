@@ -215,7 +215,7 @@ function renderAssignments(assignments, imageCount) {
   const rows = $("#assignmentRows");
   rows.innerHTML = "";
   if (!assignments.length) {
-    rows.innerHTML = '<tr><td colspan="6">No assignment codes generated.</td></tr>';
+    rows.innerHTML = '<tr><td colspan="7">No assignment codes generated.</td></tr>';
     return;
   }
   for (const assignment of assignments) {
@@ -227,6 +227,11 @@ function renderAssignments(assignments, imageCount) {
       <td>${assignment.pages_done}/${imageCount} done, ${assignment.pages_started} opened</td>
       <td>${escapeHtml(formatDate(assignment.last_seen_at || assignment.started_at))}</td>
       <td><input class="inline-checkbox" type="checkbox" data-expert-id="${assignment.id}" ${assignment.expert_mode ? "checked" : ""} ${revoked ? "disabled" : ""}></td>
+      <td>
+        <a href="/api/admin/assignments/${encodeURIComponent(assignment.id)}/export.jsonl">JSONL</a>
+        <span aria-hidden="true"> / </span>
+        <a href="/api/admin/assignments/${encodeURIComponent(assignment.id)}/export.json">JSON</a>
+      </td>
       <td><button type="button" data-revoke-id="${assignment.id}" data-revoked="${revoked}">${revoked ? "Restore" : "Revoke"}</button></td>
     `;
     rows.appendChild(row);
