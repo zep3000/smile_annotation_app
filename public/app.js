@@ -921,8 +921,6 @@ const UI_TEXT = {
       "This task is not about being fast. Careful, consistent choices are more important than completing many pages quickly. These human annotations will be used as reference data to evaluate how well LLMs can perform the same coding task.",
     intro_4_task:
       "Continue when you are ready to start the annotation task.",
-    intro_demo_quality_main: "Quality first",
-    intro_demo_quality_sub: "Reference data for LLMs",
     assignment_code: "Eight-digit assignment code",
     open_annotation: "Open annotation",
     annotation_set_complete: "Annotation set complete",
@@ -1109,8 +1107,6 @@ const UI_TEXT = {
       "Bei dieser Aufgabe geht es nicht darum, möglichst schnell zu sein. Sorgfältige und konsistente Entscheidungen sind wichtiger, als schnell viele Seiten zu schaffen. Die menschlichen Annotationen werden als Referenzdaten genutzt, um zu bewerten, wie gut LLMs dieselbe Codieraufgabe lösen können.",
     intro_4_task:
       "Fahre fort, wenn du bereit bist, mit der Annotation zu beginnen.",
-    intro_demo_quality_main: "Qualität zuerst",
-    intro_demo_quality_sub: "Referenzdaten für LLMs",
     assignment_code: "Achtstelliger Zuweisungscode",
     open_annotation: "Annotation öffnen",
     annotation_set_complete: "Annotationsset abgeschlossen",
@@ -1323,12 +1319,11 @@ function renderIntroDemo() {
   svg.innerHTML = `
     <rect width="360" height="210" fill="#f7f7f1"/>
     <rect x="34" y="30" width="292" height="150" rx="5" fill="#ffffff" stroke="#cfd5cc" stroke-width="2"/>
-    <circle cx="92" cy="105" r="42" fill="#e5f0ef" stroke="#28666e" stroke-width="3"/>
-    <path d="M72 106l14 14 31-37" fill="none" stroke="#28666e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="158" y="91" fill="#1c2522" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="800">${escapeHtml(t("intro_demo_quality_main"))}</text>
-    <text x="158" y="121" fill="#66736d" font-family="Arial, Helvetica, sans-serif" font-size="13">${escapeHtml(t("intro_demo_quality_sub"))}</text>
-    <rect x="158" y="138" width="104" height="10" rx="5" fill="#28666e"/>
-    <rect x="268" y="138" width="28" height="10" rx="5" fill="#d9ded6"/>
+    <circle cx="112" cy="105" r="40" fill="#e5f0ef" stroke="#28666e" stroke-width="3"/>
+    <path d="M94 106l13 13 28-35" fill="none" stroke="#28666e" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M166 78h78" stroke="#28666e" stroke-width="10" stroke-linecap="round"/>
+    <path d="M166 105h120" stroke="#28666e" stroke-width="10" stroke-linecap="round" opacity="0.75"/>
+    <path d="M166 132h94" stroke="#d9ded6" stroke-width="10" stroke-linecap="round"/>
   `;
 }
 
