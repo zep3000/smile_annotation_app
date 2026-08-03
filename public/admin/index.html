@@ -103,10 +103,12 @@
                     <input id="imageFiles" type="file" accept="image/jpeg,.jpg,.jpeg" multiple webkitdirectory directory>
                   </label>
                   <button id="uploadImagesButton" type="button" class="primary" disabled>Upload missing</button>
+                  <button id="verifyImagesButton" type="button">Verify stored images</button>
                 </div>
               </div>
               <progress id="uploadProgress" value="0" max="100"></progress>
               <p id="uploadStatus" class="status"></p>
+              <pre id="verifyImagesReport" class="verify-report hidden"></pre>
               <div class="section-actions left-actions">
                 <button id="activateSetButton" type="button" class="primary">Activate set</button>
                 <button id="deactivateSetButton" type="button">Deactivate set</button>

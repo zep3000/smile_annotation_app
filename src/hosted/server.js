@@ -31,6 +31,106 @@ const { summarizeAnnotations } = require("../shared/annotation-summary");
 
 const PUBLIC_DIR = path.resolve(__dirname, "..", "..", "public");
 const DONE_STATUSES = new Set(["complete", "ineligible", "needs_review"]);
+const SMALL_SINGLE_PAGE_BYTES = 500_000;
+const SMALL_DOUBLE_PAGE_BYTES = 2_000_000;
+
+async function objectBodyBuffer(body) {
+  if (!body) return Buffer.alloc(0);
+  if (Buffer.isBuffer(body)) return body;
+  if (body instanceof Uint8Array) return Buffer.from(body);
+  if (typeof body.transformToByteArray === "function") {
+    return Buffer.from(await body.transformToByteArray());
+  }
+  if (typeof body[Symbol.asyncIterator] === "function") {
+    const chunks = [];
+    for await (const chunk of body) chunks.push(Buffer.from(chunk));
+    return Buffer.concat(chunks);
+  }
+  return Buffer.from(body);
+}
+
+function jpegDimensions(buffer) {
+  if (!isJpeg(buffer)) throw new Error("JPEG start/end markers missing.");
+  let offset = 2;
+  const sofMarkers = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+  while (offset < buffer.length - 1) {
+    while (offset < buffer.length && buffer[offset] === 0xff) offset += 1;
+    const marker = buffer[offset];
+    offset += 1;
+    if (marker === 0xd9) break;
+    if (marker === 0xda) break;
+    if (marker >= 0xd0 && marker <= 0xd7) continue;
+    if (offset + 2 > buffer.length) throw new Error("JPEG segment length is truncated.");
+    const length = buffer.readUInt16BE(offset);
+    if (length < 2 || offset + length > buffer.length) throw new Error("JPEG segment extends beyond file length.");
+    if (sofMarkers.has(marker)) {
+      if (length < 7) throw new Error("JPEG SOF segment is too short.");
+      const height = buffer.readUInt16BE(offset + 3);
+      const width = buffer.readUInt16BE(offset + 5);
+      if (!width || !height) throw new Error("JPEG dimensions are invalid.");
+      return { width, height };
+    }
+    offset += length;
+  }
+  throw new Error("JPEG dimensions could not be decoded.");
+}
+
+async function verifyStoredImage(image, objectStorage) {
+  const problems = [];
+  const warnings = [];
+  if (!image.uploaded) {
+    problems.push("not marked uploaded in database");
+    return { image_id: image.image_id, filename: image.filename, page_type: image.page_type, ok: false, problems, warnings };
+  }
+  let object;
+  try {
+    object = await objectStorage.getJpeg(image.object_key);
+  } catch (error) {
+    problems.push(`storage object missing or unreadable: ${error.message || error.name || "unknown error"}`);
+    return { image_id: image.image_id, filename: image.filename, object_key: image.object_key, page_type: image.page_type, ok: false, problems, warnings };
+  }
+  let buffer;
+  try {
+    buffer = await objectBodyBuffer(object.Body);
+  } catch (error) {
+    problems.push(`storage object body unreadable: ${error.message || "unknown error"}`);
+    return { image_id: image.image_id, filename: image.filename, object_key: image.object_key, page_type: image.page_type, ok: false, problems, warnings };
+  }
+  const byteSize = buffer.length;
+  if (byteSize <= 0) problems.push("storage object is empty");
+  if (image.byte_size !== null && image.byte_size !== undefined && Number(image.byte_size) !== byteSize) {
+    problems.push(`byte size mismatch: database ${image.byte_size}, storage ${byteSize}`);
+  }
+  const sha256 = crypto.createHash("sha256").update(buffer).digest("hex");
+  if (image.sha256 && image.sha256 !== sha256) {
+    problems.push("sha256 mismatch");
+  }
+  let dimensions = null;
+  try {
+    dimensions = jpegDimensions(buffer);
+  } catch (error) {
+    problems.push(`jpeg decode failed: ${error.message}`);
+  }
+  const pageType = String(image.page_type || "").toLowerCase();
+  if (pageType === "single" && byteSize > 0 && byteSize < SMALL_SINGLE_PAGE_BYTES) {
+    warnings.push("single page image is smaller than 500 KB");
+  }
+  if (pageType === "double" && byteSize > 0 && byteSize < SMALL_DOUBLE_PAGE_BYTES) {
+    warnings.push("double page image is smaller than 2 MB");
+  }
+  return {
+    image_id: image.image_id,
+    filename: image.filename,
+    object_key: image.object_key,
+    page_type: image.page_type,
+    ok: problems.length === 0,
+    problems,
+    warnings,
+    byte_size: byteSize,
+    sha256,
+    dimensions
+  };
+}
 
 class LoginLimiter {
   constructor({ attempts = 8, windowMs = 15 * 60 * 1000 } = {}) {
@@ -356,6 +456,32 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
         ipAddress: ip
       });
       return sendJson(res, 200, { ok: true, set });
+    }
+    const verifyImagesMatch = pathname.match(/^\/api\/admin\/sets\/([0-9a-f-]+)\/verify-images$/i);
+    if (req.method === "POST" && verifyImagesMatch) {
+      const setId = verifyImagesMatch[1];
+      const set = await repo.getSet(setId);
+      if (!set) return sendJson(res, 404, { error: "Annotation set not found." });
+      const images = await repo.setImages(setId);
+      const results = [];
+      for (const image of images) {
+        results.push(await verifyStoredImage(image, objectStorage));
+      }
+      const report = {
+        total: results.length,
+        ok: results.filter((result) => result.ok).length,
+        problems: results.filter((result) => result.problems.length > 0).length,
+        warnings: results.filter((result) => result.warnings.length > 0).length,
+        results
+      };
+      await repo.audit({
+        role: "admin",
+        setId,
+        eventType: "images_verified",
+        details: { total: report.total, ok: report.ok, problems: report.problems, warnings: report.warnings },
+        ipAddress: ip
+      });
+      return sendJson(res, 200, { ok: true, report });
     }
     const uploadMatch = pathname.match(/^\/api\/admin\/sets\/([0-9a-f-]+)\/images\/([^/]+)$/i);
     if (req.method === "PUT" && uploadMatch) {

@@ -47,6 +47,25 @@ function summarizeFilenames(images) {
   return `${names.slice(0, 3).join(", ")} and ${names.length - 3} more`;
 }
 
+function formatVerificationReport(report) {
+  const lines = [
+    `Checked ${report.total} manifest image(s).`,
+    `OK: ${report.ok}`,
+    `Problems: ${report.problems}`,
+    `Warnings: ${report.warnings}`
+  ];
+  const notable = (report.results || []).filter((item) => item.problems?.length || item.warnings?.length);
+  if (notable.length) {
+    lines.push("", "Images needing attention:");
+    for (const item of notable.slice(0, 80)) {
+      const issues = [...(item.problems || []), ...(item.warnings || [])].join("; ");
+      lines.push(`- ${item.filename}: ${issues}`);
+    }
+    if (notable.length > 80) lines.push(`- ... ${notable.length - 80} more`);
+  }
+  return lines.join("\n");
+}
+
 async function login() {
   setStatus("#adminLoginStatus", "Signing in...");
   try {
@@ -126,6 +145,8 @@ function renderDetail() {
   $("#createAssignmentsButton").disabled = set.status === "inactive";
   $("#jsonlExportLink").href = `/api/admin/sets/${set.id}/export.jsonl`;
   $("#jsonExportLink").href = `/api/admin/sets/${set.id}/export.json`;
+  $("#verifyImagesReport").classList.add("hidden");
+  $("#verifyImagesReport").textContent = "";
   renderAssignments(assignments, set.image_count);
   renderCopyControls();
   renderAudit(events);
@@ -347,6 +368,37 @@ async function uploadImages() {
   }
 }
 
+async function verifyImages() {
+  if (!state.detail) return;
+  const setId = state.detail.set.id;
+  const report = $("#verifyImagesReport");
+  $("#verifyImagesButton").disabled = true;
+  report.classList.remove("hidden");
+  report.textContent = "Verifying stored images...";
+  setStatus("#uploadStatus", "Verifying stored images. This can take a while for large sets...");
+  try {
+    const data = await jsonRequest(`/api/admin/sets/${setId}/verify-images`, { method: "POST" });
+    report.textContent = formatVerificationReport(data.report);
+    const hasProblems = Number(data.report.problems || 0) > 0;
+    const hasWarnings = Number(data.report.warnings || 0) > 0;
+    setStatus(
+      "#uploadStatus",
+      hasProblems
+        ? "Verification found image problems. Review the report below."
+        : hasWarnings
+          ? "Verification passed, with warnings. Review the report below."
+          : "Verification passed. All stored images look consistent.",
+      hasProblems ? "error" : "success"
+    );
+  } catch (error) {
+    report.textContent = "";
+    report.classList.add("hidden");
+    setStatus("#uploadStatus", error.message, "error");
+  } finally {
+    $("#verifyImagesButton").disabled = false;
+  }
+}
+
 async function changeSetStatus(status) {
   setStatus("#uploadStatus", `${status === "active" ? "Activating" : "Deactivating"} set...`);
   try {
@@ -492,6 +544,7 @@ function bindEvents() {
   $("#createSetForm").addEventListener("submit", (event) => void createSet(event));
   $("#imageFiles").addEventListener("change", (event) => { state.files = [...event.target.files].filter((file) => /\.jpe?g$/i.test(file.name)); updateUploadSelection(); });
   $("#uploadImagesButton").addEventListener("click", () => void uploadImages());
+  $("#verifyImagesButton").addEventListener("click", () => void verifyImages());
   $("#activateSetButton").addEventListener("click", () => void changeSetStatus("active"));
   $("#deactivateSetButton").addEventListener("click", () => void changeSetStatus("inactive"));
   $("#deleteSetButton").addEventListener("click", () => void deleteSelectedSet());

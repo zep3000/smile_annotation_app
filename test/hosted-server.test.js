@@ -1,8 +1,15 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const http = require("node:http");
 const test = require("node:test");
 const { createHostedServer } = require("../src/hosted/server");
 const { tokenHash } = require("../src/hosted/auth");
+
+const VALID_JPEG_1X1 = Buffer.from([
+  0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+  0x01, 0x01, 0x00, 0x48, 0x00, 0x48, 0x00, 0x00, 0xff, 0xc0, 0x00, 0x0b,
+  0x08, 0x00, 0x01, 0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0xff, 0xd9
+]);
 
 function config() {
   return {
@@ -120,7 +127,10 @@ class FakeRepository {
 
   async listSets() { return []; }
   async createSet() { return { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task" }; }
-  async getSet() { return null; }
+  async getSet() { return { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task", name: "Test set" }; }
+  async setImages() {
+    return this.images || [];
+  }
   async deleteSetIfUnassigned() {
     this.deletedSet = true;
     return { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task", name: "Test set" };
@@ -181,10 +191,10 @@ function fakeStorage() {
   };
 }
 
-async function startTestServer() {
-  const repository = new FakeRepository();
+async function startTestServer(options = {}) {
+  const repository = options.repository || new FakeRepository();
   const pool = { async query() { return { rows: [{ ready: 1 }] }; } };
-  const app = createHostedServer({ config: config(), pool, repository, storage: fakeStorage() });
+  const app = createHostedServer({ config: config(), pool, repository, storage: options.storage || fakeStorage() });
   const server = http.createServer(app.handler);
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
@@ -345,6 +355,56 @@ test("admin upload accepts JPEG bytes and rejects other files", async (t) => {
   });
   assert.equal(valid.status, 200);
   assert.equal(app.repository.uploaded, true);
+});
+
+test("admin can verify stored image integrity and small-page warnings", async (t) => {
+  const repository = new FakeRepository();
+  const sha256 = crypto.createHash("sha256").update(VALID_JPEG_1X1).digest("hex");
+  repository.images = [
+    {
+      image_id: "page-1",
+      filename: "page-1.jpg",
+      object_key: "sets/test/page-1.jpg",
+      page_type: "single",
+      uploaded: true,
+      byte_size: VALID_JPEG_1X1.length,
+      sha256
+    },
+    {
+      image_id: "page-2",
+      filename: "page-2.jpg",
+      object_key: "sets/test/missing.jpg",
+      page_type: "double",
+      uploaded: false,
+      byte_size: null,
+      sha256: null
+    }
+  ];
+  const storage = {
+    async getJpeg(key) {
+      assert.equal(key, "sets/test/page-1.jpg");
+      return { Body: VALID_JPEG_1X1, ContentLength: VALID_JPEG_1X1.length };
+    },
+    async putJpeg() {}
+  };
+  const app = await startTestServer({ repository, storage });
+  t.after(app.close);
+  const signedIn = await login(app.baseUrl, "admin", "admin-secret");
+
+  const response = await fetch(`${app.baseUrl}/api/admin/sets/20000000-0000-4000-8000-000000000001/verify-images`, {
+    method: "POST",
+    headers: { cookie: signedIn.cookie }
+  });
+  assert.equal(response.status, 200);
+  const report = (await response.json()).report;
+  assert.equal(report.total, 2);
+  assert.equal(report.ok, 1);
+  assert.equal(report.problems, 1);
+  assert.equal(report.warnings, 1);
+  assert.deepEqual(report.results[0].dimensions, { width: 1, height: 1 });
+  assert.deepEqual(report.results[0].warnings, ["single page image is smaller than 500 KB"]);
+  assert.deepEqual(report.results[1].problems, ["not marked uploaded in database"]);
+  assert.ok(repository.audits.some((event) => event.eventType === "images_verified"));
 });
 
 test("admin can delete a set when the repository allows it", async (t) => {
