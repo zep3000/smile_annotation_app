@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS assignments (
   id uuid PRIMARY KEY,
   annotation_set_id uuid NOT NULL REFERENCES annotation_sets(id) ON DELETE RESTRICT,
   code char(8) NOT NULL UNIQUE CHECK (code ~ '^[0-9]{8}$'),
+  assignee_name text NOT NULL DEFAULT '',
   status text NOT NULL DEFAULT 'not_started'
     CHECK (status IN ('not_started', 'started', 'done', 'revoked')),
   expert_mode boolean NOT NULL DEFAULT false,
@@ -51,6 +52,9 @@ CREATE TABLE IF NOT EXISTS assignments (
   last_seen_at timestamptz,
   revoked_at timestamptz
 );
+
+ALTER TABLE assignments
+  ADD COLUMN IF NOT EXISTS assignee_name text NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS annotations (
   assignment_id uuid NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,

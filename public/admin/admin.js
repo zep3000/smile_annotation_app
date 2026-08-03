@@ -133,7 +133,8 @@ function renderDetail() {
 }
 
 function assignmentOptionLabel(assignment) {
-  return `${assignment.code} | ${assignment.status.replaceAll("_", " ")} | ${assignment.pages_started} opened, ${assignment.pages_done} done`;
+  const name = String(assignment.assignee_name || "").trim();
+  return `${assignment.code}${name ? ` | ${name}` : ""} | ${assignment.status.replaceAll("_", " ")} | ${assignment.pages_started} opened, ${assignment.pages_done} done`;
 }
 
 function fillSelect(select, options, placeholder) {
@@ -220,7 +221,7 @@ function renderAssignments(assignments, imageCount) {
   const rows = $("#assignmentRows");
   rows.innerHTML = "";
   if (!assignments.length) {
-    rows.innerHTML = '<tr><td colspan="7">No assignment codes generated.</td></tr>';
+    rows.innerHTML = '<tr><td colspan="8">No assignment codes generated.</td></tr>';
     return;
   }
   for (const assignment of assignments) {
@@ -228,6 +229,7 @@ function renderAssignments(assignments, imageCount) {
     const revoked = assignment.status === "revoked";
     row.innerHTML = `
       <td><code>${escapeHtml(assignment.code)}</code></td>
+      <td><input class="assignee-input" type="text" maxlength="120" value="${escapeHtml(assignment.assignee_name || "")}" placeholder="Name" data-assignee-id="${assignment.id}"></td>
       <td>${escapeHtml(assignment.status.replaceAll("_", " "))}</td>
       <td>${assignment.pages_done}/${imageCount} done, ${assignment.pages_started} opened</td>
       <td>${escapeHtml(formatDate(assignment.last_seen_at || assignment.started_at))}</td>
@@ -243,6 +245,12 @@ function renderAssignments(assignments, imageCount) {
   }
   rows.querySelectorAll("[data-expert-id]").forEach((input) => {
     input.addEventListener("change", () => void updateAssignment(input.dataset.expertId, { expert_mode: input.checked }));
+  });
+  rows.querySelectorAll("[data-assignee-id]").forEach((input) => {
+    input.addEventListener("change", () => void updateAssignment(input.dataset.assigneeId, { assignee_name: input.value }));
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") input.blur();
+    });
   });
   rows.querySelectorAll("[data-revoke-id]").forEach((button) => {
     button.addEventListener("click", () => void updateAssignment(button.dataset.revokeId, { revoked: button.dataset.revoked !== "true" }));

@@ -440,10 +440,11 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
     const assignmentMatch = pathname.match(/^\/api\/admin\/assignments\/([0-9a-f-]+)$/i);
     if (req.method === "PATCH" && assignmentMatch) {
       const body = await readJson(req, 16 * 1024);
-      const assignment = await repo.updateAssignment(assignmentMatch[1], {
-        expertMode: typeof body.expert_mode === "boolean" ? body.expert_mode : undefined,
-        revoked: typeof body.revoked === "boolean" ? body.revoked : undefined
-      });
+      const updates = {};
+      if (typeof body.assignee_name === "string") updates.assigneeName = body.assignee_name;
+      if (typeof body.expert_mode === "boolean") updates.expertMode = body.expert_mode;
+      if (typeof body.revoked === "boolean") updates.revoked = body.revoked;
+      const assignment = await repo.updateAssignment(assignmentMatch[1], updates);
       if (!assignment) return sendJson(res, 404, { error: "Assignment not found." });
       await repo.audit({ role: "admin", assignmentId: assignment.id, setId: assignment.annotation_set_id, eventType: "assignment_updated", details: body, ipAddress: ip });
       return sendJson(res, 200, { ok: true, assignment });

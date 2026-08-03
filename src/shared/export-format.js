@@ -6,6 +6,7 @@ function annotationRecord(set, record) {
     annotation_set_id: set.id,
     task_id: set.task_id,
     assignment_code: record.assignment_code,
+    assignee_name: record.assignee_name || "",
     assignment_status: record.assignment_status,
     image_id: record.image_id,
     filename: record.filename,

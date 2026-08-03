@@ -8,6 +8,7 @@ test("formats matching JSON and JSONL annotation exports", () => {
     records: [
       {
         assignment_code: "12345678",
+        assignee_name: "Ada Lovelace",
         assignment_status: "done",
         image_id: "page-1",
         filename: "page-1.jpg",
@@ -32,6 +33,7 @@ test("formats matching JSON and JSONL annotation exports", () => {
   assert.equal(json.annotations.length, 1);
   assert.equal(jsonl.length, 1);
   assert.equal(jsonl[0].annotation_set_id, "set-1");
+  assert.equal(jsonl[0].assignee_name, "Ada Lovelace");
   assert.equal(jsonl[0].server_created_at, "2026-07-19T10:00:00.000Z");
   assert.deepEqual(jsonl[0].annotation, json.annotations[0].payload);
 });

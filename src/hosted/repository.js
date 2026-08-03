@@ -237,7 +237,7 @@ class HostedRepository {
 
   async setAssignments(setId) {
     const result = await this.pool.query(
-      `SELECT a.id, a.code, a.status, a.expert_mode, a.current_image_order,
+      `SELECT a.id, a.code, a.assignee_name, a.status, a.expert_mode, a.current_image_order,
               a.created_at, a.started_at, a.completed_at, a.last_seen_at, a.revoked_at,
               COALESCE(nc.pages_started, 0)::integer AS pages_started,
               COALESCE(nc.pages_done, 0)::integer AS pages_done
@@ -383,6 +383,16 @@ class HostedRepository {
   async updateAssignment(assignmentId, updates) {
     const fields = [];
     const values = [assignmentId];
+    if (Object.prototype.hasOwnProperty.call(updates, "assigneeName")) {
+      const name = String(updates.assigneeName || "").trim();
+      if (name.length > 120) {
+        const error = new Error("Assignee name must be at most 120 characters.");
+        error.statusCode = 400;
+        throw error;
+      }
+      values.push(name);
+      fields.push(`assignee_name = $${values.length}`);
+    }
     if (typeof updates.expertMode === "boolean") {
       values.push(updates.expertMode);
       fields.push(`expert_mode = $${values.length}`);
@@ -820,7 +830,7 @@ class HostedRepository {
     const set = await this.getSet(setId);
     if (!set) return null;
     const result = await this.pool.query(
-      `SELECT a.code AS assignment_code, a.status AS assignment_status,
+      `SELECT a.code AS assignment_code, a.assignee_name, a.status AS assignment_status,
               i.image_id, i.filename, i.sort_order, n.status, n.revision,
               n.created_at, n.updated_at, n.completed_at, n.payload
        FROM assignments a
@@ -844,7 +854,7 @@ class HostedRepository {
     const set = setResult.rows[0];
     if (!set) return null;
     const result = await this.pool.query(
-      `SELECT a.code AS assignment_code, a.status AS assignment_status,
+      `SELECT a.code AS assignment_code, a.assignee_name, a.status AS assignment_status,
               i.image_id, i.filename, i.sort_order, n.status, n.revision,
               n.created_at, n.updated_at, n.completed_at, n.payload
        FROM assignments a

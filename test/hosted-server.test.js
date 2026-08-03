@@ -127,6 +127,16 @@ class FakeRepository {
   async imageForUpload() { return { id: "30000000-0000-4000-8000-000000000001", image_id: "page-1", object_key: "sets/test/page-1.jpg" }; }
   async reusableUploadedImageForUpload() { return null; }
   async markImageUploaded() { this.uploaded = true; return { image_id: "page-1", uploaded: true }; }
+  async updateAssignment(id, updates) {
+    this.assignmentUpdate = { id, updates };
+    return {
+      id,
+      annotation_set_id: "20000000-0000-4000-8000-000000000001",
+      code: "12345678",
+      assignee_name: updates.assigneeName || "",
+      status: "not_started"
+    };
+  }
   async exportAssignment() {
     return {
       set: { id: "20000000-0000-4000-8000-000000000001", task_id: "test-task", name: "Test set" },
@@ -350,6 +360,24 @@ test("admin can delete a set when the repository allows it", async (t) => {
       event.setId === undefined &&
       event.details.deleted_set_id === "20000000-0000-4000-8000-000000000001"
   ));
+});
+
+test("admin can save an assignment assignee name", async (t) => {
+  const app = await startTestServer();
+  t.after(app.close);
+  const signedIn = await login(app.baseUrl, "admin", "admin-secret");
+
+  const response = await fetch(`${app.baseUrl}/api/admin/assignments/10000000-0000-4000-8000-000000000001`, {
+    method: "PATCH",
+    headers: { cookie: signedIn.cookie, "content-type": "application/json" },
+    body: JSON.stringify({ assignee_name: "Ada Lovelace" })
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(app.repository.assignmentUpdate, {
+    id: "10000000-0000-4000-8000-000000000001",
+    updates: { assigneeName: "Ada Lovelace" }
+  });
+  assert.equal((await response.json()).assignment.assignee_name, "Ada Lovelace");
 });
 
 test("admin can export one assignment as JSONL", async (t) => {

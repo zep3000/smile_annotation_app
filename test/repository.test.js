@@ -49,6 +49,8 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
 
   const [issued] = await repository.issueAssignments(set.id, 1, false);
   assert.match(issued.code, /^\d{8}$/);
+  const renamed = await repository.updateAssignment(issued.id, { assigneeName: "Ada Lovelace" });
+  assert.equal(renamed.assignee_name, "Ada Lovelace");
   const opened = await repository.openAssignment(issued.code);
   assert.equal(opened.status, "started");
   await repository.createAuthSession({
@@ -117,10 +119,12 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
   const assignmentExport = await repository.exportAssignment(issued.id);
   assert.equal(assignmentExport.set.id, set.id);
   assert.equal(assignmentExport.assignment.assignment_code, issued.code);
+  assert.equal(assignmentExport.assignment.assignee_name, "Ada Lovelace");
   assert.equal(assignmentExport.records.length, 2);
   assert.equal(assignmentExport.records.filter((record) => record.payload).length, 2);
   const assignments = await repository.setAssignments(set.id);
   assert.equal(assignments[0].status, "done");
+  assert.equal(assignments[0].assignee_name, "Ada Lovelace");
 
   await repository.setStatus(set.id, "inactive");
   assert.equal(await repository.assignmentManifest(issued.id), null);

@@ -104,6 +104,7 @@ th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: left; 
 th { color: var(--muted); font-size: 11px; text-transform: uppercase; }
 td code { font-size: 15px; font-weight: 800; }
 .inline-checkbox { width: 18px; height: 18px; }
+.assignee-input { width: 170px; min-width: 140px; padding: 7px 8px; }
 .audit-list { display: grid; border-top: 1px solid var(--line); }
 .audit-item { display: grid; grid-template-columns: 170px 180px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
 .audit-item > * { min-width: 0; }
