@@ -538,6 +538,17 @@ class HostedRepository {
     return result.rows;
   }
 
+  async assignmentFocusedTimeMs(assignmentId) {
+    const result = await this.pool.query(
+      "SELECT payload FROM annotations WHERE assignment_id = $1",
+      [assignmentId]
+    );
+    return result.rows.reduce((total, row) => {
+      const value = Number(row.payload?.timing?.total_focused_ms);
+      return Number.isFinite(value) && value > 0 ? total + value : total;
+    }, 0);
+  }
+
   async imageForAssignment(assignmentId, externalImageId) {
     const result = await this.pool.query(
       `SELECT i.* FROM assignments a

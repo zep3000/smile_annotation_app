@@ -75,7 +75,7 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
     assignmentId: issued.id,
     externalImageId: "page-1",
     expectedRevision: 0,
-    payload: { status: "complete", page: { qualifying_ad_count: 1 } }
+    payload: { status: "complete", page: { qualifying_ad_count: 1 }, timing: { total_focused_ms: 60_000 } }
   });
   assert.equal(firstSave.revision, 1);
   assert.equal(firstSave.allDone, false);
@@ -99,10 +99,12 @@ test("repository supports a complete hosted assignment lifecycle", async (t) => 
       page: {
         qualifying_ad_count: 0,
         no_qualifying_ad_reason: "ads_present_no_visible_faces"
-      }
+      },
+      timing: { total_focused_ms: 120_000 }
     }
   });
   assert.equal(finalSave.allDone, true);
+  assert.equal(await repository.assignmentFocusedTimeMs(issued.id), 180_000);
 
   const progress = await repository.assignmentProgress(issued.id);
   assert.equal(progress["page-1"].status, "complete");

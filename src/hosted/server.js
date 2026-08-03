@@ -194,6 +194,7 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
     assignmentLimiter.clear(limiterKey);
     const rawToken = sessionTokenFromRequest(req);
     await repo.attachAssignment(tokenHash(rawToken), assignment.id);
+    const focusedTimeMs = await repo.assignmentFocusedTimeMs(assignment.id);
     await repo.audit({
       role: "annotator",
       assignmentId: assignment.id,
@@ -204,6 +205,7 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
     sendJson(res, 200, {
       ok: true,
       resumed: Boolean(assignment.started_at),
+      focused_time_ms: focusedTimeMs,
       session: {
         session_id: assignment.id,
         session_code: assignment.code,

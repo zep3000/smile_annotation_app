@@ -1250,6 +1250,7 @@ function t(key, values = {}) {
 }
 
 const HOSTED_INTRO_TOTAL = 4;
+const HOSTED_INTRO_WORKED_THRESHOLD_MS = 30 * 60 * 1000;
 
 function hostedIntroComplete() {
   if (state.hostedIntroIndex === 0) return Boolean(state.hostedIntroBox);
@@ -5077,6 +5078,14 @@ async function enterHostedAssignment(code) {
   state.session = sessionData.session;
   state.manifest = manifestData.manifest;
   await refreshProgress();
+  if (Number(sessionData.focused_time_ms || 0) <= HOSTED_INTRO_WORKED_THRESHOLD_MS) {
+    setHostedEntryStep("intro");
+    return;
+  }
+  await showHostedAnnotationApp();
+}
+
+async function showHostedAnnotationApp() {
   $("#loginView").classList.add("hidden");
   $("#appView").classList.remove("hidden");
   $("#taskTitle").textContent = state.manifest.task_id;
@@ -5100,7 +5109,7 @@ async function hostedLogin() {
   try {
     await postJson("/api/auth/login", { role: "annotator", password });
     $("#hostedPassword").value = "";
-    setHostedEntryStep("intro");
+    setHostedEntryStep("assignment");
   } catch (error) {
     $("#loginStatus").textContent = error.message;
     $("#loginStatus").className = "status-line error";
@@ -5256,14 +5265,22 @@ function finishIntroBox(event) {
 function advanceHostedIntro() {
   if (!hostedIntroComplete()) return;
   if (state.hostedIntroIndex >= HOSTED_INTRO_TOTAL - 1) {
-    setHostedEntryStep("assignment");
+    if (state.session && state.manifest) {
+      void showHostedAnnotationApp();
+    } else {
+      setHostedEntryStep("assignment");
+    }
     return;
   }
   setHostedIntroIndex(state.hostedIntroIndex + 1);
 }
 
 function skipHostedIntro() {
-  setHostedEntryStep("assignment");
+  if (state.session && state.manifest) {
+    void showHostedAnnotationApp();
+  } else {
+    setHostedEntryStep("assignment");
+  }
 }
 
 function bindEvents() {
@@ -5432,7 +5449,7 @@ async function boot() {
       } else if (auth.assignment?.code) {
         await enterHostedAssignment(auth.assignment.code);
       } else {
-        setHostedEntryStep("intro");
+        setHostedEntryStep("assignment");
       }
     } catch (error) {
       $("#loginStatus").textContent = error.message;

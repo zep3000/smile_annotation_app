@@ -101,6 +101,7 @@ class FakeRepository {
     if (!range) return records;
     return records.slice(range.start, range.end + 1);
   }
+  async assignmentFocusedTimeMs() { return this.focusedTimeMs || 0; }
   async annotation() { return this.saved ? { payload: this.saved, revision: this.revision } : null; }
   async imageForAssignment() { return { filename: "page-1.jpg", object_key: "sets/test/page-1.jpg" }; }
 
@@ -227,12 +228,14 @@ test("hosted annotator login protects assignment and image APIs", async (t) => {
   const noAssignment = await fetch(`${app.baseUrl}/api/manifest`, { headers: { cookie: signedIn.cookie } });
   assert.equal(noAssignment.status, 403);
 
+  app.repository.focusedTimeMs = 1_800_001;
   const opened = await fetch(`${app.baseUrl}/api/assignment/open`, {
     method: "POST",
     headers: { cookie: signedIn.cookie, "content-type": "application/json" },
     body: JSON.stringify({ code: "12345678" })
   });
   assert.equal(opened.status, 200);
+  assert.equal((await opened.json()).focused_time_ms, 1_800_001);
 
   const image = await fetch(`${app.baseUrl}/api/image?image_id=page-1`, { headers: { cookie: signedIn.cookie } });
   assert.equal(image.status, 200);
