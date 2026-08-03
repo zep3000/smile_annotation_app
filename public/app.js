@@ -640,6 +640,9 @@ const state = {
   completionSummary: null,
   completionMode: "final",
   completionRange: null,
+  pageListBlockStart: 0,
+  pageListSearch: "",
+  pendingUnfinishedBlockRange: null,
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -970,6 +973,7 @@ const UI_TEXT = {
     block_progress: "Block progress",
     total_progress: "Total progress",
     block_label: "Block {current} / {total}",
+    page: "Page",
     task: "Task",
     expert: "Expert",
     exit: "Exit",
@@ -998,6 +1002,17 @@ const UI_TEXT = {
     language_group: "Interface language",
     page_overview: "Page overview",
     page_states: "Page states",
+    previous_block: "Previous block",
+    next_block: "Next block",
+    page_search: "Search page",
+    page_search_placeholder: "Index or page id",
+    page_search_no_match: "No page found.",
+    page_search_multiple: "{count} pages found.",
+    unfinished_block_title: "This block has unfinished pages",
+    unfinished_block_text:
+      "{count} page(s) in this block are not complete. You can review them through Pages at the bottom left.",
+    review_pages: "Review pages",
+    continue_anyway: "Continue anyway",
     open_page_overview: "Open page overview",
     open_page_overview_expert: "Open page overview; all pages are available",
     choose_saved_annotation: "Choose a saved annotation to resume.",
@@ -1156,6 +1171,7 @@ const UI_TEXT = {
     block_progress: "Blockfortschritt",
     total_progress: "Gesamtfortschritt",
     block_label: "Block {current} / {total}",
+    page: "Seite",
     task: "Aufgabe",
     expert: "Expert",
     exit: "Beenden",
@@ -1184,6 +1200,17 @@ const UI_TEXT = {
     language_group: "Sprache der Oberfläche",
     page_overview: "Seitenübersicht",
     page_states: "Seitenstatus",
+    previous_block: "Vorheriger Block",
+    next_block: "Nächster Block",
+    page_search: "Seite suchen",
+    page_search_placeholder: "Index oder Seiten-ID",
+    page_search_no_match: "Keine Seite gefunden.",
+    page_search_multiple: "{count} Seiten gefunden.",
+    unfinished_block_title: "Dieser Block hat unfertige Seiten",
+    unfinished_block_text:
+      "{count} Seite(n) in diesem Block sind nicht abgeschlossen. Du kannst sie über Seiten unten links prüfen.",
+    review_pages: "Seiten prüfen",
+    continue_anyway: "Trotzdem fortfahren",
     open_page_overview: "Seitenübersicht öffnen",
     open_page_overview_expert:
       "Seitenübersicht öffnen; alle Seiten sind verfügbar",
@@ -1530,6 +1557,8 @@ function applyLanguage({ rerender = true } = {}) {
   setAriaLabel("#imageList", "page_overview");
   setText(".page-list-header > strong", "pages");
   setAriaLabel(".page-list-legend", "page_states");
+  setText(".page-list-search label", "page_search");
+  setPlaceholder("#pageListSearchInput", "page_search_placeholder");
   const legendStates = $$(".page-list-legend .page-state");
   ["not_started", "started", "done"].forEach((key, index) => {
     if (legendStates[index]) legendStates[index].lastChild.textContent = t(key);
@@ -1583,6 +1612,9 @@ function applyLanguage({ rerender = true } = {}) {
   const conflictText = $("#saveConflictDialog .instruction");
   if (conflictText) conflictText.textContent = t("page_changed_explanation");
   $("#reloadAfterConflictButton").textContent = t("reload_page");
+  setText("#unfinishedBlockTitle", "unfinished_block_title");
+  $("#reviewUnfinishedBlockButton").textContent = t("review_pages");
+  $("#continueUnfinishedBlockButton").textContent = t("continue_anyway");
 
   if (state.manifest) {
     $("#pageListToggle").title = state.expertMode
@@ -3869,6 +3901,23 @@ function blockIsComplete(range) {
   return Boolean(range && completedPageCount(range) === range.size);
 }
 
+function unfinishedPageCount(range) {
+  return range ? range.size - completedPageCount(range) : 0;
+}
+
+function blockRangeFromStart(start) {
+  const blockSize = manifestBlockSize();
+  const total = state.manifest?.images?.length || 0;
+  if (!blockSize || !total) return null;
+  const safeStart = clamp(Math.floor(Number(start) || 0), 0, total - 1);
+  return currentBlockRange(Math.floor(safeStart / blockSize) * blockSize);
+}
+
+function syncPageListToCurrentBlock() {
+  const range = currentBlockRange();
+  state.pageListBlockStart = range ? range.start : 0;
+}
+
 function summaryUrl(range = null) {
   const params = new URLSearchParams();
   if (!state.hostedMode) {
@@ -3967,7 +4016,14 @@ async function showBlockCompletionView() {
     await refreshProgress();
     const range = currentBlockRange();
     if (!range || !blockIsComplete(range)) {
-      await loadImage(state.currentIndex + 1, { allowSequentialNext: true });
+      state.pendingUnfinishedBlockRange = range;
+      $("#unfinishedBlockText").textContent = t("unfinished_block_text", {
+        count: unfinishedPageCount(range),
+      });
+      $("#unfinishedBlockTitle").textContent = t("unfinished_block_title");
+      $("#reviewUnfinishedBlockButton").textContent = t("review_pages");
+      $("#continueUnfinishedBlockButton").textContent = t("continue_anyway");
+      $("#unfinishedBlockDialog").showModal();
       return;
     }
     const data = await fetchJson(summaryUrl(range));
@@ -4028,6 +4084,27 @@ async function continueAfterBlock() {
   $("#completionView").classList.add("hidden");
   $("#appView").classList.remove("hidden");
   await loadImage(nextIndex, { allowSequentialNext: true });
+}
+
+function reviewUnfinishedBlock() {
+  const range = state.pendingUnfinishedBlockRange || currentBlockRange();
+  if (range) state.pageListBlockStart = range.start;
+  state.pageListSearch = "";
+  $("#pageListSearchInput").value = "";
+  $("#unfinishedBlockDialog").close();
+  $(".workspace").classList.add("sidebar-open");
+  renderImageList();
+  setStageSize();
+  renderOverlay();
+}
+
+async function continueUnfinishedBlock() {
+  const range = state.pendingUnfinishedBlockRange || currentBlockRange();
+  state.pendingUnfinishedBlockRange = null;
+  $("#unfinishedBlockDialog").close();
+  if (range) {
+    await loadImage(range.end + 1, { allowSequentialNext: true });
+  }
 }
 
 async function leaveCompletedTask() {
@@ -4111,36 +4188,121 @@ function canNavigateToImageIndex(index, { allowSequentialNext = false } = {}) {
   return index <= Math.min(limit, state.manifest.images.length - 1);
 }
 
+function pageListButton(index, image, extraClass = "") {
+  const button = document.createElement("button");
+  button.type = "button";
+  if (extraClass) button.classList.add(extraClass);
+  if (index === state.currentIndex) button.classList.add("active");
+  const workState = pageWorkState(image.image_id);
+  const canOpen = canNavigateToImageIndex(index);
+  button.disabled = !canOpen;
+  button.dataset.pageState = workState.key;
+  button.setAttribute(
+    "aria-current",
+    index === state.currentIndex ? "page" : "false",
+  );
+  button.title = canOpen
+    ? t("page_status_title", { number: index + 1, status: workState.label })
+    : t("page_locked_title", { number: index + 1, status: workState.label });
+  button.innerHTML = `
+    <span class="page-list-copy">
+      <span class="image-name">${escapeHtml(image.filename)}</span>
+      <span class="page-state ${workState.key}"><span class="page-state-dot"></span>${workState.label}</span>
+    </span>
+    <span class="page-index">${index + 1}</span>
+  `;
+  button.addEventListener("click", () => {
+    if (canOpen) void loadImage(index);
+  });
+  return button;
+}
+
+function pageListNavButton(label, targetStart, disabled = false) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "page-list-block-nav";
+  button.disabled = disabled;
+  button.innerHTML = `<span>${escapeHtml(label)}</span>`;
+  button.addEventListener("click", () => {
+    if (disabled) return;
+    state.pageListBlockStart = targetStart;
+    state.pageListSearch = "";
+    $("#pageListSearchInput").value = "";
+    renderImageList();
+  });
+  return button;
+}
+
+function pageSearchMatches(query) {
+  const text = String(query || "").trim().toLowerCase();
+  if (!text) return null;
+  const numeric = /^\d+$/.test(text) ? Number(text) : null;
+  if (numeric !== null && numeric < 1000) {
+    const index = numeric - 1;
+    return index >= 0 && index < state.manifest.images.length ? [index] : [];
+  }
+  return state.manifest.images
+    .map((image, index) => ({ image, index }))
+    .filter(({ image }) =>
+      String(image.image_id || "").toLowerCase().includes(text) ||
+      String(image.filename || "").toLowerCase().includes(text),
+    )
+    .map(({ index }) => index);
+}
+
 function renderImageList() {
   const list = $("#imageListItems");
   list.innerHTML = "";
-  state.manifest.images.forEach((image, index) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    if (index === state.currentIndex) button.classList.add("active");
-    const workState = pageWorkState(image.image_id);
-    const canOpen = canNavigateToImageIndex(index);
-    button.disabled = !canOpen;
-    button.dataset.pageState = workState.key;
-    button.setAttribute(
-      "aria-current",
-      index === state.currentIndex ? "page" : "false",
-    );
-    button.title = canOpen
-      ? t("page_status_title", { number: index + 1, status: workState.label })
-      : t("page_locked_title", { number: index + 1, status: workState.label });
-    button.innerHTML = `
-      <span class="page-list-copy">
-        <span class="image-name">${escapeHtml(image.filename)}</span>
-        <span class="page-state ${workState.key}"><span class="page-state-dot"></span>${workState.label}</span>
-      </span>
-      <span class="page-index">${index + 1}</span>
-    `;
-    button.addEventListener("click", () => {
-      if (canOpen) void loadImage(index);
+  const searchMatches = pageSearchMatches(state.pageListSearch);
+  const status = $("#pageListSearchStatus");
+  if (searchMatches) {
+    if (searchMatches.length === 1) {
+      state.pageListBlockStart = currentBlockRange(searchMatches[0])?.start || 0;
+      status.textContent = "";
+    } else {
+      status.textContent = searchMatches.length
+        ? t("page_search_multiple", { count: searchMatches.length })
+        : t("page_search_no_match");
+    }
+  } else {
+    status.textContent = "";
+  }
+  const range = blockRangeFromStart(state.pageListBlockStart) || {
+    start: 0,
+    end: state.manifest.images.length - 1,
+    size: state.manifest.images.length,
+    current: 1,
+    total: 1,
+  };
+  if (searchMatches && searchMatches.length !== 1) {
+    searchMatches.slice(0, 50).forEach((index) => {
+      list.appendChild(pageListButton(index, state.manifest.images[index], "search-result"));
     });
-    list.appendChild(button);
-  });
+    return;
+  }
+  const blockSize = manifestBlockSize();
+  const previousStart = Math.max(0, range.start - (blockSize || range.size));
+  const nextStart = Math.min(
+    state.manifest.images.length - 1,
+    range.end + 1,
+  );
+  list.appendChild(
+    pageListNavButton(
+      `< ${t("previous_block")}`,
+      previousStart,
+      !blockSize || range.start === 0,
+    ),
+  );
+  for (let index = range.start; index <= range.end; index += 1) {
+    list.appendChild(pageListButton(index, state.manifest.images[index]));
+  }
+  list.appendChild(
+    pageListNavButton(
+      `${t("next_block")} >`,
+      nextStart,
+      !blockSize || range.end >= state.manifest.images.length - 1,
+    ),
+  );
 }
 
 function currentVisibleRegion() {
@@ -4373,7 +4535,7 @@ function render() {
   if (imageTitle) imageTitle.textContent = image.filename;
   const range = currentBlockRange();
   $("#bottomPageLabel").textContent = range
-    ? `${t("block_label", { current: range.current, total: range.total })} · ${image.index - range.start + 1} / ${range.size}`
+    ? `${t("block_label", { current: range.current, total: range.total })} - ${t("page")} ${image.index - range.start + 1} / ${range.size}`
     : `${image.index + 1} / ${image.total}`;
   $("#bottomFilename").textContent = image.filename;
   $("#prevImageButton").disabled = !canNavigateToImageIndex(
@@ -4383,6 +4545,9 @@ function render() {
     state.currentIndex + 1,
   );
   setStageSize();
+  if ($("#workspace").classList.contains("sidebar-open") && !state.pageListSearch) {
+    syncPageListToCurrentBlock();
+  }
   renderImageList();
   renderStepPanel();
   renderOverlay();
@@ -5347,6 +5512,14 @@ function bindEvents() {
     "click",
     () => void continueAfterBlock(),
   );
+  $("#reviewUnfinishedBlockButton").addEventListener(
+    "click",
+    reviewUnfinishedBlock,
+  );
+  $("#continueUnfinishedBlockButton").addEventListener(
+    "click",
+    () => void continueUnfinishedBlock(),
+  );
   $("#reloadAfterConflictButton").addEventListener("click", () =>
     window.location.reload(),
   );
@@ -5373,9 +5546,30 @@ function bindEvents() {
   );
   $("#urgentCommentButton").addEventListener("click", showCommentDialog);
   $("#pageListToggle").addEventListener("click", () => {
-    $("#workspace").classList.toggle("sidebar-open");
+    const workspace = $("#workspace");
+    const opening = !workspace.classList.contains("sidebar-open");
+    workspace.classList.toggle("sidebar-open");
+    if (opening) {
+      syncPageListToCurrentBlock();
+      state.pageListSearch = "";
+      $("#pageListSearchInput").value = "";
+      renderImageList();
+    }
     setStageSize();
     renderOverlay();
+  });
+  $("#pageListSearchInput").addEventListener("input", (event) => {
+    state.pageListSearch = event.target.value;
+    renderImageList();
+  });
+  $("#pageListSearchInput").addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const matches = pageSearchMatches(state.pageListSearch);
+    if (matches?.length !== 1) return;
+    const [index] = matches;
+    if (!canNavigateToImageIndex(index)) return;
+    event.preventDefault();
+    void loadImage(index);
   });
   $("#cancelCommentButton").addEventListener("click", () =>
     $("#commentDialog").close(),

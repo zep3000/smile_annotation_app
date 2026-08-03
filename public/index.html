@@ -125,6 +125,11 @@
             </div>
           </div>
           <div id="imageListItems" class="page-list-items"></div>
+          <div class="page-list-search">
+            <label for="pageListSearchInput">Search page</label>
+            <input id="pageListSearchInput" type="search" placeholder="Index or page id">
+            <p id="pageListSearchStatus" class="status-line"></p>
+          </div>
         </aside>
         <section class="image-pane">
           <div id="imageScroll" class="image-scroll">
@@ -230,6 +235,17 @@
         <p class="instruction">Another browser or tab saved a newer version. Reload this page before continuing so that work is not overwritten.</p>
         <div class="dialog-actions">
           <button type="button" id="reloadAfterConflictButton">Reload page</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="unfinishedBlockDialog" aria-labelledby="unfinishedBlockTitle">
+      <div class="dialog-body">
+        <h2 id="unfinishedBlockTitle">This block has unfinished pages</h2>
+        <p id="unfinishedBlockText" class="instruction"></p>
+        <div class="dialog-actions">
+          <button type="button" id="reviewUnfinishedBlockButton">Review pages</button>
+          <button type="button" id="continueUnfinishedBlockButton">Continue anyway</button>
         </div>
       </div>
     </dialog>
