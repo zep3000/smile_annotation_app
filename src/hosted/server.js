@@ -695,7 +695,7 @@ async function start() {
     shutdown().catch(console.error);
   });
   server.listen(config.port, config.host, () => {
-    console.log(`Annotation App V2 hosted: http://${config.host}:${config.port}`);
+    console.log(`Annotation App 2.0 hosted: http://${config.host}:${config.port}`);
   });
   return server;
 }

@@ -700,7 +700,7 @@ function listen(port) {
     const mode = EXPERT_MODE ? " (expert mode)" : "";
     const address = server.address();
     const activePort = typeof address === "object" && address ? address.port : port;
-    console.log(`Annotation App V2${mode}: http://${HOST}:${activePort}`);
+    console.log(`Annotation App 2.0${mode}: http://${HOST}:${activePort}`);
   });
 }
 

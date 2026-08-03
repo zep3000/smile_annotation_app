@@ -864,7 +864,7 @@ const DISPLAY_LABELS = new Proxy(DISPLAY_LABELS_EN, {
 
 const UI_TEXT = {
   en: {
-    app_title: "Annotation App V2",
+    app_title: "Annotation App 2.0",
     welcome_1:
       "This app guides you through one annotation decision at a time for magazine pages or page spreads.",
     welcome_2:
@@ -1062,7 +1062,7 @@ const UI_TEXT = {
     select_one_option: "Select one option.",
   },
   de: {
-    app_title: "Annotations-App V2",
+    app_title: "Annotations-App 2.0",
     welcome_1:
       "Diese App führt dich Schritt für Schritt durch die Annotation von Magazinseiten oder Doppelseiten.",
     welcome_2:

@@ -82,7 +82,7 @@ test("health is public and the local app remains open when staging auth is disab
 
   const home = await fetch(`${baseUrl}/`);
   assert.equal(home.status, 200);
-  assert.match(await home.text(), /Annotation App V2/);
+  assert.match(await home.text(), /Annotation App 2\.0/);
 });
 
 test("staging auth protects the app but never blocks the Railway healthcheck", async (t) => {
@@ -112,7 +112,7 @@ test("staging auth protects the app but never blocks the Railway healthcheck", a
     }
   });
   assert.equal(authorized.status, 200);
-  assert.match(await authorized.text(), /Annotation App V2/);
+  assert.match(await authorized.text(), /Annotation App 2\.0/);
 });
 
 test("staging auth fails closed when credentials are missing", async () => {

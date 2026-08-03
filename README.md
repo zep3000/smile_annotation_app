@@ -1,4 +1,4 @@
-# Annotation App V2
+# Annotation App 2.0
 
 Stepwise advertisement-face annotation app with local filesystem and hosted
 Railway/PostgreSQL operating modes.
@@ -19,7 +19,7 @@ http://localhost:5176
 ## Local baseline and hosted staging
 
 The working local JSON-storage application source is preserved in Git as tag
-`local-v2-baseline`. Generated annotations and absolute-path manifests remain
+`local-2.0-baseline`. Generated annotations and absolute-path manifests remain
 outside Git and must be backed up separately. This tag is a local recovery
 point; pushing it to a private remote repository is a separate step.
 

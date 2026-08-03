@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.local/annotation-app-v2/annotation_app_manifest_schema_v1.json",
-  "title": "Annotation App V2 Manifest",
-  "description": "Preferred manifest format for Annotation App V2. Hosted mode ignores image path values; local mode requires absolute image paths.",
+  "title": "Annotation App 2.0 Manifest",
+  "description": "Preferred manifest format for Annotation App 2.0. Hosted mode ignores image path values; local mode requires absolute image paths.",
   "type": "object",
   "required": ["task_id", "images"],
   "additionalProperties": true,
