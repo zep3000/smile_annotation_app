@@ -2298,6 +2298,14 @@ function exactAdCountValue(value) {
     : null;
 }
 
+function hasRequiredValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function hasRequiredText(value) {
+  return String(value || "").trim().length > 0;
+}
+
 function ensureAdsForCount(value) {
   const count = exactAdCountValue(value);
   if (!count) return;
@@ -2345,7 +2353,147 @@ function personStartStep(adIndex, person) {
   };
 }
 
+function firstMissingPersonStep(adIndex, person) {
+  const ad = adByIndex(adIndex);
+  const base = {
+    adIndex,
+    personId: person.person_id,
+    personIndex: ad.people.indexOf(person),
+  };
+  if (
+    ad.depiction_type === "multiple_types_present" &&
+    !hasRequiredValue(person.depiction_type)
+  ) {
+    return { ...base, id: "I0_person_depiction_type" };
+  }
+  if (!hasRequiredValue(person.perceived_age)) return { ...base, id: "I1_age" };
+  if (!hasRequiredValue(person.perceived_gender_presentation))
+    return { ...base, id: "I2_gender" };
+  if (!hasRequiredValue(person.face_expression_legibility))
+    return { ...base, id: "I4_expression_legibility" };
+  if (!hasRequiredValue(person.face_orientation))
+    return { ...base, id: "I3_orientation" };
+  const expressionLegible =
+    person.face_expression_legibility !== "0_not_legible";
+  if (expressionLegible) {
+    if (!hasRequiredValue(person.gaze_target))
+      return { ...base, id: "I5_gaze_target" };
+    if (
+      person.gaze_target === "another_person" &&
+      !hasRequiredValue(person.gaze_target_person_id) &&
+      person.gaze_target_person_unboxed !== true
+    ) {
+      return { ...base, id: "I5_target_person" };
+    }
+  }
+  if (!hasRequiredValue(person.mouth_covered))
+    return { ...base, id: "I6_mouth_covered" };
+  if (person.mouth_covered === "yes" || person.mouth_covered === "partly") {
+    if (!hasRequiredValue(person.mouth_covering))
+      return { ...base, id: "I7_mouth_covering" };
+    if (
+      person.mouth_covering === "other" &&
+      !hasRequiredText(person.mouth_covering_other_text)
+    ) {
+      return { ...base, id: "I7_covering_other_text" };
+    }
+  }
+  if (expressionLegible) {
+    if (!hasRequiredValue(person.smile_present))
+      return { ...base, id: "I8_smile_present" };
+    if (
+      person.smile_present === "yes" &&
+      !hasRequiredValue(person.smile_intensity)
+    ) {
+      return { ...base, id: "I9_smile_intensity" };
+    }
+  }
+  return null;
+}
+
+function firstMissingGroupStep(adIndex, group) {
+  const ad = adByIndex(adIndex);
+  const base = {
+    adIndex,
+    groupId: group.group_id,
+    groupIndex: Math.max(0, ad.groups.indexOf(group)),
+  };
+  if (!hasRequiredValue(group.group_type)) return { ...base, id: "G1_group_type" };
+  if (!hasRequiredValue(group.age_composition)) return { ...base, id: "G2_group_age" };
+  if (!hasRequiredValue(group.gender_presentation_composition))
+    return { ...base, id: "G3_group_gender" };
+  if (!hasRequiredValue(group.expression_legibility_distribution))
+    return { ...base, id: "G4_group_expression_legibility" };
+  if (group.expression_legibility_distribution === "all_0_not_legible")
+    return null;
+  if (!hasRequiredValue(group.dominant_gaze))
+    return { ...base, id: "G5_group_gaze" };
+  if (!hasRequiredValue(group.smile_prevalence))
+    return { ...base, id: "G6_group_smile" };
+  if (
+    group.smile_prevalence !== "none" &&
+    group.smile_prevalence !== "not_assessable" &&
+    !hasRequiredValue(group.dominant_smile_intensity)
+  ) {
+    return { ...base, id: "G7_group_smile_intensity" };
+  }
+  return null;
+}
+
+function firstMissingDetailStep(startAdIndex = 0) {
+  for (
+    let adIndex = Math.max(0, startAdIndex);
+    adIndex < state.annotation.advertisements.length;
+    adIndex += 1
+  ) {
+    const ad = adByIndex(adIndex);
+    if (!hasRequiredValue(ad.depiction_type))
+      return { id: "A2_ad_depiction_type", adIndex };
+    if (!hasRequiredValue(ad.face_depiction_count_band))
+      return { id: "A3_unique_person_count", adIndex };
+    const people = canonicalPeople(ad);
+    const isCrowdRoute = CROWD_FACE_BANDS.has(ad.face_depiction_count_band);
+    if (isCrowdRoute) {
+      if (!hasRequiredValue(ad.has_outstanding_individuals))
+        return { id: "C1_outstanding_present", adIndex };
+      if (!ad.groups.some((group) => group.bbox))
+        return { id: "DRAW_GROUP_BOXES", adIndex };
+    } else if (!people.length) {
+      return { id: "A3_unique_person_count", adIndex };
+    }
+    if (people.length >= 2 && !hasRequiredValue(ad.duplicate_faces_present))
+      return { id: "D0_duplicates_present", adIndex };
+    if (
+      ad.duplicate_faces_present === "yes" &&
+      !hasRequiredValue(ad.unique_face_count)
+    ) {
+      return { id: "D1_unique_face_count", adIndex };
+    }
+    for (const person of people) {
+      const missing = firstMissingPersonStep(adIndex, person);
+      if (missing) return missing;
+    }
+    for (const group of ad.groups.filter((item) => item.bbox)) {
+      const missing = firstMissingGroupStep(adIndex, group);
+      if (missing) return missing;
+    }
+  }
+  return null;
+}
+
+function completePageOrFirstMissing() {
+  const missing = firstMissingDetailStep(0);
+  if (missing) {
+    state.annotation.status = "draft";
+    state.annotation.finished_at = null;
+    return missing;
+  }
+  return terminalStep("complete", "END_PAGE_COMPLETE");
+}
+
 function nextAdAfterCompletedAd(adIndex) {
+  const missing = firstMissingDetailStep(0);
+  if (missing) return missing;
   const nextIndex = adIndex + 1;
   if (nextIndex < state.annotation.advertisements.length) {
     return { id: "A2_ad_depiction_type", adIndex: nextIndex };
@@ -2378,7 +2526,7 @@ function firstDetailsFromAd(startAdIndex = 0) {
     if (canonicalPeople(ad).length || ad.groups.length)
       return firstDetailsInAd(adIndex);
   }
-  return terminalStep("complete", "END_PAGE_COMPLETE");
+  return completePageOrFirstMissing();
 }
 
 function duplicateStepAd(step = state.step) {
@@ -4980,6 +5128,14 @@ async function loadImage(index, options = {}) {
   state.annotation = migrateLoadedAnnotation(
     data.annotation || defaultAnnotation(image),
   );
+  const missingLoadedStep =
+    state.annotation.status === "complete" ? firstMissingDetailStep(0) : null;
+  const reopenedIncompleteLoadedStatus = Boolean(missingLoadedStep);
+  if (missingLoadedStep) {
+    state.annotation.status = "draft";
+    state.annotation.finished_at = null;
+    state.annotation.current_step = missingLoadedStep;
+  }
   state.step = normalizeLoadedStep(
     state.annotation.current_step || { id: "P1_qualifying_ad_count" },
   );
@@ -4994,7 +5150,7 @@ async function loadImage(index, options = {}) {
   annotationReady = true;
   if (pageImage.complete && pageImage.naturalWidth) imageReady = true;
   applyLoadedImage();
-  if (normalizedLegacyStatus) {
+  if (normalizedLegacyStatus || reopenedIncompleteLoadedStatus) {
     markDirty();
     void saveAnnotationDebounced();
   }

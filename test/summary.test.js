@@ -64,3 +64,76 @@ test("legacy audience/crowd group type reopens completed annotations", () => {
   };
   assert.equal(effectiveAnnotationStatus(annotation), "draft");
 });
+
+test("completed annotation with unannotated boxed person is treated as draft", () => {
+  const annotation = {
+    status: "complete",
+    flow_source: { flow_schema_version: "1.16" },
+    page: { qualifying_ad_count: "1" },
+    advertisements: [
+      {
+        depiction_type: "photo_of_person",
+        face_depiction_count_band: "2",
+        duplicate_faces_present: "no",
+        people: [
+          {
+            person_id: "ad1_p1",
+            face_bbox: [0, 0, 0.2, 0.2],
+            duplicate_of_person_id: null,
+            perceived_age: null,
+            perceived_gender_presentation: null,
+            face_expression_legibility: null,
+            face_orientation: null,
+            gaze_target: null,
+            mouth_covered: null,
+            mouth_covering: null,
+            smile_present: null,
+            smile_intensity: null
+          },
+          {
+            person_id: "ad1_p2",
+            face_bbox: [0.3, 0.3, 0.5, 0.5],
+            duplicate_of_person_id: null,
+            perceived_age: "middle_adult",
+            perceived_gender_presentation: "masculine",
+            face_expression_legibility: "0_not_legible",
+            face_orientation: "frontal",
+            mouth_covered: "no"
+          }
+        ],
+        groups: []
+      }
+    ]
+  };
+
+  assert.equal(effectiveAnnotationStatus(annotation), "draft");
+});
+
+test("completed annotation with all boxed people annotated remains complete", () => {
+  const completePerson = (personId, x) => ({
+    person_id: personId,
+    face_bbox: [x, 0, x + 0.1, 0.1],
+    duplicate_of_person_id: null,
+    perceived_age: "middle_adult",
+    perceived_gender_presentation: "masculine",
+    face_expression_legibility: "0_not_legible",
+    face_orientation: "frontal",
+    mouth_covered: "no"
+  });
+  const annotation = {
+    status: "complete",
+    flow_source: { flow_schema_version: "1.16" },
+    page: { qualifying_ad_count: "1" },
+    advertisements: [
+      {
+        depiction_type: "photo_of_person",
+        face_depiction_count_band: "2",
+        duplicate_faces_present: "no",
+        people: [completePerson("ad1_p1", 0), completePerson("ad1_p2", 0.2)],
+        groups: []
+      }
+    ]
+  };
+
+  assert.equal(effectiveAnnotationStatus(annotation), "complete");
+});
