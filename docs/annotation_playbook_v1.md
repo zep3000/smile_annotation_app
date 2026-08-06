@@ -1,6 +1,6 @@
 # Advertisement Face Annotation Playbook
 
-Version: 1.15
+Version: 1.16
 
 This playbook defines the human annotation procedure and the behavior expected from an automated or LLM annotator. The application presents one decision at a time and stores bounding boxes as normalized page coordinates in `[x1, y1, x2, y2]` format.
 
@@ -85,29 +85,31 @@ Values:
 
 Classify the form of the depicted face, not the printing process. For example, a photograph of a statue is `photo_of_artwork_or_statue`, not `photo_of_person`.
 
-### A3. Draw faces or choose a crowd band
+### A3. Choose the individual or 10+ route for the current advertisement
 
-Count every eligible face depiction, including faces whose expression is not readable, mirrors, repeated portraits, collage repetitions, and repeated product shots of the same person.
+Make this decision separately for each advertisement. Count every eligible face depiction in the current advertisement, including faces whose expression is not readable, mirrors, repeated portraits, collage repetitions, and repeated product shots of the same person. Apply the same eligibility criterion used during page screening: more than an ear or the back of a head must be visible, and the face must be locatable with a bounding box.
 
-For one through nine faces, keep **individuals or small group** selected and begin drawing immediately. Draw every eligible face box and choose **Done** only when every eligible face depiction in the current advertisement has a box. The app derives and stores the exact count from the number of boxes; no separate count selection is made. This visible UI label still stores the route key `only_individuals`.
+For one through nine faces, keep **fewer than 10 people** selected and begin drawing immediately. Draw every eligible face box and choose **Done** only when every eligible face depiction in the current advertisement has a box. The app derives and stores the exact count from the number of boxes; no separate count selection is made. This visible UI label stores the legacy-compatible route key `only_individuals`.
 
-For ten or more faces, do not draw all individual boxes. Choose `10_20` or `20_plus` to enter the crowd route. This route can be changed back to **individuals or small group** before continuing. If a crowd band is selected after individual boxes have been drawn on this screen, those boxes are retained as `outstanding_individual` records rather than discarded.
+For ten or more eligible faces in the advertisement, do not draw all individual boxes. Choose `10_20` or `20_plus` to enter the aggregate route. This route can be changed back to **fewer than 10 people** before continuing. If a 10+ band is selected after individual boxes have been drawn on this screen, those boxes are retained as `outstanding_individual` records rather than discarded.
 
 Draw the smallest box that covers all visible face and head features needed for coding. Include visible hair, ears, forehead, cheeks, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, labels, or empty background unless they visibly cover or cut across the face. The count concerns depictions, not unique identities, so repeated depictions receive separate boxes. Boxes are stored relative to the full page even while the interface displays only the current advertisement crop. Duplicate identities are resolved later within the current advertisement.
 
-### C1. Outstanding individuals in a crowd
+### C1. Individually coded people in the 10+ route
 
-For an advertisement with `10_20` or `20_plus` faces, choose `yes` when one or more faces are much more visible than the rest of the group or crowd and therefore prominent enough for detailed individual coding. Also choose `yes` when the advertisement contains eligible single individuals that are not part of the group or crowd. Otherwise choose `no`.
+For an advertisement with `10_20` or `20_plus` eligible faces, choose `yes` when one or more faces are much more visible than the other people and therefore prominent enough for detailed individual coding. Also choose `yes` when the advertisement contains eligible single individuals that appear separately from the other people. Otherwise choose `no`.
 
-Outstanding individuals include faces that stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. They also include eligible individuals in the same advertisement who are outside the group or crowd. When present, draw their individual face boxes. Then draw group boxes for the remaining crowd.
+Outstanding individuals include faces that are much larger, clearer, more central, or otherwise much more visible than the rest. They also include eligible individuals in the same advertisement who appear separately from the other people. When present, draw their individual face boxes. Then draw people-area boxes for everyone remaining.
 
-### C2. Group boxes
+### C2. People-area boxes
 
-Draw one box for each visually distinct remaining group. A group box should include all faces in that group. Separate groups only when faces form distinct clusters, panels, scenes, or portrait sets; do not split one crowd merely because it has rows.
+Draw one box around each visually distinct area of remaining eligible faces. A people area is an aggregate annotation unit and does not imply that the depicted people form a social group. Include only faces that meet the standard eligibility criterion. Use one box when all remaining people occupy one visual area. Use separate boxes only when the people form distinct clusters, panels, scenes, or portrait sets; do not split one crowd merely because it has rows.
+
+For backward compatibility, people areas continue to be stored in `advertisement.groups[]` with `group_id` and the established group field names. This is a terminology clarification, not a structural annotation change.
 
 ## 5. Duplicate identity resolution
 
-Duplicate resolution occurs within each advertisement after that advertisement's individual face boxes have been drawn. When a page contains multiple advertisements, finish the first advertisement's face drawing, duplicate resolution, individual coding, and group coding before moving to the second advertisement. Duplicate resolution applies only to individually boxed faces, not to unboxed members represented by a group box.
+Duplicate resolution occurs within each advertisement after that advertisement's individual face boxes have been drawn. When a page contains multiple advertisements, finish the first advertisement's face drawing, duplicate resolution, individual coding, and people-area coding before moving to the second advertisement. Duplicate resolution applies only to individually boxed faces, not to people represented only by a people-area box.
 
 ### D0. Are any boxed faces duplicates?
 
@@ -210,11 +212,11 @@ Asked only when smile presence is `yes`.
 
 Choose the closest level. The scale describes visible configuration and does not claim emotional authenticity.
 
-## 7. Group coding
+## 7. Aggregate people-area coding
 
-For every group box, code:
+For every people-area box, code the following established storage fields:
 
-- Group type: `interacting_group`, `posed_group`, `audience`, `background_population`, `separate_portraits_or_composite`, `other_group`
+- Visual arrangement (`group_type`): `interacting_group`, `posed_group`, `audience`, `background_population`, `separate_portraits_or_composite`, `other_group`
 - Age composition: `young_only`, `middle_only`, `older_only`, `mostly_young`, `mostly_middle`, `mostly_older`, `mixed`, `not_assessable`
 - Gender-presentation composition: `feminine_only`, `masculine_only`, `mostly_feminine`, `mostly_masculine`, `mixed`, `ambiguous_or_androgynous_present`, `not_assessable`
 - Expression legibility distribution: `all_0_not_legible`, `mostly_0_not_legible`, `all_1_low_legibility`, `mostly_1_low_legibility`, `all_2_moderate_legibility`, `mostly_2_moderate_legibility`, `all_3_high_legibility`, `mostly_3_high_legibility`, `mixed_legibility`
@@ -222,19 +224,19 @@ For every group box, code:
 - Smile prevalence: `none`, `minority`, `about_half`, `majority`, `all`, `not_assessable`
 - Dominant smile intensity: `slight`, `clear`, `broad_or_laughter_like`, `mixed`
 
-For group expression legibility, use the same four underlying levels as individual expression legibility, but code their distribution across the boxed group. Use an `all_*` value when all or nearly all grouped faces fall at the same level. Use a `mostly_*` value when one level clearly predominates but exceptions are visible. Use `mixed_legibility` when no single level clearly predominates.
+For people-area expression legibility, use the same four underlying levels as individual expression legibility, but code their distribution across the eligible faces in the box. Use an `all_*` value when all or nearly all faces fall at the same level. Use a `mostly_*` value when one level clearly predominates but exceptions are visible. Use `mixed_legibility` when no single level clearly predominates.
 
-As with individual legibility, score the overall expression-coding result rather than the cause. Low, moderate, or high group legibility may come from small faces, few facial details, covering or occlusion, profile or tilted orientation, blur, low contrast, or degraded reproduction quality.
+As with individual legibility, score the overall expression-coding result rather than the cause. Low, moderate, or high people-area legibility may come from small faces, few facial details, covering or occlusion, profile or tilted orientation, blur, low contrast, or degraded reproduction quality.
 
-Do not ask for group gaze, smile prevalence, or smile intensity when expression legibility is `all_0_not_legible`. Do not ask for group smile intensity when smile prevalence is `none` or `not_assessable`.
+Do not ask for aggregate gaze, smile prevalence, or smile intensity when expression legibility is `all_0_not_legible`. Do not ask for aggregate smile intensity when smile prevalence is `none` or `not_assessable`.
 
 ## 8. Urgent comments and completion
 
-The urgent-comment action is available throughout annotation. Use it when the available labels seem to miss something, or for strange, extremely difficult cases that should be reviewed in depth. The app stores the current page, advertisement, group or person, interrupted step, and timestamp with the comment.
+The urgent-comment action is available throughout annotation. Use it when the available labels seem to miss something, or for strange, extremely difficult cases that should be reviewed in depth. The app stores the current page, advertisement, people area or person, interrupted step, and timestamp with the comment.
 
-A page is complete only after all required boxes, duplicate assignments, canonical-person fields, and group fields have been entered. Creation, update, completion, and per-screen timing information are retained in the structured JSON output.
+A page is complete only after all required boxes, duplicate assignments, canonical-person fields, and people-area fields have been entered. Creation, update, completion, and per-screen timing information are retained in the structured JSON output.
 
-## 9. Variables excluded from version 1.15
+## 9. Variables excluded from version 1.16
 
 - Brand and product category
 - Felt emotion

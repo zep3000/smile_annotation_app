@@ -1,4 +1,4 @@
-schema_version: "1.15"
+schema_version: "1.16"
 title: "Advertisement Face Annotation Flow"
 companion_playbook: "annotation_playbook_v1.md"
 
@@ -16,7 +16,7 @@ scope:
   excluded_from_this_pass: [brand_name, product_category]
 
 units:
-  hierarchy: [page, advertisement, identity_group, person_or_group]
+  hierarchy: [page, advertisement, identity_group, person_or_people_area]
   coordinate_format: normalized_xyxy_relative_to_full_page
   bbox_range: [0.0, 1.0]
   face_bbox_convention: >-
@@ -25,6 +25,22 @@ units:
     moustache, and face-worn items such as glasses. Exclude neck, shoulders,
     captions, labels, and empty background unless they visibly cover or cut
     across the face.
+
+terminology:
+  people_area:
+    definition: >-
+      An aggregate annotation box around one visually distinct area of eligible
+      faces in an advertisement with at least 10 eligible face depictions. It
+      does not imply that the depicted people form a social group.
+    eligibility_rule: >-
+      Include only faces for which more than an ear or the back of a head is
+      visible and the face can be located with a bounding box.
+    legacy_storage_collection: advertisement.groups
+    legacy_storage_id_field: group_id
+    compatibility: >-
+      Version 1.16 changes annotator-facing terminology only. Existing group
+      storage keys and enum values remain canonical so annotations from 1.15
+      and earlier require no structural transformation.
 
 answer_semantics:
   forced_best_fit: "When relevant visual evidence is available, select exactly one best-fitting substantive category, including near category boundaries."
@@ -260,14 +276,14 @@ flow:
       implementation_id: A3_unique_person_count
       unit: advertisement
       field: advertisement.face_depiction_count_band
-      ui: draw_bbox_collection_or_crowd_choice
-      prompt: "Draw a box around every eligible face depiction."
-      instruction: "Keep Individuals or small group selected and draw 1-9 boxes, including eligible faces whose expression is not readable, or choose 10-20 or 20+ for a crowd."
+      ui: draw_bbox_collection_or_count_band_choice
+      prompt: "How many eligible people are visible in this advertisement?"
+      instruction: "Keep Fewer than 10 people selected and draw every eligible face box, including faces whose expression is not readable, or choose 10-20 or 20+. Apply this count only to the current advertisement."
       route_choices:
         - only_individuals
         - 10_20
         - 20_plus
-      route_storage_note: "only_individuals is a UI route only; the stored field is derived from drawn face-box count. If the user switches from only_individuals to a crowd band after drawing boxes, those individual boxes are retained as outstanding_individual records."
+      route_storage_note: "The UI label Fewer than 10 people retains the legacy route key only_individuals; the stored small-count field is derived from drawn face-box count. If the user switches from only_individuals to a 10+ band after drawing boxes, those individual boxes are retained as outstanding_individual records."
       direct_drawing:
         create_unit: person_candidate
         field: face_bbox
@@ -275,7 +291,8 @@ flow:
         maximum: 9
         include_duplicate_depictions: true
         derive_field_value_from: "count(drawn face boxes)"
-      crowd_choices: ["10_20", "20_plus"]
+      aggregate_count_band_choices: ["10_20", "20_plus"]
+      legacy_schema_alias: {crowd_choices: ["10_20", "20_plus"]}
       transitions:
         "1 <= count(drawn face boxes) <= 9": START_DUPLICATE_RESOLUTION
         "value in ['10_20','20_plus']": C1_outstanding_present
@@ -285,12 +302,12 @@ flow:
       field: advertisement.has_outstanding_individuals
       ui: single_choice
       values_from: yes_no
-      instruction: "Choose yes when one or more individuals are much more visible than the rest of the group or crowd, or when eligible single individuals are outside the group."
+      instruction: "Choose yes when one or more individuals are much more visible than the other people, or when eligible single individuals appear separately from them in the advertisement."
       coding_rule: >-
-        Outstanding individuals include faces that stand out from the group by
+        Outstanding individuals include faces that stand out from the other people by
         being much larger, clearer, more central, or otherwise much more visible.
         They also include eligible single individuals in the same advertisement
-        who are not part of the group or crowd.
+        who appear separately from the other people.
       transitions:
         "yes": DRAW_OUTSTANDING_INDIVIDUAL_BOXES
         "no": DRAW_GROUP_BOXES
@@ -307,8 +324,14 @@ flow:
     DRAW_GROUP_BOXES:
       unit: advertisement
       create_unit: group
+      ui_unit: people_area
       field: bbox
       ui: draw_bbox_until_done
+      instruction: >-
+        Draw one box around each visually separate area of remaining eligible
+        faces. A people area is an aggregate annotation unit, not necessarily a
+        social group. Include only faces that satisfy the standard eligibility
+        rule.
       after: START_DUPLICATE_RESOLUTION
 
     START_DUPLICATE_RESOLUTION:
@@ -515,13 +538,16 @@ flow:
 
     G1_group_type:
       unit: group
+      ui_unit: people_area
       field: group_type
       ui: single_choice
       values_from: group_type
+      prompt: "How are the people in this area visually arranged?"
       next: G2_group_age
 
     G2_group_age:
       unit: group
+      ui_unit: people_area
       field: age_composition
       ui: single_choice
       values_from: group_age_composition
@@ -529,6 +555,7 @@ flow:
 
     G3_group_gender:
       unit: group
+      ui_unit: people_area
       field: gender_presentation_composition
       ui: single_choice
       values_from: group_gender_composition
@@ -536,6 +563,7 @@ flow:
 
     G4_group_expression_legibility:
       unit: group
+      ui_unit: people_area
       field: expression_legibility_distribution
       ui: single_choice
       values_from: group_expression_legibility
@@ -562,6 +590,7 @@ flow:
 
     G5_group_gaze:
       unit: group
+      ui_unit: people_area
       field: dominant_gaze
       ui: single_choice
       values_from: group_gaze
@@ -569,6 +598,7 @@ flow:
 
     G6_group_smile:
       unit: group
+      ui_unit: people_area
       field: smile_prevalence
       ui: single_choice
       values_from: group_smile_prevalence
@@ -578,6 +608,7 @@ flow:
 
     G7_group_smile_intensity:
       unit: group
+      ui_unit: people_area
       field: dominant_smile_intensity
       ui: single_choice
       values_from: group_smile_intensity
@@ -609,6 +640,11 @@ storage:
   advertisement_depiction_field: depiction_type
   identity_group_fields: [identity_group_id, scope_ad_id, main_person_id, duplicate_person_ids]
   group_expression_legibility_field: expression_legibility_distribution
+  people_area_compatibility:
+    canonical_collection: advertisement.groups
+    canonical_id_field: group_id
+    migration_from_1_15: identity
+    note: "People area is the UI/codebook term; group remains the stable JSON storage term."
   person_duplicate_fields: [duplicate_of_person_id, duplicate_person_ids]
   depiction_inheritance: "When advertisement.depiction_type is not multiple_types_present, it applies to every person in that advertisement and person.depiction_type remains null."
 

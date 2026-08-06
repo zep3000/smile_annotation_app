@@ -170,71 +170,71 @@ const STEP_META_EN = {
   },
   A3_unique_person_count: {
     unit: "Advertisement",
-    prompt: "Draw a box around every eligible face depiction.",
+    prompt: "How many eligible people are visible in this advertisement?",
     instruction:
-      "Keep Individuals or small group selected and draw 1-9 boxes, or choose 10-20 or 20+ for a crowd.",
-    help: "For one to nine faces, leave Individuals or small group selected, draw every face, and choose Done only after all boxes are drawn. Include eligible faces even when the expression is not readable. The exact count is recorded automatically. Include mirrors and repetitions. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a crowd band after drawing, existing individual boxes are kept as outstanding individuals. You can switch back to Individuals or small group before continuing.",
+      "For fewer than 10 people, leave that option selected and draw every eligible face box. For 10 or more, choose 10-20 or 20+.",
+    help: "This count applies only to the current advertisement. Count only people with an eligible face: more than an ear or the back of a head is visible, and the face can be located with a box. Include eligible faces even when their expression is not readable, as well as mirrors and repetitions. For fewer than 10, draw every face and choose Done only after all boxes are drawn; the exact count is recorded automatically. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses. Do not include neck, shoulders, captions, or empty background unless they visibly cover or cut across the face. If you switch to a 10+ band after drawing, existing individual boxes are kept as outstanding individuals. You can switch back to Fewer than 10 people before continuing.",
   },
   C1_outstanding_present: {
-    unit: "Crowd",
+    unit: "Advertisement with 10+ people",
     prompt:
-      "Are there outstanding individuals that should be annotated separately?",
+      "Should any people be annotated individually?",
     instruction:
-      "Choose yes for people who are much more visible than the rest, or eligible individuals outside the group.",
-    help: "Outstanding individuals include faces that stand out visually from the group, especially by being much larger, clearer, more central, or otherwise much more visible than the rest. Also include eligible single individuals in the advertisement who are not part of the group or crowd. They will receive full individual coding before group coding.",
+      "Choose yes only for people who are much more visible than the rest, or eligible individuals separate from the other people.",
+    help: "In an advertisement with 10 or more people, only outstanding individuals receive full individual coding. These include faces that are much larger, clearer, more central, or otherwise much more visible than the rest, as well as eligible single individuals that are separate from the other people in the advertisement.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "People",
     prompt: "Draw outstanding individual face boxes.",
     instruction: "Draw every outstanding face box before choosing Done.",
-    help: "Use this only for individuals who are much more visible than the remaining crowd or group and should be coded separately. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses.",
+    help: "Use this only for individuals who are much more visible than the other people in the advertisement, or who appear separately from them. Use the smallest box that covers all visible face and head features needed for coding, including visible hair, ears, chin, beard or moustache, and face-worn items such as glasses.",
   },
   DRAW_GROUP_BOXES: {
-    unit: "Groups",
-    prompt: "Draw one box for each visually distinct remaining group.",
-    instruction: "Each group box should include all faces in that group.",
-    help: "Use group boxes for crowds or many small faces where individual annotation would be slow or unreliable.",
+    unit: "People areas",
+    prompt: "Draw one box around each visually separate area of remaining people.",
+    instruction: "Each box should include every remaining eligible face in that area.",
+    help: "A people area is an aggregate annotation unit, not necessarily a social group. Include only eligible faces: more than an ear or the back of a head must be visible, and each face must be locatable. Use one box when all remaining people form one visual area. Use separate boxes only for distinct clusters, panels, scenes, or portrait sets.",
   },
   G1_group_type: {
-    unit: "Group",
-    prompt: "Choose the group type.",
+    unit: "People area",
+    prompt: "How are the people in this area visually arranged?",
     instruction: "",
-    help: "Code the dominant visual organization of the boxed group.",
+    help: "Choose the dominant visual arrangement of the eligible people inside this box. The box does not need to represent a social group.",
   },
   G2_group_age: {
-    unit: "Group",
-    prompt: "Choose the group's apparent age composition.",
+    unit: "People area",
+    prompt: "Choose the apparent age composition in this area.",
     instruction: "",
     help: "Code broad perceived age composition only from visible evidence.",
   },
   G3_group_gender: {
-    unit: "Group",
-    prompt: "Choose the group's perceived gender-presentation composition.",
+    unit: "People area",
+    prompt: "Choose the perceived gender-presentation composition in this area.",
     instruction: "",
     help: "Code presentation, not identity. Use not assessable only when the necessary visual evidence is unavailable.",
   },
   G4_group_expression_legibility: {
-    unit: "Group",
-    prompt: "How legible are facial expressions in this group?",
+    unit: "People area",
+    prompt: "How legible are facial expressions in this area?",
     instruction:
       "Judge how well facial expressions can be assessed, then choose the closest distribution.",
-    help: "Expression legibility means how well the visible faces support expression coding, not which emotion is shown. Low, moderate, or high legibility can result from limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Choose mixed when no single level or mostly-level describes the group well. If no grouped faces are legible, gaze and smile questions are skipped.",
+    help: "Expression legibility means how well the eligible faces in this area support expression coding, not which emotion is shown. Low, moderate, or high legibility can result from limited facial detail, covering or occlusion, face orientation, small face size, blur, low contrast, or poor image/reproduction quality. Choose mixed when no single level or mostly-level describes the area well. If none of the faces are legible, gaze and smile questions are skipped.",
   },
   G5_group_gaze: {
-    unit: "Group",
-    prompt: "Choose the group's dominant gaze pattern.",
+    unit: "People area",
+    prompt: "Choose the dominant gaze pattern in this area.",
     instruction: "",
     help: "Code the dominant visible gaze pattern among assessable faces.",
   },
   G6_group_smile: {
-    unit: "Group",
-    prompt: "How prevalent is visible smiling among assessable group members?",
+    unit: "People area",
+    prompt: "How prevalent is visible smiling among assessable people in this area?",
     instruction: "",
-    help: "Estimate prevalence among group members whose mouths/faces are visible enough to assess.",
+    help: "Estimate prevalence among people in this area whose mouths/faces are visible enough to assess.",
   },
   G7_group_smile_intensity: {
-    unit: "Group",
-    prompt: "What smile intensity predominates among smiling group members?",
+    unit: "People area",
+    prompt: "What smile intensity predominates among smiling people in this area?",
     instruction: "",
     help: "Code only among those visibly smiling. Use mixed if no single intensity predominates.",
   },
@@ -395,76 +395,76 @@ const STEP_META_DE = {
   },
   A3_unique_person_count: {
     unit: "Anzeige",
-    prompt: "Zeichne eine Box um jede geeignete Gesichtsdarstellung.",
+    prompt: "Wie viele geeignete Personen sind in dieser Anzeige sichtbar?",
     instruction:
-      "Lass Einzelpersonen oder kleine Gruppe ausgewählt und zeichne 1-9 Boxen, oder wähle 10-20 bzw. 20+ für eine Menge.",
-    help: "Bei ein bis neun Gesichtern lass Einzelpersonen oder kleine Gruppe ausgewählt, zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind. Schließe geeignete Gesichter auch ein, wenn der Ausdruck nicht lesbar ist. Die genaue Anzahl wird automatisch gespeichert. Spiegelungen und Wiederholungen werden mitgezählt. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Mengen-Kategorie wechselst, bleiben vorhandene Einzelpersonen-Boxen als herausstechende Einzelpersonen erhalten. Du kannst vor dem Fortfahren wieder zu Einzelpersonen oder kleine Gruppe wechseln.",
+      "Bei weniger als 10 Personen lass diese Option ausgewählt und zeichne jede geeignete Gesichtsbox. Bei 10 oder mehr wähle 10-20 oder 20+.",
+    help: "Die Zählung bezieht sich nur auf die aktuelle Anzeige. Zähle nur Personen mit einem geeigneten Gesicht: Es muss mehr als ein Ohr oder der Hinterkopf sichtbar und das Gesicht mit einer Box lokalisierbar sein. Schließe geeignete Gesichter auch ein, wenn ihr Ausdruck nicht lesbar ist, sowie Spiegelungen und Wiederholungen. Bei weniger als 10 zeichne jedes Gesicht und wähle Fertig erst, wenn alle Boxen gezeichnet sind; die genaue Anzahl wird automatisch gespeichert. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen. Schließe Hals, Schultern, Bildunterschriften und leeren Hintergrund aus, sofern sie das Gesicht nicht sichtbar verdecken oder schneiden. Wenn du nach dem Zeichnen zu einer Kategorie ab 10 wechselst, bleiben vorhandene Einzelpersonen-Boxen als herausstechende Einzelpersonen erhalten. Du kannst vor dem Fortfahren wieder zu Weniger als 10 Personen wechseln.",
   },
   C1_outstanding_present: {
-    unit: "Menge",
+    unit: "Anzeige mit mindestens 10 Personen",
     prompt:
-      "Gibt es herausstechende Einzelpersonen, die separat annotiert werden sollten?",
+      "Sollen einzelne Personen separat annotiert werden?",
     instruction:
-      "Wähle ja für Personen, die deutlich sichtbarer sind als der Rest, oder für geeignete Einzelpersonen außerhalb der Gruppe.",
-    help: "Herausstechende Einzelpersonen sind Gesichter, die sich visuell klar von der Gruppe abheben, vor allem weil sie viel größer, klarer, zentraler oder anderweitig deutlich sichtbarer sind als der Rest. Schließe auch geeignete Einzelpersonen in der Anzeige ein, die nicht Teil der Gruppe oder Menge sind. Sie erhalten eine vollständige Einzelcodierung vor der Gruppencodierung.",
+      "Wähle ja nur für Personen, die deutlich sichtbarer sind als der Rest, oder für geeignete Einzelpersonen, die getrennt von den anderen Personen erscheinen.",
+    help: "In einer Anzeige mit mindestens 10 Personen werden nur herausstechende Einzelpersonen vollständig einzeln codiert. Dazu gehören Gesichter, die viel größer, klarer, zentraler oder anderweitig deutlich sichtbarer sind als der Rest, sowie geeignete Einzelpersonen, die getrennt von den anderen Personen in der Anzeige erscheinen.",
   },
   DRAW_OUTSTANDING_INDIVIDUAL_BOXES: {
     unit: "Personen",
     prompt: "Zeichne Boxen für herausstechende Einzelpersonen.",
     instruction:
       "Zeichne jede herausstechende Gesichts-Box, bevor du Fertig wählst.",
-    help: "Nutze dies nur für Personen, die deutlich sichtbarer sind als die restliche Menge oder Gruppe und deshalb separat codiert werden sollen. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen.",
+    help: "Nutze dies nur für Personen, die deutlich sichtbarer sind als die anderen Personen in der Anzeige oder getrennt von ihnen erscheinen. Nutze die kleinste Box, die alle sichtbaren Gesichts- und Kopfmerkmale abdeckt, die für die Codierung gebraucht werden, einschließlich sichtbarer Haare, Ohren, Kinn, Bart oder Schnurrbart und getragener Brillen.",
   },
   DRAW_GROUP_BOXES: {
-    unit: "Gruppen",
+    unit: "Personenbereiche",
     prompt:
-      "Zeichne eine Box für jede visuell abgrenzbare verbleibende Gruppe.",
+      "Zeichne eine Box um jeden visuell getrennten Bereich der verbleibenden Personen.",
     instruction:
-      "Jede Gruppen-Box soll alle Gesichter dieser Gruppe einschließen.",
-    help: "Nutze Gruppen-Boxen für Mengen oder viele kleine Gesichter, bei denen Einzelannotation langsam oder unzuverlässig wäre.",
+      "Jede Box soll alle verbleibenden geeigneten Gesichter in diesem Bereich einschließen.",
+    help: "Ein Personenbereich ist eine zusammengefasste Annotationseinheit und nicht zwingend eine soziale Gruppe. Nimm nur geeignete Gesichter auf: Es muss mehr als ein Ohr oder der Hinterkopf sichtbar und jedes Gesicht lokalisierbar sein. Zeichne eine Box, wenn alle verbleibenden Personen einen gemeinsamen visuellen Bereich bilden. Zeichne mehrere Boxen nur für klar getrennte Ansammlungen, Bildfelder, Szenen oder Porträtreihen.",
   },
   G1_group_type: {
-    unit: "Gruppe",
-    prompt: "Wähle den Gruppentyp.",
+    unit: "Personenbereich",
+    prompt: "Wie sind die Personen in diesem Bereich visuell angeordnet?",
     instruction: "",
-    help: "Codiere die dominierende visuelle Organisation der markierten Gruppe.",
+    help: "Wähle die dominante visuelle Anordnung der geeigneten Personen innerhalb dieser Box. Die Box muss keine soziale Gruppe darstellen.",
   },
   G2_group_age: {
-    unit: "Gruppe",
-    prompt: "Wähle die ungefähre Alterszusammensetzung der Gruppe.",
+    unit: "Personenbereich",
+    prompt: "Wähle die ungefähre Alterszusammensetzung in diesem Bereich.",
     instruction: "",
     help: "Codiere nur die grobe wahrgenommene Alterszusammensetzung anhand sichtbarer Hinweise.",
   },
   G3_group_gender: {
-    unit: "Gruppe",
-    prompt: "Wähle die wahrgenommene Geschlechterpräsentation der Gruppe.",
+    unit: "Personenbereich",
+    prompt: "Wähle die wahrgenommene Geschlechterpräsentation in diesem Bereich.",
     instruction: "",
     help: "Codiere Präsentation, nicht Identität. Nutze nicht beurteilbar nur, wenn die nötigen visuellen Hinweise fehlen.",
   },
   G4_group_expression_legibility: {
-    unit: "Gruppe",
-    prompt: "Wie gut sind Gesichtsausdrücke in dieser Gruppe lesbar?",
+    unit: "Personenbereich",
+    prompt: "Wie gut sind Gesichtsausdrücke in diesem Bereich lesbar?",
     instruction:
       "Beurteile, wie gut Gesichtsausdrücke einschätzbar sind, und wähle dann die passendste Verteilung.",
-    help: "Ausdruckslesbarkeit meint, wie gut die sichtbaren Gesichter eine Ausdruckscodierung erlauben, nicht welche Emotion gezeigt wird. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Gesichtsdetails, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Wähle gemischt, wenn kein einzelnes Niveau oder mehrheitliches Niveau gut passt. Wenn keine gruppierten Gesichter lesbar sind, werden Blick- und Lächelfragen übersprungen.",
+    help: "Ausdruckslesbarkeit meint, wie gut die geeigneten Gesichter in diesem Bereich eine Ausdruckscodierung erlauben, nicht welche Emotion gezeigt wird. Niedrige, mittlere oder hohe Lesbarkeit kann durch wenige Gesichtsdetails, Verdeckung, Gesichtsausrichtung, kleine Gesichtsgröße, Unschärfe, niedrigen Kontrast oder schlechte Bild-/Reproduktionsqualität entstehen. Wähle gemischt, wenn kein einzelnes Niveau oder mehrheitliches Niveau gut zum Bereich passt. Wenn keines der Gesichter lesbar ist, werden Blick- und Lächelfragen übersprungen.",
   },
   G5_group_gaze: {
-    unit: "Gruppe",
-    prompt: "Wähle das dominierende Blickmuster der Gruppe.",
+    unit: "Personenbereich",
+    prompt: "Wähle das dominierende Blickmuster in diesem Bereich.",
     instruction: "",
     help: "Codiere das dominierende sichtbare Blickmuster unter den beurteilbaren Gesichtern.",
   },
   G6_group_smile: {
-    unit: "Gruppe",
+    unit: "Personenbereich",
     prompt:
-      "Wie verbreitet ist sichtbares Lächeln unter den beurteilbaren Gruppenmitgliedern?",
+      "Wie verbreitet ist sichtbares Lächeln unter den beurteilbaren Personen in diesem Bereich?",
     instruction: "",
-    help: "Schätze die Häufigkeit unter Gruppenmitgliedern, deren Mund/Gesicht sichtbar genug ist.",
+    help: "Schätze die Häufigkeit unter Personen in diesem Bereich, deren Mund/Gesicht sichtbar genug ist.",
   },
   G7_group_smile_intensity: {
-    unit: "Gruppe",
+    unit: "Personenbereich",
     prompt:
-      "Welche Lächelintensität überwiegt unter den lächelnden Gruppenmitgliedern?",
+      "Welche Lächelintensität überwiegt unter den lächelnden Personen in diesem Bereich?",
     instruction: "",
     help: "Codiere nur unter sichtbar lächelnden Personen. Nutze gemischt, wenn keine Intensität klar überwiegt.",
   },
@@ -674,7 +674,7 @@ const DISPLAY_LABELS_EN = {
   mask_mannequin_doll_or_puppet: "mask, mannequin, doll, or puppet",
   schematic_icon_or_logo_face: "schematic icon/logo face",
   multiple_types_present: "multiple types present",
-  only_individuals: "individuals or small group",
+  only_individuals: "fewer than 10 people",
   "10_20": "10-20",
   "20_plus": "20+",
   beyond_profile: "less than profile",
@@ -711,8 +711,12 @@ const DISPLAY_LABELS_EN = {
   broad_or_laughter_like: "broad/laughter-like",
   ambiguous_or_androgynous: "ambiguous/androgynous",
   ambiguous_or_androgynous_present: "ambiguous/androgynous present",
+  interacting_group: "interacting people",
+  posed_group: "posed people",
   audience: "audience",
-  other_group: "other group",
+  background_population: "people in the background",
+  separate_portraits_or_composite: "separate portraits/composite",
+  other_group: "other arrangement",
   three_quarter: "three-quarter",
   off_frame: "off-frame",
   crop_or_frame: "crop/frame",
@@ -749,7 +753,7 @@ const DISPLAY_LABELS_DE = {
   nonhuman_creature_with_face: "nichtmenschliches Wesen mit Gesicht",
   schematic_icon_or_logo_face: "schematisches Icon/Logo-Gesicht",
   multiple_types_present: "mehrere Typen vorhanden",
-  only_individuals: "Einzelpersonen oder kleine Gruppe",
+  only_individuals: "weniger als 10 Personen",
   "10_20": "10-20",
   "20_plus": "20+",
   infant: "Säugling",
@@ -793,12 +797,12 @@ const DISPLAY_LABELS_DE = {
   "1_low_legibility": "1 geringe Lesbarkeit",
   "2_moderate_legibility": "2 mittlere Lesbarkeit",
   "3_high_legibility": "3 hohe Lesbarkeit",
-  interacting_group: "interagierende Gruppe",
-  posed_group: "gestellte Gruppe",
+  interacting_group: "interagierende Personen",
+  posed_group: "gestellte Personen",
   audience: "Publikum",
-  other_group: "andere Gruppe",
-  background_population: "Hintergrundpersonen",
-  separate_portraits_or_composite: "getrennte Porträts/Komposit",
+  other_group: "andere Anordnung",
+  background_population: "Personen im Hintergrund",
+  separate_portraits_or_composite: "separate Porträts/Komposition",
   young_only: "nur jung",
   middle_only: "nur mittleres Alter",
   older_only: "nur älter",
@@ -934,7 +938,7 @@ const UI_TEXT = {
     pages: "Pages",
     qualifying_ads: "Qualifying ads",
     faces_boxed: "Faces boxed",
-    groups: "Groups",
+    groups: "People areas",
     focused_time: "Focused time",
     session: "Session",
     review_annotations: "Review annotations",
@@ -992,7 +996,7 @@ const UI_TEXT = {
       "Another browser or tab saved a newer version. Reload this page before continuing so that work is not overwritten.",
     reload_page: "Reload page",
     higher_count: "Higher count",
-    face_route: "Face route",
+    face_route: "Number of people",
     other_covering: "Other covering",
     short_description: "Short description",
     person_without_box: "Person without bounding box",
@@ -1132,7 +1136,7 @@ const UI_TEXT = {
     pages: "Seiten",
     qualifying_ads: "Qualifizierende Anzeigen",
     faces_boxed: "Gesichter markiert",
-    groups: "Gruppen",
+    groups: "Personenbereiche",
     focused_time: "Aktive Zeit",
     session: "Sitzung",
     review_annotations: "Annotationen ansehen",
@@ -1190,7 +1194,7 @@ const UI_TEXT = {
       "Ein anderer Browser oder Tab hat eine neuere Version gespeichert. Lade die Seite neu, bevor du fortfährst, damit keine Arbeit überschrieben wird.",
     reload_page: "Seite neu laden",
     higher_count: "Höhere Anzahl",
-    face_route: "Gesichtsroute",
+    face_route: "Anzahl Personen",
     other_covering: "Andere Verdeckung",
     short_description: "Kurze Beschreibung",
     person_without_box: "Person ohne Box",
@@ -1882,7 +1886,7 @@ function defaultAnnotation(image) {
     flow_source: {
       playbook: "docs/annotation_playbook_v1.md",
       yaml: "docs/annotation_flow_v1.yaml",
-      flow_schema_version: "1.15",
+      flow_schema_version: "1.16",
     },
     session: {
       session_id: state.session.session_id,
@@ -1928,7 +1932,7 @@ function defaultAnnotation(image) {
 
 function migrateLoadedAnnotation(annotation) {
   annotation.flow_source ||= {};
-  annotation.flow_source.flow_schema_version = "1.15";
+  annotation.flow_source.flow_schema_version ??= "1.16";
   annotation.page ||= {};
   let reopenedStep = null;
   if (annotation.page.qualifying_ad_count === "unclear")
@@ -4196,6 +4200,7 @@ function pageListButton(index, image, extraClass = "") {
   const workState = pageWorkState(image.image_id);
   const canOpen = canNavigateToImageIndex(index);
   button.disabled = !canOpen;
+  button.dataset.pageIndex = String(index);
   button.dataset.pageState = workState.key;
   button.setAttribute(
     "aria-current",
@@ -4303,6 +4308,14 @@ function renderImageList() {
       !blockSize || range.end >= state.manifest.images.length - 1,
     ),
   );
+  if (searchMatches?.length === 1) {
+    const matchedButton = list.querySelector(
+      `[data-page-index="${searchMatches[0]}"]`,
+    );
+    requestAnimationFrame(() =>
+      matchedButton?.scrollIntoView({ block: "center", inline: "nearest" }),
+    );
+  }
 }
 
 function currentVisibleRegion() {

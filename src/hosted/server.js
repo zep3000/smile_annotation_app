@@ -425,7 +425,7 @@ function createHostedServer({ config, pool, repository, storage } = {}) {
         set = await repo.createSet({
           name: body.name,
           manifest: body.manifest,
-          flowVersion: String(body.flow_version || "1.15")
+          flowVersion: String(body.flow_version || "1.16")
         });
       } catch (error) {
         if (!error.statusCode) error.statusCode = error.code === "23505" ? 409 : 400;
