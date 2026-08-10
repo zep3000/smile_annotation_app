@@ -68,7 +68,7 @@ test("legacy audience/crowd group type reopens completed annotations", () => {
 test("completed annotation with unannotated boxed person is treated as draft", () => {
   const annotation = {
     status: "complete",
-    flow_source: { flow_schema_version: "1.16" },
+    flow_source: { flow_schema_version: "1.17" },
     page: { qualifying_ad_count: "1" },
     advertisements: [
       {
@@ -122,7 +122,7 @@ test("completed annotation with all boxed people annotated remains complete", ()
   });
   const annotation = {
     status: "complete",
-    flow_source: { flow_schema_version: "1.16" },
+    flow_source: { flow_schema_version: "1.17" },
     page: { qualifying_ad_count: "1" },
     advertisements: [
       {
@@ -136,4 +136,62 @@ test("completed annotation with all boxed people annotated remains complete", ()
   };
 
   assert.equal(effectiveAnnotationStatus(annotation), "complete");
+});
+
+test("legacy tilted orientation reopens completed annotations", () => {
+  const annotation = {
+    status: "complete",
+    flow_source: { flow_schema_version: "1.16" },
+    page: { qualifying_ad_count: "1" },
+    advertisements: [
+      {
+        depiction_type: "photo_of_person",
+        face_depiction_count_band: "1",
+        people: [
+          {
+            person_id: "ad1_p1",
+            face_bbox: [0, 0, 0.2, 0.2],
+            duplicate_of_person_id: null,
+            perceived_age: "middle_adult",
+            perceived_gender_presentation: "masculine",
+            face_expression_legibility: "0_not_legible",
+            face_orientation: "tilted_down",
+            mouth_covered: "no"
+          }
+        ],
+        groups: []
+      }
+    ]
+  };
+
+  assert.equal(effectiveAnnotationStatus(annotation), "draft");
+});
+
+test("removed frontal head-angle orientation reopens completed annotations", () => {
+  const annotation = {
+    status: "complete",
+    flow_source: { flow_schema_version: "1.17" },
+    page: { qualifying_ad_count: "1" },
+    advertisements: [
+      {
+        depiction_type: "photo_of_person",
+        face_depiction_count_band: "1",
+        people: [
+          {
+            person_id: "ad1_p1",
+            face_bbox: [0, 0, 0.2, 0.2],
+            duplicate_of_person_id: null,
+            perceived_age: "middle_adult",
+            perceived_gender_presentation: "masculine",
+            face_expression_legibility: "0_not_legible",
+            face_orientation: "frontal_head_angled_up",
+            mouth_covered: "no"
+          }
+        ],
+        groups: []
+      }
+    ]
+  };
+
+  assert.equal(effectiveAnnotationStatus(annotation), "draft");
 });

@@ -1,4 +1,4 @@
-schema_version: "1.16"
+schema_version: "1.17"
 title: "Advertisement Face Annotation Flow"
 companion_playbook: "annotation_playbook_v1.md"
 
@@ -42,6 +42,22 @@ terminology:
       storage keys and enum values remain canonical so annotations from 1.15
       and earlier require no structural transformation.
 
+migration_notes:
+  "1.17":
+    depiction_type:
+      auto_normalize:
+        naturalistic_illustration: illustration
+        stylized_illustration: illustration
+    face_orientation:
+      clear_legacy_values_for_review:
+        - tilted_down
+        - tilted_up
+        - frontal_head_angled_down
+        - frontal_head_angled_up
+      reason: >-
+        Vertical head tilt is no longer coded as a separate orientation
+        category.
+
 answer_semantics:
   forced_best_fit: "When relevant visual evidence is available, select exactly one best-fitting substantive category, including near category boundaries."
   not_assessable: "Use only when there is not enough information to decide in general because required visual evidence is missing, occluded, too small, cropped, or degraded enough to prevent a meaningful best estimate."
@@ -75,8 +91,7 @@ enums:
   yes_no: ["yes", "no"]
   depiction_type:
     - photo_of_person
-    - naturalistic_illustration
-    - stylized_illustration
+    - illustration
     - cartoon_or_caricature
     - generic_human_figure
     - photo_of_artwork_or_statue
@@ -88,8 +103,7 @@ enums:
     - multiple_types_present
   person_depiction_type:
     - photo_of_person
-    - naturalistic_illustration
-    - stylized_illustration
+    - illustration
     - cartoon_or_caricature
     - generic_human_figure
     - photo_of_artwork_or_statue
@@ -117,8 +131,6 @@ enums:
     - profile
     - three_quarter
     - frontal
-    - tilted_down
-    - tilted_up
     - other
     - not_assessable
   face_expression_legibility:
@@ -442,7 +454,7 @@ flow:
       possible_limiting_factors:
         - limited_or_missing_facial_detail
         - covering_or_occlusion
-        - face_orientation_or_tilt
+        - face_orientation_or_unusual_head_position
         - small_face_size
         - blur_or_poor_focus
         - low_contrast
@@ -459,13 +471,11 @@ flow:
       ui: single_choice
       values_from: face_orientation
       coding_rule: >-
-        First choose the best left-right orientation if one fits:
-        beyond_profile, profile, three_quarter, or frontal. Use tilted_down or
-        tilted_up only when those ordinary orientation labels are insufficient
-        because the head is mainly pitched vertically. These are head-position
-        labels, not gaze labels. Use tilted_down when the chin is lowered or
-        the top of the head is more visible. Use tilted_up when the chin is
-        raised or the underside of the chin, jaw, or nostrils is more visible.
+        Choose the best left-right orientation: beyond_profile, profile,
+        three_quarter, or frontal. Use other only when none of these orientation
+        labels fits the visible face. Use not_assessable only when the face
+        orientation cannot be judged. Do not code vertical head tilt as a
+        separate orientation category.
       transitions:
         "person.face_expression_legibility == '0_not_legible'": I6_mouth_covered
         otherwise: I5_gaze_target
@@ -577,7 +587,7 @@ flow:
       possible_limiting_factors:
         - limited_or_missing_facial_detail
         - covering_or_occlusion
-        - face_orientation_or_tilt
+        - face_orientation_or_unusual_head_position
         - small_face_size
         - blur_or_poor_focus
         - low_contrast

@@ -306,7 +306,7 @@ async function createSet(event) {
       })
     });
     $("#createSetForm").reset();
-    $("#flowVersion").value = "1.16";
+    $("#flowVersion").value = "1.17";
     await loadSets(data.set.id);
   } catch (error) {
     setStatus("#createSetStatus", error.message, "error");

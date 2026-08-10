@@ -22,6 +22,21 @@ function hasLegacyAudienceCrowdGroupType(annotation) {
   );
 }
 
+function hasLegacyTiltedOrientation(annotation) {
+  return Boolean(
+    annotation?.advertisements?.some((advertisement) =>
+      advertisement?.people?.some((person) =>
+        [
+          "tilted_down",
+          "tilted_up",
+          "frontal_head_angled_down",
+          "frontal_head_angled_up",
+        ].includes(person?.face_orientation),
+      ),
+    ),
+  );
+}
+
 function hasValue(value) {
   return value !== null && value !== undefined && value !== "";
 }
@@ -169,6 +184,7 @@ function effectiveAnnotationStatus(record) {
   const status = record?.status || annotation?.status || null;
   return missingNoQualifyingAdReason(annotation) ||
     hasLegacyAudienceCrowdGroupType(annotation) ||
+    hasLegacyTiltedOrientation(annotation) ||
     hasIncompleteRequiredAnnotations(annotation)
     ? "draft"
     : status;
@@ -216,6 +232,7 @@ module.exports = {
   effectiveAnnotationStatus,
   hasIncompleteRequiredAnnotations,
   hasLegacyAudienceCrowdGroupType,
+  hasLegacyTiltedOrientation,
   missingNoQualifyingAdReason,
   summarizeAnnotations,
 };

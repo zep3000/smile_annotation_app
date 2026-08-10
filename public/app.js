@@ -2,8 +2,7 @@ const ENUMS = {
   yes_no: ["yes", "no"],
   depiction_type: [
     "photo_of_person",
-    "naturalistic_illustration",
-    "stylized_illustration",
+    "illustration",
     "cartoon_or_caricature",
     "generic_human_figure",
     "photo_of_artwork_or_statue",
@@ -34,8 +33,6 @@ const ENUMS = {
     "profile",
     "three_quarter",
     "frontal",
-    "tilted_down",
-    "tilted_up",
     "other",
     "not_assessable",
   ],
@@ -287,7 +284,7 @@ const STEP_META_EN = {
     unit: "Person",
     prompt: "Choose the face orientation.",
     instruction: "",
-    help: "First choose the best left-right orientation if one fits: less than profile, profile, three-quarter, or frontal. Use tilted down/up only when these ordinary orientation labels do not describe the face well because the head is mainly pitched vertically. Tilted down/up describe head position, not gaze. Choose tilted down when the chin is lowered or the top of the head is more visible. Choose tilted up when the chin is raised or the underside of the chin, jaw, or nostrils is more visible.",
+    help: "Choose the best left-right orientation: less than profile, profile, three-quarter, or frontal. Use other only when none of these orientation labels fits the visible face. Use not assessable only when the face orientation cannot be judged.",
   },
   I4_expression_legibility: {
     unit: "Person",
@@ -518,7 +515,7 @@ const STEP_META_DE = {
     unit: "Person",
     prompt: "Wähle die Gesichtsausrichtung.",
     instruction: "",
-    help: "Wähle zuerst die passende Links-rechts-Ausrichtung, wenn eine passt: weniger als Profil, Profil, Dreiviertel oder frontal. Nutze nach unten/oben geneigt nur, wenn diese normalen Ausrichtungslabels das Gesicht nicht gut beschreiben, weil der Kopf vor allem vertikal geneigt ist. Nach unten/oben geneigt beschreibt die Kopfposition, nicht den Blick. Wähle nach unten geneigt, wenn das Kinn gesenkt ist oder die Oberseite des Kopfes stärker sichtbar ist. Wähle nach oben geneigt, wenn das Kinn angehoben ist oder die Unterseite von Kinn, Kiefer oder Nasenlöchern stärker sichtbar ist.",
+    help: "Wähle die passendste Links-rechts-Ausrichtung: weniger als Profil, Profil, Dreiviertel oder frontal. Nutze anderes nur, wenn keines dieser Ausrichtungslabels zum sichtbaren Gesicht passt. Nutze nicht beurteilbar nur, wenn die Gesichtsausrichtung nicht beurteilt werden kann.",
   },
   I4_expression_legibility: {
     unit: "Person",
@@ -667,6 +664,7 @@ const DISPLAY_LABELS_EN = {
   no_ads_on_page: "no ad(s) on this page",
   ads_present_no_visible_faces: "ads present, but none with visible faces",
   photo_of_person: "photo of person",
+  illustration: "illustration",
   cartoon_or_caricature: "cartoon/caricature",
   photo_of_artwork_or_statue: "photo of artwork/statue",
   drawing_of_statue_monument_or_public_symbol:
@@ -726,8 +724,6 @@ const DISPLAY_LABELS_EN = {
   part_of_another_person: "(part of) another person",
   object_in_mouth: "object in mouth",
   cropped_by_page_edge: "cropped by page edge",
-  tilted_down: "tilted down",
-  tilted_up: "tilted up",
 };
 
 const DISPLAY_LABELS_DE = {
@@ -740,8 +736,7 @@ const DISPLAY_LABELS_DE = {
   full_page: "ganzseitig",
   partial_page: "Teilseite",
   photo_of_person: "Foto einer Person",
-  naturalistic_illustration: "naturalistische Illustration",
-  stylized_illustration: "stilisierte Illustration",
+  illustration: "Illustration",
   cartoon_or_caricature: "Cartoon/Karikatur",
   generic_human_figure: "generische menschliche Figur",
   photo_of_artwork_or_statue: "Foto von Kunstwerk/Statue",
@@ -769,8 +764,6 @@ const DISPLAY_LABELS_DE = {
   profile: "Profil",
   three_quarter: "Dreiviertel",
   frontal: "frontal",
-  tilted_down: "nach unten geneigt",
-  tilted_up: "nach oben geneigt",
   not_assessable: "nicht beurteilbar",
   viewer_camera: "Betrachter/Kamera",
   another_person: "andere Person",
@@ -1830,6 +1823,13 @@ function defaultGroup(ad) {
   };
 }
 
+function normalizeDepictionType(value) {
+  return {
+    naturalistic_illustration: "illustration",
+    stylized_illustration: "illustration",
+  }[value] || value;
+}
+
 function setInitialFaceRoute(ad, route) {
   if (!ad) return;
   const previous = ad.face_depiction_count_band;
@@ -1886,7 +1886,7 @@ function defaultAnnotation(image) {
     flow_source: {
       playbook: "docs/annotation_playbook_v1.md",
       yaml: "docs/annotation_flow_v1.yaml",
-      flow_schema_version: "1.16",
+      flow_schema_version: "1.17",
     },
     session: {
       session_id: state.session.session_id,
@@ -1932,7 +1932,7 @@ function defaultAnnotation(image) {
 
 function migrateLoadedAnnotation(annotation) {
   annotation.flow_source ||= {};
-  annotation.flow_source.flow_schema_version ??= "1.16";
+  annotation.flow_source.flow_schema_version ??= "1.17";
   annotation.page ||= {};
   let reopenedStep = null;
   if (annotation.page.qualifying_ad_count === "unclear")
@@ -1966,6 +1966,7 @@ function migrateLoadedAnnotation(annotation) {
         ad.depiction_type = legacyPageDepictionType;
       }
     }
+    ad.depiction_type = normalizeDepictionType(ad.depiction_type);
     ad.face_depiction_count_band ??= ad.unique_person_count_band ?? null;
     if (ad.extent === "unclear") ad.extent = null;
     if (ad.face_depiction_count_band === "unclear")
@@ -1978,6 +1979,7 @@ function migrateLoadedAnnotation(annotation) {
       person.duplicate_of_person_id ??= null;
       person.duplicate_person_ids ||= [];
       person.depiction_type ??= null;
+      person.depiction_type = normalizeDepictionType(person.depiction_type);
       person.face_expression_legibility ??= null;
       person.face_expression_legibility =
         {
@@ -2005,6 +2007,25 @@ function migrateLoadedAnnotation(annotation) {
         person.mouth_covering = "part_of_another_person";
       if (!("mouth_covering_other_text" in person))
         person.mouth_covering_other_text = null;
+      if (
+        person.face_orientation === "tilted_down" ||
+        person.face_orientation === "tilted_up" ||
+        person.face_orientation === "frontal_head_angled_down" ||
+        person.face_orientation === "frontal_head_angled_up"
+      ) {
+        person.face_orientation = null;
+        annotation.status = "draft";
+        annotation.finished_at = null;
+        if (!reopenedStep) {
+          const adIndex = annotation.advertisements.indexOf(ad);
+          reopenedStep = {
+            id: "I3_orientation",
+            adIndex,
+            personId: person.person_id,
+            personIndex: Math.max(0, (ad.people || []).indexOf(person)),
+          };
+        }
+      }
       for (const field of [
         "perceived_age",
         "perceived_gender_presentation",
@@ -5125,9 +5146,11 @@ async function loadImage(index, options = {}) {
   state.annotationPersisted = Boolean(data.annotation);
   state.dirty = false;
   state.changeVersion = 0;
-  state.annotation = migrateLoadedAnnotation(
-    data.annotation || defaultAnnotation(image),
-  );
+  const loadedAnnotation = data.annotation || defaultAnnotation(image);
+  const beforeMigration = data.annotation ? JSON.stringify(loadedAnnotation) : null;
+  state.annotation = migrateLoadedAnnotation(loadedAnnotation);
+  const migratedLoadedAnnotation =
+    Boolean(beforeMigration) && JSON.stringify(state.annotation) !== beforeMigration;
   const missingLoadedStep =
     state.annotation.status === "complete" ? firstMissingDetailStep(0) : null;
   const reopenedIncompleteLoadedStatus = Boolean(missingLoadedStep);
@@ -5150,7 +5173,11 @@ async function loadImage(index, options = {}) {
   annotationReady = true;
   if (pageImage.complete && pageImage.naturalWidth) imageReady = true;
   applyLoadedImage();
-  if (normalizedLegacyStatus || reopenedIncompleteLoadedStatus) {
+  if (
+    normalizedLegacyStatus ||
+    reopenedIncompleteLoadedStatus ||
+    migratedLoadedAnnotation
+  ) {
     markDirty();
     void saveAnnotationDebounced();
   }

@@ -1,6 +1,6 @@
 # Advertisement Face Annotation Playbook
 
-Version: 1.16
+Version: 1.17
 
 This playbook defines the human annotation procedure and the behavior expected from an automated or LLM annotator. The application presents one decision at a time and stores bounding boxes as normalized page coordinates in `[x1, y1, x2, y2]` format.
 
@@ -71,8 +71,7 @@ Choose one value for each advertisement when the same depiction type applies to 
 Values:
 
 - `photo_of_person`: direct photograph of a living or historically photographed person
-- `naturalistic_illustration`: realistic drawing, painting, engraving, or rendered illustration of a person
-- `stylized_illustration`: recognizably human illustration with deliberate simplification or stylization
+- `illustration`: drawn, painted, engraved, or rendered depiction of a plausible human figure with normal human proportions and facial structure. It may be detailed or simplified, but it is not primarily comic, caricatured, symbolic, or icon-like.
 - `cartoon_or_caricature`: cartoon convention or conspicuous comic exaggeration
 - `generic_human_figure`: anonymous or generic human figure rather than a represented individual
 - `photo_of_artwork_or_statue`: photograph of physical artwork, sculpture, or statue containing a face
@@ -165,15 +164,15 @@ This four-point ordinal scale measures how well the visible face supports expres
 
 Consider face size, pose, occlusion, contrast, focus, reproduction quality, and visible facial detail. Choose the nearest level rather than avoiding a boundary decision.
 
-The scale records the overall legibility of the expression, not why legibility is limited. The same low or moderate score can arise for different reasons: the depiction may contain few facial details; part of the face may be covered or otherwise occluded; profile or tilted orientation may hide relevant features; or the face may be too small, blurred, low-contrast, degraded, or poorly reproduced. Several limitations may also combine. Judge their combined effect on how confidently the visible facial expression can be coded rather than counting limitations or assigning a fixed penalty for any one cause. A face with an unusual orientation or partial covering can still receive high legibility when its expression-relevant features remain clear.
+The scale records the overall legibility of the expression, not why legibility is limited. The same low or moderate score can arise for different reasons: the depiction may contain few facial details; part of the face may be covered or otherwise occluded; profile or unusual head orientation may hide relevant features; or the face may be too small, blurred, low-contrast, degraded, or poorly reproduced. Several limitations may also combine. Judge their combined effect on how confidently the visible facial expression can be coded rather than counting limitations or assigning a fixed penalty for any one cause. A face with an unusual orientation or partial covering can still receive high legibility when its expression-relevant features remain clear.
 
 When the value is `0_not_legible`, skip gaze and smile-presence/intensity coding. Continue to face orientation and mouth-covering coding because these may remain observable even when expression is not legible.
 
 ### I3. Face orientation
 
-Values: `beyond_profile`, `profile`, `three_quarter`, `frontal`, `tilted_down`, `tilted_up`, `other`, `not_assessable`.
+Values: `beyond_profile`, `profile`, `three_quarter`, `frontal`, `other`, `not_assessable`.
 
-The interface displays `beyond_profile` as **less than profile**. First choose the best left-right orientation if one fits: `beyond_profile`, `profile`, `three_quarter`, or `frontal`. Use `tilted_down` or `tilted_up` only when those ordinary orientation labels are insufficient because the head is mainly pitched vertically. These are head-position labels, not gaze labels. Use `tilted_down` when the chin is lowered or the top of the head is more visible. Use `tilted_up` when the chin is raised or the underside of the chin, jaw, or nostrils is more visible. Select the closest orientation when between categories.
+The interface displays `beyond_profile` as **less than profile**. Choose the best left-right orientation: `beyond_profile`, `profile`, `three_quarter`, or `frontal`. Use `other` only when none of these orientation labels fits the visible face. Use `not_assessable` only when the face orientation cannot be judged. Do not code vertical head tilt as a separate orientation category.
 
 ### I5. Gaze
 
@@ -226,7 +225,7 @@ For every people-area box, code the following established storage fields:
 
 For people-area expression legibility, use the same four underlying levels as individual expression legibility, but code their distribution across the eligible faces in the box. Use an `all_*` value when all or nearly all faces fall at the same level. Use a `mostly_*` value when one level clearly predominates but exceptions are visible. Use `mixed_legibility` when no single level clearly predominates.
 
-As with individual legibility, score the overall expression-coding result rather than the cause. Low, moderate, or high people-area legibility may come from small faces, few facial details, covering or occlusion, profile or tilted orientation, blur, low contrast, or degraded reproduction quality.
+As with individual legibility, score the overall expression-coding result rather than the cause. Low, moderate, or high people-area legibility may come from small faces, few facial details, covering or occlusion, profile or unusual head orientation, blur, low contrast, or degraded reproduction quality.
 
 Do not ask for aggregate gaze, smile prevalence, or smile intensity when expression legibility is `all_0_not_legible`. Do not ask for aggregate smile intensity when smile prevalence is `none` or `not_assessable`.
 
@@ -236,7 +235,12 @@ The urgent-comment action is available throughout annotation. Use it when the av
 
 A page is complete only after all required boxes, duplicate assignments, canonical-person fields, and people-area fields have been entered. Creation, update, completion, and per-screen timing information are retained in the structured JSON output.
 
-## 9. Variables excluded from version 1.16
+## 9. Version 1.17 compatibility changes
+
+- Existing `naturalistic_illustration` and `stylized_illustration` values are automatically normalized to `illustration`.
+- Existing `tilted_down`, `tilted_up`, `frontal_head_angled_down`, and `frontal_head_angled_up` face-orientation values are cleared on load because vertical head tilt is no longer coded as a separate orientation category. Those pages reopen at the missing orientation field.
+
+## 10. Variables excluded from version 1.17
 
 - Brand and product category
 - Felt emotion
@@ -245,6 +249,7 @@ A page is complete only after all required boxes, duplicate assignments, canonic
 - Smile social function
 - Intentional covering
 - Exact head-pose degrees
+- Vertical head tilt
 - Race or ethnicity
 - Actual gender identity
 - Exact chronological age
