@@ -159,3 +159,11 @@ All automated tests run with:
 ```powershell
 npm test
 ```
+
+## Licensing
+
+No reuse license has been selected yet. Until a license is added, copyright in
+the original code and documentation is retained by the author. Third-party
+materials, including the demonstration image, remain subject to their
+respective rights holders' terms and are not licensed for reuse by this
+repository.
